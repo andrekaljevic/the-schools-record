@@ -64,27 +64,7 @@ document = f"""<!doctype html>
 </head>
 <body>
   <div id="root"></div>
-  <script>
-    window.__SCHOOLS_RECORD_QUERY__ = {json.dumps(initial_query)};
-
-    const reportHeight = () => {{
-      const height = Math.max(
-        document.documentElement.scrollHeight,
-        document.body ? document.body.scrollHeight : 0,
-        900
-      );
-      window.parent.postMessage({{
-        isStreamlitMessage: true,
-        type: "streamlit:setFrameHeight",
-        height
-      }}, "*");
-    }};
-
-    window.addEventListener("load", reportHeight);
-    window.addEventListener("resize", reportHeight);
-    new ResizeObserver(reportHeight).observe(document.documentElement);
-    [0, 100, 300, 750, 1500, 3000].forEach((delay) => setTimeout(reportHeight, delay));
-  </script>
+  <script>window.__SCHOOLS_RECORD_QUERY__ = {json.dumps(initial_query)};</script>
   <script type="module">{safe_js}</script>
 </body>
 </html>"""
@@ -117,4 +97,4 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-components.html(document, height=1100, scrolling=False)
+components.html(document, height=1400, scrolling=True)
