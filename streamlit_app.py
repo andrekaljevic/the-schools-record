@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import base64
 import gzip
 import json
 from pathlib import Path
 from urllib.parse import urlencode
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -20,7 +20,20 @@ st.set_page_config(
 )
 
 
+def load_connector_asset(directory: str) -> str | None:
+    parts = sorted((BUNDLE_DIR / "connector" / directory).glob("part-*"))
+    if not parts:
+        return None
+    encoded = "".join(part.read_text(encoding="ascii") for part in parts)
+    return gzip.decompress(base64.b64decode(encoded)).decode("utf-8")
+
+
 def load_frontend() -> tuple[str, str]:
+    connector_css = load_connector_asset("css")
+    connector_js = load_connector_asset("js")
+    if connector_css is not None and connector_js is not None:
+        return connector_css, connector_js
+
     css_path = BUNDLE_DIR / "app.css.gz"
     js_path = BUNDLE_DIR / "app.js.gz"
     if not css_path.exists() or not js_path.exists():
@@ -86,7 +99,7 @@ st.markdown(
       [data-testid="stElementContainer"] {
         margin: 0 !important;
       }
-      iframe[title="streamlit_components.v1.html"] {
+      [data-testid="stIFrame"] iframe {
         display: block;
         width: 100%;
         border: 0;
@@ -96,4 +109,4 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-components.html(document, height=1400, scrolling=True)
+st.iframe(document, height=1400)

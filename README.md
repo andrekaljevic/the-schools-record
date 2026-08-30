@@ -3,9 +3,8 @@
 A public, source-led statistical yearbook of examination results, university
 pathways and admissions evidence across leading UK independent schools.
 
-This repository contains the Streamlit deployment of the version-12 Schools
-Record interface and its bundled, auditable evidence snapshot dated 30 August
-2026.
+This repository contains the self-contained Streamlit deployment of The Schools
+Record and its auditable evidence snapshot dated 30 August 2026.
 
 ## Run locally
 
@@ -16,3 +15,6 @@ streamlit run streamlit_app.py
 
 The deployment bundle is self-contained and does not load the former
 ChatGPT-hosted site.
+
+The compressed interface assets are generated from the canonical application
+source and loaded locally by `streamlit_app.py`.
