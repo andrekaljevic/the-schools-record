@@ -20,7 +20,6 @@ st.set_page_config(
 )
 
 
-@st.cache_resource(show_spinner=False)
 def load_frontend() -> tuple[str, str]:
     css_path = BUNDLE_DIR / "app.css.gz"
     js_path = BUNDLE_DIR / "app.js.gz"
