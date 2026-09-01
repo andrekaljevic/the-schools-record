@@ -8,6 +8,8 @@ from urllib.parse import urlencode
 
 import streamlit as st
 
+from site_patches import apply_st_pauls_history
+
 
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
@@ -142,6 +144,7 @@ def serialise_query() -> str:
 
 
 frontend_css, frontend_js = extend_frontend_for_school_sketches(*load_frontend())
+frontend_js = apply_st_pauls_history(frontend_js)
 initial_query = serialise_query()
 school_sketches = load_school_sketches()
 
