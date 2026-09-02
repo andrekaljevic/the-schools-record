@@ -29,7 +29,8 @@ python -m unittest discover -s tests -v
 | `tsr/records.py` | Dataset and row selection, ordering and labelling |
 | `tsr/format.py` | Field labels and display formatting |
 | `tsr/comparison.py` | Like-for-like comparison series |
-| `tsr/chart.py` | The comparison chart, drawn as inline SVG |
+| `tsr/chart.py` | The comparison chart and the small-multiple panels, drawn as inline SVG |
+| `tsr/trajectory.py` | Index panels and school results-by-year panels, assembled from the comparison series |
 | `tsr/components.py` | Data ledgers, evidence panels, latest-record cards |
 | `tsr/views_*.py` | One module per group of routes |
 | `tsr/forms.py` | Enquiry and correction forms |
@@ -53,6 +54,28 @@ Streamlit page shares one DOM with Streamlit's own chrome, `tsr/styles.py`
 re-scopes every selector under `.tsr` before injecting it; the site's Tailwind
 preflight therefore cannot reach Streamlit's widgets, and the widgets that carry
 real interaction are styled back to match the record.
+
+### Charts
+
+Three chart placements share one visual language with the comparison chart:
+
+* **School index** — every row carries a small panel of one like-for-like
+  series (default: A-level grades at A*, switchable to any comparison metric
+  and reflected in the `series` URL parameter). All seven panels share one
+  ruler, so schools can be read against each other by year without a ranking.
+* **School record** — a "Results by year" section with one panel per grading
+  ruler (A level, GCSE 9–1, legacy GCSE A*–G). Panels share a year axis so a
+  change of ruler reads as a handover; the 2010 introduction of A* and the
+  2020–21 CAG/TAG years are marked; ledgers on rulers the comparison tool does
+  not define (Pre-U, IB, crosswalks) are listed as recorded but not charted.
+* **Sample dossier** — the comparison chart above the exact-value exhibit.
+
+Every plotted point is a point from `tsr/comparison.py`, so nothing can be
+drawn that the comparison tool would refuse. Lines join consecutive published
+years only: a break in a line is a gap in the record, never an interpolation.
+Each panel carries an "Exact values" disclosure. `tests/test_charts.py` pins
+the rendered markup and checks that drawing every chart leaves the dataset
+untouched.
 
 ## The frozen data
 

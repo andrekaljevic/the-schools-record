@@ -272,6 +272,10 @@ def sample_dossier() -> None:
             return "—", "—"
         return f"{match['value']:.1f}%", match["status"]
 
+    chart = (
+        comparison_chart(metric, "eton", "westminster", 2015, 2019) if points else ""
+    )
+
     rows = []
     for year in years:
         eton_value, eton_status = cell("eton", year)
@@ -323,6 +327,8 @@ def sample_dossier() -> None:
     <article>
       <p class="eyebrow">Exact-value exhibit</p>
       <h2>Five-year published record</h2>
+      <div class="series-legend"><span><i class="series-colour colour-1"></i>Eton College</span><span><i class="series-colour colour-2"></i>Westminster School</span></div>
+      {chart}
       <div class="table-scroll" tabindex="0">
         <table class="data-table dossier-table">
           <caption>A-level entries awarded A*, 2015–2019</caption>

@@ -6,7 +6,7 @@ from typing import Any, Sequence
 
 import streamlit as st
 
-from . import components, dataset, records
+from . import comparison, components, dataset, records, trajectory
 from .icons import icon
 from .ui import (
     LAST_REVIEWED_SHORT,
@@ -23,6 +23,27 @@ from .ui import (
 def _dataset_stack(slug: str, domains: tuple[str, ...], school_name: str) -> str:
     """Ledger markup is deterministic for a frozen dataset, so build it once."""
     return components.dataset_stack(records.school_datasets(slug, list(domains)), school_name)
+
+
+@st.cache_data(show_spinner=False)
+def _metrics() -> list[dict[str, Any]]:
+    return comparison.metrics()
+
+
+@st.cache_data(show_spinner=False)
+def _index_panels(metric_id: str) -> dict[str, str]:
+    """Every school's index panel for one metric, drawn on one shared ruler."""
+    metric = comparison.metric_by_id(_metrics(), metric_id)
+    frame = trajectory.index_frame(metric)
+    return {
+        school["id"]: trajectory.index_panel(metric, school, frame)
+        for school in dataset.schools()
+    }
+
+
+@st.cache_data(show_spinner=False)
+def _school_trajectory(slug: str) -> str:
+    return trajectory.school_trajectory(records.find_school(slug), _metrics())
 
 
 HOME_QUESTIONS = (
@@ -171,14 +192,64 @@ def schools_index() -> None:
         if needle in f'{entry["name"]} {entry["short"]}'.lower()
     ]
 
+    # One like-for-like series is drawn in every row on a ruler shared by all
+    # seven schools, so the index can be read across schools and across years
+    # without becoming a ranking.  The series is one of the comparison tool's
+    # own metrics, chosen here and reflected in the URL.
+    metrics = _metrics()
+    metric_ids = trajectory.index_metric_ids(metrics)
+    params = st.query_params
+    requested = params.get("series")
+    default_id = (
+        requested
+        if requested in metric_ids
+        else trajectory.INDEX_DEFAULT_METRIC
+        if trajectory.INDEX_DEFAULT_METRIC in metric_ids
+        else metric_ids[0]
+    )
+    with controls("tsr-index-series"):
+        metric_id = st.selectbox(
+            "Charted series",
+            metric_ids,
+            index=metric_ids.index(default_id),
+            format_func=lambda value: next(m["label"] for m in metrics if m["id"] == value),
+            key="index_series",
+        )
+    if params.get("series") != metric_id:
+        params["series"] = metric_id
+    metric = comparison.metric_by_id(metrics, metric_id)
+    panels = _index_panels(metric_id)
+    derived_note = (
+        "<p>Calculated rates are generated at display time from frozen source values and are not stored as new public claims.</p>"
+        if any(point.get("annotation") for point in metric["points"])
+        else ""
+    )
+    compare_link = (
+        f'<a class="text-link" href="?p=/compare&amp;metric={esc(metric_id)}" target="_self">'
+        f'Compare two schools on this series {icon("arrow-right")}</a>'
+    )
+    write(f"""
+<main class="school-index-series">
+  <section class="shell tsr-tight-top">
+    <div class="index-series-note">
+      <p>{esc(metric["definition"])}</p>
+      <p><strong>Comparison limit.</strong> {esc(metric["note"])}</p>
+      {derived_note}
+      <p>{esc(trajectory.GAP_RULE)} Rows stay in alphabetical order: a higher line is not a claim that one school is better.</p>
+      {compare_link}
+    </div>
+  </section>
+</main>""")
+
     rows = []
     for entry in matches:
-        rows.append(f"""<article class="index-row">
-  <div><p class="index-letter" aria-hidden="true">{esc(entry["name"][0])}</p></div>
-  <div>
+        rows.append(f"""<article class="index-row index-row-charted">
+  <div class="index-letter-cell"><p class="index-letter" aria-hidden="true">{esc(entry["name"][0])}</p></div>
+  <div class="index-copy">
     <h2>{link(f'/schools/{entry["id"]}', esc(entry["name"]))}</h2>
     <p>{esc(entry["oneLine"])}</p>
   </div>
+  {panels[entry["id"]]}
   <dl>
     <div><dt>Available years</dt><dd>{esc(entry["evidenceWindow"])}</dd></div>
     <div><dt>Datasets</dt><dd>{entry["datasets"]}</dd></div>
@@ -236,6 +307,14 @@ def school_record(slug: str) -> bool:
       <p>{esc(school["caution"])}</p>
       {link("/methodology", f'Review the methodology {icon("arrow-right")}', "text-link")}
     </aside>
+  </section>
+
+  <section class="section shell trajectory-section" aria-labelledby="trajectory-title">
+    <div class="section-heading">
+      <div><p class="eyebrow">Published trajectory</p><h2 id="trajectory-title">Results by year</h2></div>
+      <p>The school’s like-for-like examination series, one panel per grading ruler, drawn from the same frozen values the comparison tool uses.</p>
+    </div>
+    {_school_trajectory(slug)}
   </section>
 
   <section class="school-route-band">

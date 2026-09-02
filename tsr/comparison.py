@@ -267,3 +267,18 @@ def metrics() -> list[dict[str, Any]]:
             "points": _resolve_conflicts(points),
         })
     return built
+
+
+def metric_by_id(metrics: list[dict[str, Any]], metric_id: str) -> dict[str, Any] | None:
+    for metric in metrics:
+        if metric["id"] == metric_id:
+            return metric
+    return None
+
+
+def school_points(metric: dict[str, Any], school_id: str) -> list[dict[str, Any]]:
+    """One school's points for a metric, oldest first."""
+    return sorted(
+        (point for point in metric["points"] if point["schoolId"] == school_id),
+        key=lambda point: point["year"],
+    )
