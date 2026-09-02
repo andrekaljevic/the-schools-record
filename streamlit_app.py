@@ -12,10 +12,6 @@ import re
 
 import streamlit as st
 
-from deployment_bootstrap import ensure_runtime_assets
-
-ensure_runtime_assets()
-
 from tsr import forms, styles, ui
 from tsr import views_compare, views_core, views_corrections, views_editorial
 
