@@ -253,6 +253,15 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
             (506, 75.9, 93.3),
         )
         self.assertIn("559", controlling["note"])
+        current = next(row for row in WINCHESTER_ALEVEL_HISTORY if row["year"] == 2025)
+        self.assertEqual(
+            (current["a_star"], current["a_star_a"], current["a_star_b"]),
+            (44.0, 75.0, 92.0),
+        )
+        self.assertEqual(current["confidence"], "P/CONFLICT")
+        self.assertIn("42%, 74% and 91%", current["note"])
+        pending = next(row for row in WINCHESTER_ALEVEL_HISTORY if row["year"] == 2026)
+        self.assertIn("2 September 2026", pending["publication_status"])
 
     def test_university_rows_keep_outcome_types_separate(self) -> None:
         for row in WINCHESTER_ACCESS_HISTORY:
