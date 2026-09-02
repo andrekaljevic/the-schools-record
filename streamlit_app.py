@@ -18,7 +18,8 @@ from winchester_entry_updates import apply_winchester_gcse_entry_updates
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
-DEPLOYMENT_REVISION = "2026-09-02-canonical-site-handoff"\nCANONICAL_PUBLIC_SITE = "https://the-schools-record.akal95.chatgpt.site"
+DEPLOYMENT_REVISION = "2026-09-02-canonical-site-handoff"
+CANONICAL_PUBLIC_SITE = "https://the-schools-record.akal95.chatgpt.site"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {
