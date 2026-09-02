@@ -43,6 +43,7 @@ ICONS: dict[str, str] = {
 }
 
 
+
 def icon(name: str, extra_class: str = "") -> str:
     """Return the inline SVG for a named icon."""
     markup = ICONS[name.replace("-", "_")]
