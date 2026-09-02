@@ -4,8 +4,17 @@ A public, source-led statistical yearbook of examination results, university
 pathways and admissions evidence across leading UK independent schools.
 
 This repository contains the self-contained Streamlit deployment of The Schools
-Record and its auditable evidence snapshot dated 30 August 2026. A traced
-St Paul’s historical extension was added on 1 September 2026.
+Record and its auditable evidence snapshot dated 30 August 2026. Traced
+St Paul’s and Winchester historical extensions were added in September 2026.
+
+## Winchester historical GCSE extension
+
+The Winchester GCSE ledger now begins with the introduction of A* in 1994 and
+uses the same three entry-grade fields in every legacy-scale year: A*, A*/A and
+A*–B. It records the recovered 1996, 1997, 2004–06, 2011 and 2012 bands, retains
+lawful suppression as intervals, and leaves unrecovered annual cells blank. It
+does not substitute pupil-level five-grade thresholds or government subsets
+that excluded substantial IGCSE provision.
 
 ## St Paul’s historical extension
 

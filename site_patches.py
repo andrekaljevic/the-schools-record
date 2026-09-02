@@ -14,6 +14,220 @@ def _replace_once(source: str, before: str, after: str, label: str) -> str:
     return source.replace(before, after, 1)
 
 
+WINCHESTER_SOURCES = {
+    "WIN_GCSE_HMC_1997": {
+        "id": "winchester-gcse-hmc-inspection-1997",
+        "title": "Winchester College · HMC inspection report · October 1997",
+        "url": "https://web.archive.org/web/20040501054423id_/http://www.wincoll.ac.uk/academic/inspector.asp",
+        "role": "first-party inspection evidence for the 1996 and 1997 whole-school A*/A and A*–B entry shares",
+    },
+    "WIN_GCSE_DFE_HISTORIC": {
+        "id": "winchester-gcse-dfe-historic-downloads",
+        "title": "DfE · historical school-performance downloads",
+        "url": "https://www.compare-school-performance.service.gov.uk/download-data",
+        "role": "official historic pupil thresholds; excluded Winchester IGCSEs in several years and therefore cannot populate whole-school entry-grade bands",
+    },
+    "WIN_GCSE_2001_ISBI": {
+        "id": "winchester-gcse-2001-isbi-profile",
+        "title": "Winchester College · archived ISBI school-updated profile",
+        "url": "https://web.archive.org/web/20030515195823id_/http://www.isbi.com/isbi-viewschool/408-WINCHESTER_COLLEGE.html",
+        "role": "strongly attributed summer-2001 entry/pass total; pass threshold is unstated and is not recast as a requested grade band",
+    },
+    "WIN_GCSE_2004_TIMES_REPRODUCTION": {
+        "id": "winchester-gcse-2004-times-reproduction",
+        "title": "The Times Top 500 · 2004 GCSE table · archived reproduction",
+        "url": "https://www.albioncom.ru/countries/great-britain/srednee-obrazovanie/rejtingi-chastnyh-shkol-i-shkol-pansionov-velikobritanii/arhiv-rejtingov-shkol-pansionov-velikobritanii-do-2014-goda",
+        "role": "secondary reproduction of the contemporary Times table; supplies the rounded 87.0% A*/A band only",
+    },
+    "WIN_GCSE_2005_TIMES_TRANSCRIPTION": {
+        "id": "winchester-gcse-2005-times-transcription",
+        "title": "The Times · independent-school GCSE analysis 2005 · contemporary transcription",
+        "url": "https://arltblog.wordpress.com/2005/09/06/gcse-results-show-that-the-top-schools-teach-latin/",
+        "role": "contemporary transcription carrying 50.9% A* and 90.9% A*/A for 132 candidates",
+    },
+    "WIN_GCSE_2006_ISC": {
+        "id": "winchester-gcse-2006-isc",
+        "title": "ISC · Year 11 examination results 2006",
+        "url": "https://www.isc.co.uk/research/exam-results/exam-results-2006/",
+        "role": "official final post-remarks counts: 1,069 entries, including 502 A*, 429 A and 109 B grades",
+    },
+    "WIN_GCSE_2011_DFE_GCSE": {
+        "id": "winchester-gcse-2011-dfe-gcse",
+        "title": "DfE · 2011 full GCSE subject file",
+        "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20120908140957id_/http://www.education.gov.uk/schools/performance/2011/download/1_GCSE_FULL.zip",
+        "role": "official subject-level GCSE cumulative bands with lawful small-cell suppression",
+    },
+    "WIN_GCSE_2011_DFE_IGCSE": {
+        "id": "winchester-gcse-2011-dfe-igcse",
+        "title": "DfE · 2011 IGCSE subject file",
+        "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20120908140957id_/http://www.education.gov.uk/schools/performance/2011/download/4_iGCSE.zip",
+        "role": "official exact IGCSE cumulative bands; combined with the suppressed GCSE component only as a bounded reconstruction",
+    },
+    "WIN_GCSE_2011_SCHOOL": {
+        "id": "winchester-gcse-2011-school-headline",
+        "title": "Winchester College · GCSE Results 2011",
+        "url": "https://web.archive.org/web/20120430171904id_/http://www.winchestercollege.org/gcse-results-",
+        "role": "first-party 99.2% A*–C headline used to tighten, but not overstate, the official suppression interval",
+    },
+    "WIN_GCSE_2012_DFE": {
+        "id": "winchester-gcse-2012-dfe-underlying-data",
+        "title": "DfE · 2012 KS4 underlying school-level data",
+        "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20140111002934id_/http://www.education.gov.uk/schools/performance/2012/download/2012_KS4_Underlying_Data_School_Level.zip",
+        "role": "official 1,191-entry file; 1,185 grades disclosed and six lawfully suppressed, producing exact percentage intervals",
+    },
+}
+
+
+def _empty_winchester_gcse_row(
+    year: int,
+    note: str,
+    source_ids: list[str],
+    confidence: str = "P/S",
+) -> dict[str, object]:
+    return {
+        "year": year,
+        "scale": "A*-G",
+        "top_equivalent": None,
+        "astar_a_equivalent": None,
+        "astar_b_or_9_6": None,
+        "confidence": confidence,
+        "publication_status": "No defensible whole-school three-band entry distribution recovered",
+        "note": note,
+        "source_ids": source_ids,
+    }
+
+
+_NO_THREE_BAND_PROFILE = (
+    "No year-specific whole-school A*, A*/A or A*–B entry distribution was recovered. "
+    "The cells remain blank rather than being estimated."
+)
+
+
+WINCHESTER_GCSE_HISTORY = [
+    _empty_winchester_gcse_row(1994, _NO_THREE_BAND_PROFILE, ["FB146"], "R"),
+    _empty_winchester_gcse_row(1995, _NO_THREE_BAND_PROFILE, ["FB146"], "R"),
+    {
+        "year": 1996,
+        "scale": "A*-G",
+        "top_equivalent": None,
+        "astar_a_equivalent": 86.0,
+        "astar_b_or_9_6": 97.7,
+        "confidence": "P",
+        "note": "Official HMC comparison; source-rounded whole-school entry shares. A* was not reported separately.",
+        "source_ids": ["WIN_GCSE_HMC_1997"],
+    },
+    {
+        "year": 1997,
+        "scale": "A*-G",
+        "entries": 849,
+        "top_equivalent": None,
+        "astar_a_equivalent": 85.0,
+        "astar_b_or_9_6": 97.4,
+        "confidence": "P",
+        "note": "Official HMC result; source-rounded whole-school entry shares. A* was not reported separately.",
+        "source_ids": ["WIN_GCSE_HMC_1997"],
+    },
+    _empty_winchester_gcse_row(1998, _NO_THREE_BAND_PROFILE, ["FB146"], "R"),
+    _empty_winchester_gcse_row(1999, _NO_THREE_BAND_PROFILE, ["FB146"], "R"),
+    _empty_winchester_gcse_row(
+        2000,
+        "Contemporary government figures are pupil thresholds over a recognised-GCSE subset and omit substantial IGCSE provision; they cannot populate these entry-grade bands.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    {
+        **_empty_winchester_gcse_row(
+            2001,
+            "The school-updated profile is strongly attributable to summer 2001 and gives 815 entries and 810 ‘passes’, but does not define the pass threshold; none of the three requested bands can be inferred.",
+            ["WIN_GCSE_2001_ISBI", "WIN_GCSE_DFE_HISTORIC"],
+        ),
+        "entries": 815,
+    },
+    _empty_winchester_gcse_row(
+        2002,
+        "Government figures cover a recognised-GCSE subset and omit substantial IGCSE provision; they cannot populate these whole-school entry-grade bands.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    _empty_winchester_gcse_row(
+        2003,
+        "Government figures cover a recognised-GCSE subset and omit substantial IGCSE provision; they cannot populate these whole-school entry-grade bands.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    {
+        "year": 2004,
+        "scale": "A*-G",
+        "top_equivalent": None,
+        "astar_a_equivalent": 87.0,
+        "astar_b_or_9_6": None,
+        "confidence": "S",
+        "note": "Rounded whole-school GCSE/IGCSE-style result in a reproduction of The Times Top 500; A* and A*–B were not reported.",
+        "source_ids": ["WIN_GCSE_2004_TIMES_REPRODUCTION"],
+    },
+    {
+        "year": 2005,
+        "scale": "A*-G",
+        "candidates": 132,
+        "top_equivalent": 50.9,
+        "astar_a_equivalent": 90.9,
+        "astar_b_or_9_6": None,
+        "confidence": "S",
+        "note": "Contemporary Times transcription; A*–B was not reported.",
+        "source_ids": ["WIN_GCSE_2005_TIMES_TRANSCRIPTION"],
+    },
+    {
+        "year": 2006,
+        "scale": "A*-G",
+        "entries": 1069,
+        "top_equivalent": 47.0,
+        "astar_a_equivalent": 87.1,
+        "astar_b_or_9_6": 97.3,
+        "confidence": "P",
+        "note": "Recomputed from official final counts: A*=502, A=429 and B=109 of 1,069 entries; displayed to one decimal place.",
+        "source_ids": ["WIN_GCSE_2006_ISC"],
+    },
+    _empty_winchester_gcse_row(
+        2007,
+        "The surviving government row is a recognised-qualification pupil measure distorted by IGCSE exclusions; no whole-school entry-grade distribution was recovered.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    _empty_winchester_gcse_row(
+        2008,
+        "The surviving government row is a recognised-qualification pupil measure distorted by IGCSE exclusions; no whole-school entry-grade distribution was recovered.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    _empty_winchester_gcse_row(
+        2009,
+        "The surviving government row is a recognised-qualification pupil measure distorted by IGCSE exclusions; no whole-school entry-grade distribution was recovered.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    _empty_winchester_gcse_row(
+        2010,
+        "Accredited IGCSEs entered the official pupil measures, but the surviving 100% five-grade headline is not an entry-grade distribution and cannot populate A*, A*/A or A*–B.",
+        ["WIN_GCSE_DFE_HISTORIC"],
+    ),
+    {
+        "year": 2011,
+        "scale": "A*-G",
+        "top_equivalent": None,
+        "astar_a_equivalent": "90.40–90.69",
+        "astar_b_or_9_6": None,
+        "confidence": "P/R",
+        "note": "Exact feasible A*/A interval after correlating DfE suppressed cells with Winchester's 99.2% A*–C headline. A* and A*–B are not separately recoverable; feasible denominators are 1,040–1,042.",
+        "source_ids": ["WIN_GCSE_2011_DFE_GCSE", "WIN_GCSE_2011_DFE_IGCSE", "WIN_GCSE_2011_SCHOOL"],
+    },
+    {
+        "year": 2012,
+        "scale": "A*-G",
+        "entries": 1191,
+        "top_equivalent": "68.51–69.02",
+        "astar_a_equivalent": "93.03–93.53",
+        "astar_b_or_9_6": "98.49–98.99",
+        "confidence": "P/R",
+        "note": "Exact lawful-suppression intervals. Disclosed grades are A*=816, A=292 and B=65; six of 1,191 entries are suppressed, so no midpoint is invented.",
+        "source_ids": ["WIN_GCSE_2012_DFE"],
+    },
+]
+
+
 ST_PAULS_SOURCES = {
     "SPS_DFE_HISTORIC": {
         "id": "st-pauls-dfe-historic-results",
@@ -607,5 +821,51 @@ def apply_st_pauls_history(javascript: str) -> str:
         "datasets:45,rows:555",
         "datasets:45,rows:580",
         "scope row count",
+    )
+    return javascript
+
+
+def apply_winchester_history(javascript: str) -> str:
+    javascript = _replace_once(
+        javascript,
+        "id:`winchester`,name:`Winchester College`,short:`Winchester`,applyCentreName:`Winchester College`,usName:`Winchester College`,accent:`#2563eb`,evidenceWindow:`2009–2026`",
+        "id:`winchester`,name:`Winchester College`,short:`Winchester`,applyCentreName:`Winchester College`,usName:`Winchester College`,accent:`#2563eb`,evidenceWindow:`1994–2026`",
+        "Winchester evidence window",
+    )
+
+    source_anchor = '"WIN_2026_RESULTS_HUB":'
+    source_entries = _compact_json(WINCHESTER_SOURCES)[1:-1] + ","
+    javascript = _replace_once(
+        javascript,
+        source_anchor,
+        source_entries + source_anchor,
+        "Winchester source catalogue",
+    )
+
+    javascript = _replace_once(
+        javascript,
+        "dataset_id:`winchester_gcse`,school:`Winchester College`,domain:`exam_results`,basis:`old scale and reformed 9–1 kept typed; top_equivalent=A* or 9–8; astar_a_equivalent=A*/A or 9–7; wider band only when grade 6/A*–B is held`,source_refs:[`FB139`,`FB139A`,`FB141`,`FB146`],notes:null",
+        "dataset_id:`winchester_gcse`,school:`Winchester College`,domain:`exam_results`,basis:`annual grade-entry shares; legacy A*–G rows use A*, A*/A and A*–B, while reformed rows retain their published 9–1 crosswalk; missing cells remain null and lawful suppression is shown as an interval`,source_refs:[`FB139`,`FB139A`,`FB141`,`FB146`,`WIN_GCSE_HMC_1997`,`WIN_GCSE_2006_ISC`,`WIN_GCSE_2011_DFE_GCSE`,`WIN_GCSE_2011_DFE_IGCSE`,`WIN_GCSE_2012_DFE`],notes:`A* was introduced at GCSE in 1994, which is the start of the historical ledger. Pupil-level five-grade thresholds and incomplete government subsets are never substituted for entry-grade bands.`",
+        "Winchester GCSE dataset metadata",
+    )
+
+    old_gcse_start = "rows:[{year:2013,scale:`A*-G`,entries:null,grade_9:null,top_equivalent:61.1"
+    new_gcse_start = (
+        "rows:["
+        + _compact_json(WINCHESTER_GCSE_HISTORY)[1:-1]
+        + ",{year:2013,scale:`A*-G`,entries:null,grade_9:null,top_equivalent:61.1"
+    )
+    javascript = _replace_once(
+        javascript,
+        old_gcse_start,
+        new_gcse_start,
+        "Winchester GCSE history rows",
+    )
+
+    javascript = _replace_once(
+        javascript,
+        "datasets:45,rows:580",
+        f"datasets:45,rows:{580 + len(WINCHESTER_GCSE_HISTORY)}",
+        "scope row count after Winchester history",
     )
     return javascript
