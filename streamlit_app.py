@@ -18,7 +18,7 @@ from winchester_entry_updates import apply_winchester_gcse_entry_updates
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
-DEPLOYMENT_REVISION = "2026-09-02-dad-feedback-pass"
+DEPLOYMENT_REVISION = "2026-09-02-canonical-site-handoff"\nCANONICAL_PUBLIC_SITE = "https://the-schools-record.akal95.chatgpt.site"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {
@@ -64,6 +64,33 @@ st.set_page_config(
     page_icon="SR",
     layout="wide",
     initial_sidebar_state="collapsed",
+)
+
+
+st.markdown(
+    f"""
+    <style>
+      .canonical-site-notice {{
+        margin: 0 0 1rem;
+        padding: .85rem 1rem;
+        border: 1px solid #b49a62;
+        border-radius: 6px;
+        background: #f7f1e3;
+        color: #173b3a;
+        font-family: Georgia, serif;
+      }}
+      .canonical-site-notice a {{
+        color: #125c58;
+        font-weight: 700;
+      }}
+    </style>
+    <aside class="canonical-site-notice" aria-label="New public edition">
+      <strong>The Schools Record has a new public edition.</strong>
+      <a href="{CANONICAL_PUBLIC_SITE}" target="_top">Open the faster, fully routed site</a>.
+      This Streamlit edition remains available as the preserved reference version.
+    </aside>
+    """,
+    unsafe_allow_html=True,
 )
 
 
