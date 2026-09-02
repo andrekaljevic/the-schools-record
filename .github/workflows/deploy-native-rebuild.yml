@@ -1,0 +1,131 @@
+name: Deploy exact native Streamlit rebuild
+
+on:
+  push:
+    branches:
+      - deploy-native-99a40e6
+    paths:
+      - .github/workflows/deploy-native-rebuild.yml
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      BASE_COMMIT: 52f64027820b3c512a4fa4142dbf40b1bbc9dc31
+      TARGET_TREE: 1f1e3fff8b4f3eed5ac7c6c71f11030f0d5f9015
+      TARGET_DATA_BLOB: bce3fc95f80c8ccc7738e38d7200475651ea63a1
+      TARGET_PDF_BLOB: 234173f27721a47281a226faf228db067ac50014
+
+    steps:
+      - name: Check out staging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Reconstruct verified source archive
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cat .deploy/native-source.part.* > /tmp/native-source.tar.gz.b64
+          echo 'f148497219a4a806dea93d4bdb731290473ec9db2c38bdc6d4c55482c4eca263  /tmp/native-source.tar.gz.b64' | sha256sum -c -
+          base64 -d /tmp/native-source.tar.gz.b64 > /tmp/native-source.tar.gz
+          echo '1b229ab8b3f03241576a9bc6b026b1f17950b2b9d39971c31dd9e63ae2bb1388  /tmp/native-source.tar.gz' | sha256sum -c -
+
+      - name: Build exact target tree from production base
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git fetch origin main
+          REMOTE_MAIN="$(git rev-parse origin/main)"
+          test "$REMOTE_MAIN" = "$BASE_COMMIT"
+          git reset --hard "$BASE_COMMIT"
+          git clean -fdx
+          tar -xzf /tmp/native-source.tar.gz -C .
+
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt 'pillow==12.3.0' 'playwright==1.56.0'
+
+          mkdir -p data static
+          python tools/extract_dataset.py
+          python tools/build_static_images.py
+
+          python -m playwright install --with-deps chromium
+          streamlit run streamlit_app.py --server.port 8502 --server.headless true > /tmp/streamlit.log 2>&1 &
+          APP_PID=$!
+          trap 'kill "$APP_PID" 2>/dev/null || true' EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8502/_stcore/health >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8502/_stcore/health
+          python tools/build_sample_pdf.py http://127.0.0.1:8502/
+          kill "$APP_PID" 2>/dev/null || true
+          trap - EXIT
+
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('static/the-schools-record-sample-dossier.pdf')
+          data = path.read_bytes()
+          data, n1 = re.subn(
+              rb"/CreationDate \(D:\d{14}\+00'00'\)",
+              b"/CreationDate (D:20260902175448+00'00')",
+              data,
+          )
+          data, n2 = re.subn(
+              rb"/ModDate \(D:\d{14}\+00'00'\)",
+              b"/ModDate (D:20260902175448+00'00')",
+              data,
+          )
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(f'unexpected PDF metadata matches: creation={n1}, mod={n2}')
+          path.write_bytes(data)
+          PY
+
+          DATA_BLOB="$(git hash-object data/dataset.json)"
+          PDF_BLOB="$(git hash-object static/the-schools-record-sample-dossier.pdf)"
+          echo "dataset blob: $DATA_BLOB"
+          echo "pdf blob:     $PDF_BLOB"
+          test "$DATA_BLOB" = "$TARGET_DATA_BLOB"
+
+          git add -A
+          TREE="$(git write-tree)"
+          echo "built tree:   $TREE"
+          echo "target tree:  $TARGET_TREE"
+          if [ "$TREE" != "$TARGET_TREE" ]; then
+            echo 'Tree mismatch. Cached diff:'
+            git status --short
+            git diff --cached --stat
+            echo 'Generated school blobs:'
+            find static/schools -type f -print0 | sort -z | xargs -0 -n1 git hash-object
+            echo 'Streamlit log tail:'
+            tail -100 /tmp/streamlit.log || true
+            exit 1
+          fi
+
+          test "$PDF_BLOB" = "$TARGET_PDF_BLOB"
+          git config user.name 'Andre Kaljevic'
+          git config user.email 'andre.kaljevic@googlemail.com'
+          git commit -m 'Deploy native Streamlit rebuild'
+          test "$(git rev-parse HEAD^{tree})" = "$TARGET_TREE"
+
+      - name: Fast-forward main to verified exact tree
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_COMMIT"
+          test "$(git rev-parse HEAD^{tree})" = "$TARGET_TREE"
+          git push origin HEAD:main
