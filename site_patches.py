@@ -208,21 +208,21 @@ WINCHESTER_GCSE_HISTORY = [
         "year": 2011,
         "scale": "A*-G",
         "top_equivalent": None,
-        "astar_a_equivalent": "90.40–90.69",
+        "astar_a_equivalent": 90.7,
         "astar_b_or_9_6": None,
         "confidence": "P/R",
-        "note": "Exact feasible A*/A interval after correlating DfE suppressed cells with Winchester's 99.2% A*–C headline. A* and A*–B are not separately recoverable; feasible denominators are 1,040–1,042.",
+        "note": "Upper endpoint, rounded to one decimal place, of the feasible 90.40–90.69% A*/A interval reconstructed from DfE-suppressed cells and Winchester's 99.2% A*–C headline. A* and A*–B are not separately recoverable; feasible denominators are 1,040–1,042.",
         "source_ids": ["WIN_GCSE_2011_DFE_GCSE", "WIN_GCSE_2011_DFE_IGCSE", "WIN_GCSE_2011_SCHOOL"],
     },
     {
         "year": 2012,
         "scale": "A*-G",
         "entries": 1191,
-        "top_equivalent": "68.51–69.02",
-        "astar_a_equivalent": "93.03–93.53",
-        "astar_b_or_9_6": "98.49–98.99",
+        "top_equivalent": 69.0,
+        "astar_a_equivalent": 93.5,
+        "astar_b_or_9_6": 99.0,
         "confidence": "P/R",
-        "note": "Exact lawful-suppression intervals. Disclosed grades are A*=816, A=292 and B=65; six of 1,191 entries are suppressed, so no midpoint is invented.",
+        "note": "Upper endpoints, rounded to one decimal place, of the DfE-suppression intervals: A* 68.51–69.02%, A*/A 93.03–93.53% and A*–B 98.49–98.99%. Disclosed grades are A*=816, A=292 and B=65; six of 1,191 entries are suppressed.",
         "source_ids": ["WIN_GCSE_2012_DFE"],
     },
 ]
@@ -845,7 +845,7 @@ def apply_winchester_history(javascript: str) -> str:
     javascript = _replace_once(
         javascript,
         "dataset_id:`winchester_gcse`,school:`Winchester College`,domain:`exam_results`,basis:`old scale and reformed 9–1 kept typed; top_equivalent=A* or 9–8; astar_a_equivalent=A*/A or 9–7; wider band only when grade 6/A*–B is held`,source_refs:[`FB139`,`FB139A`,`FB141`,`FB146`],notes:null",
-        "dataset_id:`winchester_gcse`,school:`Winchester College`,domain:`exam_results`,basis:`annual grade-entry shares; legacy A*–G rows use A*, A*/A and A*–B, while reformed rows retain their published 9–1 crosswalk; missing cells remain null and lawful suppression is shown as an interval`,source_refs:[`FB139`,`FB139A`,`FB141`,`FB146`,`WIN_GCSE_HMC_1997`,`WIN_GCSE_2006_ISC`,`WIN_GCSE_2011_DFE_GCSE`,`WIN_GCSE_2011_DFE_IGCSE`,`WIN_GCSE_2012_DFE`],notes:`A* was introduced at GCSE in 1994, which is the start of the historical ledger. Pupil-level five-grade thresholds and incomplete government subsets are never substituted for entry-grade bands.`",
+        "dataset_id:`winchester_gcse`,school:`Winchester College`,domain:`exam_results`,basis:`annual grade-entry shares; legacy A*–G rows use A*, A*/A and A*–B, while reformed rows retain their published 9–1 crosswalk; missing cells remain null and the 2011–12 suppressed results use documented upper bounds rounded to one decimal`,source_refs:[`FB139`,`FB139A`,`FB141`,`FB146`,`WIN_GCSE_HMC_1997`,`WIN_GCSE_2006_ISC`,`WIN_GCSE_2011_DFE_GCSE`,`WIN_GCSE_2011_DFE_IGCSE`,`WIN_GCSE_2012_DFE`],notes:`A* was introduced at GCSE in 1994, which is the start of the historical ledger. Pupil-level five-grade thresholds and incomplete government subsets are never substituted for entry-grade bands.`",
         "Winchester GCSE dataset metadata",
     )
 

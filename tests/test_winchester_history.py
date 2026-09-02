@@ -53,15 +53,15 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
             list(range(1994, 2013)),
         )
 
-    def test_recovered_bands_and_suppression_ranges_are_present(self) -> None:
+    def test_recovered_bands_and_selected_upper_bounds_are_present(self) -> None:
         for fragment in (
             '"year":1996,"scale":"A*-G","top_equivalent":null,"astar_a_equivalent":86.0,"astar_b_or_9_6":97.7',
             '"year":1997,"scale":"A*-G","entries":849,"top_equivalent":null,"astar_a_equivalent":85.0,"astar_b_or_9_6":97.4',
             '"year":2004,"scale":"A*-G","top_equivalent":null,"astar_a_equivalent":87.0,"astar_b_or_9_6":null',
             '"year":2005,"scale":"A*-G","candidates":132,"top_equivalent":50.9,"astar_a_equivalent":90.9,"astar_b_or_9_6":null',
             '"year":2006,"scale":"A*-G","entries":1069,"top_equivalent":47.0,"astar_a_equivalent":87.1,"astar_b_or_9_6":97.3',
-            '"year":2011,"scale":"A*-G","top_equivalent":null,"astar_a_equivalent":"90.40–90.69","astar_b_or_9_6":null',
-            '"year":2012,"scale":"A*-G","entries":1191,"top_equivalent":"68.51–69.02","astar_a_equivalent":"93.03–93.53","astar_b_or_9_6":"98.49–98.99"',
+            '"year":2011,"scale":"A*-G","top_equivalent":null,"astar_a_equivalent":90.7,"astar_b_or_9_6":null',
+            '"year":2012,"scale":"A*-G","entries":1191,"top_equivalent":69.0,"astar_a_equivalent":93.5,"astar_b_or_9_6":99.0',
         ):
             self.assertIn(fragment, self.javascript)
 
@@ -85,13 +85,17 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
         self.assertAlmostEqual((502 + 429) / 1069 * 100, 87.1, places=1)
         self.assertAlmostEqual((502 + 429 + 109) / 1069 * 100, 97.3, places=1)
 
-    def test_2012_bounds_follow_six_suppressed_entries(self) -> None:
+    def test_2012_upper_bounds_follow_six_suppressed_entries(self) -> None:
         self.assertAlmostEqual(816 / 1191 * 100, 68.51, places=2)
         self.assertAlmostEqual((816 + 6) / 1191 * 100, 69.02, places=2)
         self.assertAlmostEqual((816 + 292) / 1191 * 100, 93.03, places=2)
         self.assertAlmostEqual((816 + 292 + 6) / 1191 * 100, 93.53, places=2)
         self.assertAlmostEqual((816 + 292 + 65) / 1191 * 100, 98.49, places=2)
         self.assertAlmostEqual((816 + 292 + 65 + 6) / 1191 * 100, 98.99, places=2)
+        row = next(row for row in WINCHESTER_GCSE_HISTORY if row["year"] == 2012)
+        self.assertEqual(row["top_equivalent"], 69.0)
+        self.assertEqual(row["astar_a_equivalent"], 93.5)
+        self.assertEqual(row["astar_b_or_9_6"], 99.0)
 
     def test_no_pupil_threshold_is_substituted(self) -> None:
         prohibited = {"five_plus_a_star_c", "five_plus_including_english_maths"}

@@ -12,7 +12,8 @@ St Paul’s and Winchester historical extensions were added in September 2026.
 The Winchester GCSE ledger now begins with the introduction of A* in 1994 and
 uses the same three entry-grade fields in every legacy-scale year: A*, A*/A and
 A*–B. It records the recovered 1996, 1997, 2004–06, 2011 and 2012 bands, retains
-lawful suppression as intervals, and leaves unrecovered annual cells blank. It
+the full suppression intervals in the row notes while displaying their upper
+endpoints to one decimal place, and leaves unrecovered annual cells blank. It
 does not substitute pupil-level five-grade thresholds or government subsets
 that excluded substantial IGCSE provision.
 
