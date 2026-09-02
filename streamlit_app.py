@@ -1,145 +1,87 @@
+"""The Schools Record — a native Streamlit application.
+
+The published examination and university-outcome record is rendered directly by
+Streamlit from the frozen production dataset in ``data/dataset.json``.  The
+site's own stylesheet is reused, re-scoped so it cannot reach Streamlit's own
+chrome; no compiled front-end bundle is loaded or embedded.
+"""
+
 from __future__ import annotations
 
-import base64
-import gzip
-import json
-from pathlib import Path
-from urllib.parse import urlencode
+import re
 
 import streamlit as st
-import streamlit.components.v1 as components
 
-APP_DIR = Path(__file__).resolve().parent
-BUNDLE_DIR = APP_DIR / "bundle"
-IMAGE_DIR = APP_DIR / "public" / "schools"
-DEPLOYMENT_REVISION = "2026-09-02-data-frozen-public-rebuild-streamlit"
-SCHOOLS = ("eton", "westminster", "winchester", "kcs", "st-pauls", "spgs", "wycombe")
+from deployment_bootstrap import ensure_runtime_assets
+
+ensure_runtime_assets()
+
+from tsr import forms, styles, ui
+from tsr import views_compare, views_core, views_corrections, views_editorial
+
+DEPLOYMENT_REVISION = "2026-09-02-native-streamlit-rebuild"
 
 st.set_page_config(
     page_title="The Schools Record | Independent school results, year by year",
-    page_icon="SR",
+    page_icon="📗",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
+st.markdown(styles.stylesheet(), unsafe_allow_html=True)
 
-def read_gzip_text(filename: str) -> str:
-    path = BUNDLE_DIR / filename
-    if not path.exists():
-        raise FileNotFoundError(f"The rebuilt public application asset is missing: {path}")
-    with gzip.open(path, "rt", encoding="utf-8") as handle:
-        return handle.read()
+SIMPLE_ROUTES = {
+    "/": views_core.home,
+    "/schools": views_core.schools_index,
+    "/compare": views_compare.compare,
+    "/methodology": views_editorial.methodology,
+    "/evidence": views_editorial.evidence,
+    "/sample-dossier": views_editorial.sample_dossier,
+    "/changelog": lambda: views_editorial.static_page("changelog"),
+    "/about": lambda: views_editorial.static_page("about"),
+    "/privacy": lambda: views_editorial.static_page("privacy"),
+    "/terms": lambda: views_editorial.static_page("terms"),
+}
 
-
-def load_school_images() -> dict[str, dict[str, str | int]]:
-    images: dict[str, dict[str, str | int]] = {}
-    for school_id in SCHOOLS:
-        path = IMAGE_DIR / f"{school_id}-480.webp"
-        if not path.exists():
-            raise FileNotFoundError(f"School artwork is missing: {path}")
-        images[school_id] = {
-            "src": f"data:image/webp;base64,{base64.b64encode(path.read_bytes()).decode('ascii')}",
-            "width": 480,
-            "height": 360,
-        }
-    return images
+EXAM_ROUTE = re.compile(r"^/schools/([^/]+)/exam-results$")
+UNIVERSITY_ROUTE = re.compile(r"^/schools/([^/]+)/university-destinations$")
+SCHOOL_ROUTE = re.compile(r"^/schools/([^/]+)$")
 
 
-def serialise_query() -> str:
-    pairs: list[tuple[str, str]] = []
-    for key in st.query_params:
-        for value in st.query_params.get_all(key):
-            pairs.append((key, value))
-    encoded = urlencode(pairs)
-    return f"?{encoded}" if encoded else ""
+def current_route() -> str:
+    raw = st.query_params.get(ui.ROUTE_PARAM) or "/"
+    route = raw.split("#", 1)[0].split("?", 1)[0]
+    if not route.startswith("/"):
+        route = "/" + route
+    if len(route) > 1 and route.endswith("/"):
+        route = route.rstrip("/")
+    return route or "/"
 
 
-frontend_css = read_gzip_text("latest.css.gz")
-frontend_js = read_gzip_text("latest.js.gz")
-school_images = load_school_images()
-initial_query = serialise_query()
+def render(route: str) -> None:
+    handler = SIMPLE_ROUTES.get(route)
+    if handler is not None:
+        handler()
+        return
+    if route == "/professional":
+        views_editorial.professional()
+        forms.enquiry_form()
+        return
+    if route == "/corrections":
+        views_corrections.corrections()
+        return
+    match = EXAM_ROUTE.match(route)
+    if match and views_core.dataset_page(match.group(1), "exam"):
+        return
+    match = UNIVERSITY_ROUTE.match(route)
+    if match and views_core.dataset_page(match.group(1), "university"):
+        return
+    match = SCHOOL_ROUTE.match(route)
+    if match and views_core.school_record(match.group(1)):
+        return
+    views_core.not_found()
 
-safe_css = frontend_css.replace("</style", "<\\/style")
-safe_js = frontend_js.replace("</script", "<\\/script")
 
-document = f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f4f1ea" />
-  <meta name="description" content="A source-led longitudinal record of examination results and university outcomes from highly selective UK independent schools." />
-  <title>The Schools Record | Independent school results, year by year</title>
-  <style>
-    html, body {{ margin: 0; min-height: 100%; overflow-x: hidden; background: #f4f1ea; }}
-    #root {{ min-height: 100vh; }}
-    {safe_css}
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  <script>
-    window.__STREAMLIT_EMBED__ = true;
-    window.__SCHOOLS_RECORD_QUERY__ = {json.dumps(initial_query)};
-    window.__SCHOOL_SKETCHES__ = {json.dumps(school_images, ensure_ascii=False)};
-    window.__SCHOOLS_RECORD_DEPLOYMENT__ = {json.dumps(DEPLOYMENT_REVISION)};
-  </script>
-  <script type="module">{safe_js}</script>
-  <script>
-    (() => {{
-      let lastHeight = 0;
-      const resize = () => {{
-        const height = Math.max(
-          document.body.scrollHeight,
-          document.documentElement.scrollHeight,
-          document.body.offsetHeight,
-          document.documentElement.offsetHeight,
-          1200
-        );
-        if (height === lastHeight) return;
-        lastHeight = height;
-        window.parent.postMessage({{
-          isStreamlitMessage: true,
-          type: "streamlit:setFrameHeight",
-          height: height + 4,
-        }}, "*");
-      }};
-      const observer = new ResizeObserver(resize);
-      observer.observe(document.documentElement);
-      observer.observe(document.body);
-      window.addEventListener("load", resize);
-      window.addEventListener("hashchange", () => setTimeout(resize, 50));
-      [0, 100, 300, 800, 1600, 3000].forEach((delay) => setTimeout(resize, delay));
-    }})();
-  </script>
-</body>
-</html>"""
-
-st.markdown(
-    """
-    <style>
-      html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-        background: #f4f1ea;
-      }
-      [data-testid="stHeader"], [data-testid="stToolbar"],
-      [data-testid="stDecoration"], #MainMenu, footer {
-        display: none !important;
-      }
-      [data-testid="stMainBlockContainer"], .block-container {
-        width: 100% !important;
-        max-width: none !important;
-        padding: 0 !important;
-      }
-      [data-testid="stElementContainer"] { margin: 0 !important; }
-      iframe[title="streamlit.components.v1.html"] {
-        display: block;
-        width: 100%;
-        border: 0;
-        background: #f4f1ea;
-      }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-components.html(document, height=1800, scrolling=True)
+ui.write(ui.header())
+render(current_route())
+ui.write(ui.footer())

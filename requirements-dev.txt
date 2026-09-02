@@ -1,0 +1,4 @@
+# Tooling for regenerating assets and running the browser checks.
+-r requirements.txt
+pillow>=10
+playwright>=1.45
