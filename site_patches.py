@@ -14,6 +14,60 @@ def _replace_once(source: str, before: str, after: str, label: str) -> str:
     return source.replace(before, after, 1)
 
 
+def _replace_one_of_once(
+    source: str,
+    alternatives: tuple[tuple[str, str], ...],
+    label: str,
+) -> str:
+    """Apply one version-specific replacement and reject ambiguous bundle shapes."""
+    matches = [
+        (before, after)
+        for before, after in alternatives
+        if source.count(before) == 1
+    ]
+    if len(matches) != 1:
+        found = sum(source.count(before) for before, _ in alternatives)
+        raise RuntimeError(
+            f"Unable to apply {label}: expected one supported bundle match, found {found}"
+        )
+    before, after = matches[0]
+    return source.replace(before, after, 1)
+
+
+def _replace_dataset_once(
+    source: str,
+    dataset_id: str,
+    replacements: list[dict[str, object]],
+    label: str,
+    *,
+    expected_rows: int,
+    expected_signatures: tuple[str, ...],
+) -> str:
+    """Replace one compiled dataset while failing closed on an unexpected bundle."""
+    marker = f"{{dataset_id:`{dataset_id}`"
+    if source.count(marker) != 1:
+        raise RuntimeError(
+            f"Unable to apply {label}: expected one {dataset_id!r} dataset marker"
+        )
+    start = source.index(marker)
+    boundary = source.find("},{dataset_id:", start)
+    if boundary < 0:
+        raise RuntimeError(f"Unable to apply {label}: dataset boundary was not found")
+    existing = source[start : boundary + 1]
+    row_count = existing.count("{year:") + existing.count("{period:")
+    if row_count != expected_rows:
+        raise RuntimeError(
+            f"Unable to apply {label}: expected {expected_rows} compiled rows, found {row_count}"
+        )
+    missing = [signature for signature in expected_signatures if signature not in existing]
+    if missing:
+        raise RuntimeError(
+            f"Unable to apply {label}: expected compiled signatures are missing"
+        )
+    replacement = ",".join(_compact_json(dataset) for dataset in replacements)
+    return source[:start] + replacement + source[boundary + 1 :]
+
+
 WINCHESTER_SOURCES = {
     "WIN_GCSE_HMC_1997": {
         "id": "winchester-gcse-hmc-inspection-1997",
@@ -74,6 +128,186 @@ WINCHESTER_SOURCES = {
         "title": "DfE · 2012 KS4 underlying school-level data",
         "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20140111002934id_/http://www.education.gov.uk/schools/performance/2012/download/2012_KS4_Underlying_Data_School_Level.zip",
         "role": "official 1,191-entry file; 1,185 grades disclosed and six lawfully suppressed, producing exact percentage intervals",
+    },
+    "WIN_PREU_2010_PAGE": {
+        "id": "winchester-pre-u-2010-results-page",
+        "title": "Winchester College · Cambridge Pre-U results 2010",
+        "url": "https://web.archive.org/web/20120507094642id_/http://www.winchestercollege.org/cambridge-pre-u-results-",
+        "role": "first-party narrative only: nearly one-fifth D1, about one-third D2 itself and over three-quarters D1–D3; no exact table survives",
+    },
+    "WIN_PREU_2011_PDF": {
+        "id": "winchester-pre-u-2011-pdf",
+        "title": "Winchester College · Pre-U results 2011",
+        "url": "https://web.archive.org/web/20120205020119id_/http://www.winchestercollege.org/UserFiles/pdfs/pre%20u%202011.pdf",
+        "role": "official complete subject and total grade-count table",
+    },
+    "WIN_PREU_2012_PDF": {
+        "id": "winchester-pre-u-2012-pdf",
+        "title": "Winchester College · Pre-U results 2012",
+        "url": "https://web.archive.org/web/20161118135039id_/http://www.winchestercollege.org/UserFiles/pdfs/2012%20Pre%20U%20Results.pdf",
+        "role": "official annual Pre-U distribution",
+    },
+    "WIN_PREU_2013_PDF": {
+        "id": "winchester-pre-u-2013-revised-pdf",
+        "title": "Winchester College · revised Pre-U results 2013",
+        "url": "https://web.archive.org/web/20140710091715id_/http://www.winchestercollege.org/UserFiles/pdfs/pre-U_results_revised.pdf",
+        "role": "official revised annual Pre-U distribution",
+    },
+    "WIN_PREU_2014_PDF": {
+        "id": "winchester-pre-u-2014-pdf",
+        "title": "Winchester College · Pre-U results 2014",
+        "url": "https://web.archive.org/web/20150613062522id_/http://www.winchestercollege.org/UserFiles/pdfs/pre-u_results-2014.pdf",
+        "role": "official annual Pre-U distribution",
+    },
+    "WIN_PREU_2015_ORIGINAL_PDF": {
+        "id": "winchester-pre-u-2015-original-pdf",
+        "title": "Winchester College · Pre-U results by subject 2015 · original version",
+        "url": "https://web.archive.org/web/20160119184909id_/http://www.winchestercollege.org/UserFiles/pdfs/pre-u_results_by_subject-20150813_for_website.pdf",
+        "role": "official complete 443-entry grade table; controlling annual version",
+    },
+    "WIN_ACCOUNTS_2015": {
+        "id": "winchester-accounts-2015",
+        "title": "Winchester College · signed financial statements 2015",
+        "url": "https://web.archive.org/web/20160330195140id_/http://www.winchestercollege.org/UserFiles/Winchester%20College%20Financial%20Statements%2031%20August%202015%20Signed.pdf",
+        "role": "later 444-entry Pre-U version and university-place evidence; retained as a competing source, not merged with the original result table",
+    },
+    "WIN_PREU_2016_PAGE": {
+        "id": "winchester-pre-u-2016-results-page",
+        "title": "Winchester College · examinations and universities · 2016 capture",
+        "url": "https://web.archive.org/web/20180409133837id_/http%3A%2F%2Fwww.winchestercollege.org%2Fexams-and-universities",
+        "role": "first-party cumulative Pre-U headlines; no surviving entry-count table",
+    },
+    "WIN_PREU_2017_PDF": {
+        "id": "winchester-pre-u-2017-pdf",
+        "title": "Winchester College · Pre-U summer results 2017",
+        "url": "https://web.archive.org/web/20181223050819id_/http://www.winchestercollege.org:80/UserFiles/Pre-U%20summer%202017%20results%20for%20website.xlsx.pdf",
+        "role": "official annual grade counts; primary D1–M1 computation controls",
+    },
+    "WIN_ACCOUNTS_2018": {
+        "id": "winchester-accounts-2018",
+        "title": "Winchester College · signed accounts 2018",
+        "url": "https://web.archive.org/web/20211130031905id_/https://www.winchestercollege.org/assets/files/uploads/Winchester%20College%20Accounts%202018%20-%20FINAL%20SIGNED.pdf",
+        "role": "official Pre-U headline and university-offer evidence",
+    },
+    "WIN_PREU_2019_PDF": {
+        "id": "winchester-pre-u-2019-pdf",
+        "title": "Winchester College · Pre-U summer results 2019",
+        "url": "https://web.archive.org/web/20190919111217id_/https://www.winchestercollege.org/assets/files/uploads/Pre%20U%20Results%20Summer%202019.pdf",
+        "role": "official annual grade-count table; controls D1, D1–M1 and D1–M2",
+    },
+    "WIN_ACCOUNTS_2020": {
+        "id": "winchester-accounts-2020",
+        "title": "Winchester College · signed annual accounts 2020",
+        "url": "https://web.archive.org/web/20220211185131id_/https://www.winchestercollege.org/assets/files/uploads/winchester-college-annual-accounts-2020.pdf",
+        "role": "official centre-assessed Pre-U headline and university-offer evidence",
+    },
+    "WIN_MIXED_RESULTS_2021_PDF": {
+        "id": "winchester-mixed-pre-u-a-level-2021-pdf",
+        "title": "Winchester College · combined Pre-U and A-level results 2021",
+        "url": "https://web.archive.org/web/20211023181756id_/https://www.winchestercollege.org/assets/files/uploads/pre-u-results-summer-2021-official.pdf",
+        "role": "official 450-entry teacher-assessed mixed-qualification ruler; deliberately separated from pure Pre-U",
+    },
+    "WIN_ALEVEL_2003_2009_SCHOOL": {
+        "id": "winchester-alevel-2003-2009-school-table",
+        "title": "Winchester College · examination results 2003–2009",
+        "url": "https://web.archive.org/web/20090829142933id_/http://www.wincoll.ac.uk/Home.aspx?m=0&cat=42",
+        "role": "official seven-year school table; controlling A and A–B entry shares",
+    },
+    "WIN_ALEVEL_2003_TIMES": {
+        "id": "winchester-alevel-2003-times-variant",
+        "title": "The Times · Winchester A-level results 2003",
+        "url": "https://www.thetimes.com/uk/education/article/troubled-school-has-top-results-nxjjpqd93q0",
+        "role": "contemporary conflicting 559-entry, 73.2%-A population; retained as a comparator only",
+    },
+    "WIN_ALEVEL_2006_ISC": {
+        "id": "winchester-alevel-2006-isc-variant",
+        "title": "ISC · Year 13 boys examination workbook 2006",
+        "url": "https://www.isc.co.uk/media/2474/2006_examresults_year13_boys_isc.xls",
+        "role": "narrower 546-full-A-level-entry population plus 128 AS entries; never merged with the school 641-entry table",
+    },
+    "WIN_OXBRIDGE_GUARDIAN_2001_2006": {
+        "id": "winchester-oxbridge-guardian-2001-2006",
+        "title": "The Guardian · Oxbridge school admissions analysis",
+        "url": "https://www.theguardian.com/uk/2007/mar/05/schools.oxbridgeandelitism",
+        "role": "Oxford and Cambridge successful-application/admission counts for 2001 and 2006",
+    },
+    "WIN_OXBRIDGE_SUTTON_2002_2008": {
+        "id": "winchester-oxbridge-sutton-trust-2002-2008",
+        "title": "Sutton Trust · university admissions by individual schools",
+        "url": "https://www.suttontrust.com/our-research/university-admissions-individual-schools/",
+        "role": "multi-year Oxbridge admission aggregates; not annual final-destination observations",
+    },
+    "WIN_ANNUAL_REPORT_2008": {
+        "id": "winchester-annual-report-2008",
+        "title": "Winchester College · development annual report 2008",
+        "url": "https://web.archive.org/web/20150504192437id_/http://www.winchestercollege.org/UserFiles/pdfs/Development%20-%20Annual%20report%2008.pdf",
+        "role": "first-party 2009-cycle Oxbridge offer evidence and terminology cross-check",
+    },
+    "WIN_DESTINATIONS_2010_PAGE": {
+        "id": "winchester-destinations-2010-page",
+        "title": "Winchester College · examinations and universities · 2010",
+        "url": "https://web.archive.org/web/20100418040159id_/http://www.winchestercollege.org/exams-and-universities",
+        "role": "first-party annual Oxbridge places and rolling-total evidence",
+    },
+    "WIN_DESTINATIONS_2011_PAGE": {
+        "id": "winchester-destinations-2011-page",
+        "title": "Winchester College · examinations and universities · 2011",
+        "url": "https://web.archive.org/web/20110514050159id_/https://www.winchestercollege.org/exams-and-universities",
+        "role": "first-party rolling total from which the annual 44 is derived",
+    },
+    "WIN_DESTINATIONS_2012_PAGE": {
+        "id": "winchester-destinations-2012-page",
+        "title": "Winchester College · examinations and universities · 2012",
+        "url": "https://web.archive.org/web/20120205020119id_/https://www.winchestercollege.org/exams-and-universities",
+        "role": "first-party 17 Oxford plus 21 Cambridge annual split",
+    },
+    "WIN_DESTINATIONS_2010_2019_PDF": {
+        "id": "winchester-destinations-2010-2019-pdf",
+        "title": "Winchester College · leavers' destinations 2010–2019",
+        "url": "https://web.archive.org/web/20201026100234id_/https://www.winchestercollege.org/assets/files/uploads/WinColl_5016_LeaversDestination_2010-19_v2.0.pdf",
+        "role": "official rounded ten-year destination distribution; published labels total 99%",
+    },
+    "WIN_DESTINATIONS_2020_PDF": {
+        "id": "winchester-destinations-2020-pdf",
+        "title": "Winchester College · leavers' destinations 2020",
+        "url": "https://web.archive.org/web/20201026104822id_/https://www.winchestercollege.org/assets/files/uploads/WinColl_5016_LeaversDestination_2020_v2.0.pdf",
+        "role": "official rounded annual destination distribution; published labels total 95% and are not renormalised",
+    },
+    "WIN_DESTINATIONS_2021_IMAGE": {
+        "id": "winchester-destinations-2021-image",
+        "title": "Winchester College · leavers' destinations 2021",
+        "url": "https://web.archive.org/web/20211113102435id_/https://www.winchestercollege.org/assets/img/resized/standard/leavers-destinations-sept21.png",
+        "role": "official overall destination-category graphic; a separate component graphic conflicts and is not merged",
+    },
+    "WIN_DESTINATIONS_2022_UK_IMAGE": {
+        "id": "winchester-destinations-2022-uk-image",
+        "title": "Winchester College · UK destinations 2022",
+        "url": "https://web.archive.org/web/20230820145307id_/https://www.winchestercollege.org/assets/img/resized/standard/uk-destinations-2022.png",
+        "role": "official exact Oxford and Cambridge destination counts",
+    },
+    "WIN_DESTINATIONS_2022_OVERALL_IMAGE": {
+        "id": "winchester-destinations-2022-overall-image",
+        "title": "Winchester College · overall leavers' destinations 2022",
+        "url": "https://web.archive.org/web/20230820145307id_/https://www.winchestercollege.org/assets/img/resized/standard/leavers-destinations-2022.png",
+        "role": "official complete overall destination-category distribution",
+    },
+    "WIN_CURRENT_RESULTS_2025": {
+        "id": "winchester-exam-results-futures-2025",
+        "title": "Winchester College · Exam Results & Futures · 2024/2025",
+        "url": "https://www.winchestercollege.org/learning/exam-results-destinations/",
+        "role": "dedicated controlling current page: 39 Oxbridge offers, 50 US offers, 9 Ivy League, 17 Ivy League Plus and cohort 156",
+    },
+    "WIN_CURRENT_SIXTH_FORM_2025": {
+        "id": "winchester-sixth-form-achievements-2025",
+        "title": "Winchester College · Sixth Form achievements 2025",
+        "url": "https://www.winchestercollege.org/school-life/sixth-form/",
+        "role": "official companion page carrying the conflicting 47-US-offer variant",
+    },
+    "WIN_OXBRIDGE_2026_INITIAL": {
+        "id": "winchester-oxbridge-offers-spring-2026",
+        "title": "Winchester College · Window on Winchester · Spring 2026",
+        "url": "https://www.winchestercollege.org/news-diary/news/newsletters/window-on-winchester-spring-2026/",
+        "role": "official initial, to-date total of 38 Oxford and Cambridge offers; the release names early US institutions but publishes no US-offer total",
     },
 }
 
@@ -224,6 +458,607 @@ WINCHESTER_GCSE_HISTORY = [
         "confidence": "P/R",
         "note": "Upper endpoints, rounded to one decimal place, of the DfE-suppression intervals: A* 68.51–69.02%, A*/A 93.03–93.53% and A*–B 98.49–98.99%. Disclosed grades are A*=816, A=292 and B=65; six of 1,191 entries are suppressed.",
         "source_ids": ["WIN_GCSE_2012_DFE"],
+    },
+]
+
+
+WINCHESTER_PRE_U_HISTORY = [
+    {
+        "year": 2010,
+        "entries": None,
+        "d1": None,
+        "d1_d2": None,
+        "d1_d3_honest_astar_a": None,
+        "d1_m1_published": None,
+        "d1_m2": None,
+        "d1_m3": None,
+        "confidence": "P/NARRATIVE",
+        "publication_status": "Official narrative survives; exact grade counts and percentages do not",
+        "narrative_d1": "nearly one-fifth",
+        "narrative_d2_grade_itself": "about one-third",
+        "narrative_d1_d3": "over three-quarters",
+        "note": "The source wording is retained verbatim in substance and is not converted into point estimates.",
+        "source_ids": ["WIN_PREU_2010_PAGE"],
+    },
+    {
+        "year": 2011,
+        "entries": 326,
+        "d1": 25.2,
+        "d1_d2": 51.8,
+        "d1_d3_honest_astar_a": 79.8,
+        "d1_m1_published": 90.8,
+        "d1_m2": 95.1,
+        "d1_m3": 98.8,
+        "confidence": "P",
+        "note": "Official complete total and subject table.",
+        "fold_pp": 11.0,
+        "source_ids": ["WIN_PREU_2011_PDF"],
+    },
+    {
+        "year": 2012,
+        "entries": 341,
+        "d1": 20.5,
+        "d1_d2": 50.1,
+        "d1_d3_honest_astar_a": 80.1,
+        "d1_m1_published": 89.1,
+        "d1_m2": 94.7,
+        "d1_m3": 97.9,
+        "confidence": "P",
+        "note": "Official annual table; the newly recovered D1 and D1–M3 endpoints complete the published ladder.",
+        "fold_pp": 9.0,
+        "source_ids": ["WIN_PREU_2012_PDF"],
+    },
+    {
+        "year": 2013,
+        "entries": 426,
+        "d1": 20.2,
+        "d1_d2": 50.5,
+        "d1_d3_honest_astar_a": 79.1,
+        "d1_m1_published": 90.6,
+        "d1_m2": 95.8,
+        "d1_m3": 98.1,
+        "confidence": "P",
+        "note": "Official revised annual table controls.",
+        "fold_pp": 11.5,
+        "source_ids": ["WIN_PREU_2013_PDF"],
+    },
+    {
+        "year": 2014,
+        "entries": 468,
+        "d1": 21.2,
+        "d1_d2": 51.1,
+        "d1_d3_honest_astar_a": 79.5,
+        "d1_m1_published": 89.3,
+        "d1_m2": 94.7,
+        "d1_m3": 97.2,
+        "confidence": "P",
+        "note": "Official annual table.",
+        "fold_pp": 9.8,
+        "source_ids": ["WIN_PREU_2014_PDF"],
+    },
+    {
+        "year": 2015,
+        "entries": 443,
+        "d1": 21.0,
+        "d1_d2": 47.4,
+        "d1_d3_honest_astar_a": 75.2,
+        "d1_m1_published": 84.2,
+        "d1_m2": 92.8,
+        "d1_m3": 97.3,
+        "confidence": "P/CONFLICT",
+        "note": "The complete original 443-entry table controls. Later signed accounts report 444 entries and rounded bands of 20.9%, 47.3%, 75.0% and 97.3%; their printed 99.4% pass rate is arithmetically impossible for any integer numerator over 444. The two versions are never mixed.",
+        "fold_pp": 9.0,
+        "source_ids": ["WIN_PREU_2015_ORIGINAL_PDF", "WIN_ACCOUNTS_2015"],
+    },
+    {
+        "year": 2016,
+        "entries": None,
+        "d1": None,
+        "d1_d2": 49.9,
+        "d1_d3_honest_astar_a": 75.4,
+        "d1_m1_published": 86.1,
+        "d1_m2": 92.8,
+        "d1_m3": None,
+        "confidence": "P",
+        "note": "Official cumulative headlines. The reported 120 is a pupil count, not a subject-entry denominator, and is therefore not placed in Entries.",
+        "fold_pp": 10.7,
+        "source_ids": ["WIN_PREU_2016_PAGE"],
+    },
+    {
+        "year": 2017,
+        "entries": 470,
+        "d1": 19.4,
+        "d1_d2": 47.9,
+        "d1_d3_honest_astar_a": 71.3,
+        "d1_m1_published": 84.0,
+        "d1_m2": 92.3,
+        "d1_m3": 96.6,
+        "confidence": "P/CONFLICT",
+        "note": "The official raw-count computation of 84.0% D1–M1 controls. A later secondary companion's approximately 82% candidate remains in the conflict register only.",
+        "fold_pp": 12.7,
+        "source_ids": ["WIN_PREU_2017_PDF", "FB146"],
+    },
+    {
+        "year": 2018,
+        "entries": 509,
+        "d1": 21.8,
+        "d1_d2": 49.3,
+        "d1_d3_honest_astar_a": 74.5,
+        "d1_m1_published": 86.4,
+        "d1_m2": 92.3,
+        "d1_m3": 95.5,
+        "pre_u_pass": 98.6,
+        "confidence": "P/R",
+        "note": "Official signed-account percentages. Integer bands are uniquely reconstructable, but the displayed cumulative percentages remain the directly published values.",
+        "fold_pp": 11.9,
+        "source_ids": ["WIN_ACCOUNTS_2018"],
+    },
+    {
+        "year": 2019,
+        "entries": 476,
+        "d1": 20.2,
+        "d1_d2": 42.4,
+        "d1_d3_honest_astar_a": 67.4,
+        "d1_m1_published": 81.5,
+        "d1_m2": 92.6,
+        "d1_m3": 96.6,
+        "confidence": "P/CONFLICT",
+        "note": "Official grade counts control: D1–M1 is 81.5% and D1–M2 is 92.6%. The former's approximately 81.2% secondary candidate remains a comparator; 92.7% cannot arise from an integer numerator over 476.",
+        "fold_pp": 14.1,
+        "source_ids": ["WIN_PREU_2019_PDF", "FB146"],
+    },
+    {
+        "year": 2020,
+        "scale": "D1-P3 CAG",
+        "entries": 469,
+        "d1": 24.9,
+        "d1_d2": 56.1,
+        "d1_d3_honest_astar_a": 81.0,
+        "d1_m1_published": None,
+        "d1_m2": None,
+        "d1_m3": 99.1,
+        "pre_u_pass": 99.8,
+        "d1_count": 117,
+        "d2_count": 146,
+        "d3_count": 117,
+        "m1_m3_count": 85,
+        "p1_p3_count": 3,
+        "u_count": 1,
+        "confidence": "P/R",
+        "note": "Pandemic centre-assessed grades; quarantined from examined-year comparisons. The six integer bands are mathematically unique reconstructions from the signed accounts' one-decimal percentages, not printed raw counts.",
+        "source_ids": ["WIN_ACCOUNTS_2020"],
+    },
+]
+
+
+WINCHESTER_MIXED_RESULTS_2021 = [
+    {
+        "year": 2021,
+        "level": "A-level/Pre-U",
+        "scale": "mixed TAG equivalence ruler",
+        "entries": 450,
+        "a_star": 52.4,
+        "a_star_a": 80.2,
+        "a_star_b": 92.2,
+        "published_pass_rate": 98.9,
+        "confidence": "P",
+        "note": "Teacher-assessed pandemic year combining A-level and Pre-U entries. This source-defined crosswalk is intentionally quarantined and cannot extend either pure qualification trend.",
+        "source_ids": ["WIN_MIXED_RESULTS_2021_PDF"],
+    }
+]
+
+
+WINCHESTER_ALEVEL_HISTORY = [
+    {
+        "year": 2003,
+        "entries": 506,
+        "grade_a": 75.9,
+        "grade_a_b": 93.3,
+        "a_count": 384,
+        "b_count": 88,
+        "c_count": 23,
+        "d_count": 6,
+        "e_count": 2,
+        "unclassified_residual": 3,
+        "confidence": "P/CONFLICT",
+        "note": "The official school seven-year table controls. A contemporary ISC/Times population reports 559 entries, 409 A grades and 73.2% A; it is preserved as a denominator conflict and is not averaged or merged.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL", "WIN_ALEVEL_2003_TIMES"],
+    },
+    {
+        "year": 2004,
+        "entries": 625,
+        "grade_a": 73.4,
+        "grade_a_b": 94.1,
+        "a_count": 459,
+        "b_count": 129,
+        "c_count": 30,
+        "d_count": 7,
+        "e_count": 0,
+        "unclassified_residual": 0,
+        "confidence": "P",
+        "note": "Official school seven-year table.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL"],
+    },
+    {
+        "year": 2005,
+        "entries": 571,
+        "grade_a": 69.9,
+        "grade_a_b": 91.2,
+        "a_count": 399,
+        "b_count": 122,
+        "c_count": 34,
+        "d_count": 9,
+        "e_count": 6,
+        "unclassified_residual": 1,
+        "confidence": "P",
+        "note": "Official school seven-year table.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL"],
+    },
+    {
+        "year": 2006,
+        "entries": 641,
+        "grade_a": 71.3,
+        "grade_a_b": 91.3,
+        "a_count": 457,
+        "b_count": 128,
+        "c_count": 37,
+        "d_count": 13,
+        "e_count": 5,
+        "unclassified_residual": 1,
+        "confidence": "P/CONFLICT",
+        "note": "The school 641-entry table controls. ISC separately reports a narrower 546 full-A-level entries plus 128 AS entries; the populations are not merged.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL", "WIN_ALEVEL_2006_ISC"],
+    },
+    {
+        "year": 2007,
+        "entries": 610,
+        "grade_a": 80.2,
+        "grade_a_b": 96.9,
+        "a_count": 489,
+        "b_count": 102,
+        "c_count": 15,
+        "d_count": 4,
+        "e_count": 0,
+        "unclassified_residual": 0,
+        "confidence": "P",
+        "note": "Official school seven-year table.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL"],
+    },
+    {
+        "year": 2008,
+        "entries": 578,
+        "grade_a": 80.4,
+        "grade_a_b": 93.8,
+        "a_count": 465,
+        "b_count": 77,
+        "c_count": 23,
+        "d_count": 8,
+        "e_count": 4,
+        "unclassified_residual": 1,
+        "confidence": "P",
+        "note": "Official school seven-year table.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL"],
+    },
+    {
+        "year": 2009,
+        "entries": 562,
+        "grade_a": 77.8,
+        "grade_a_b": 94.3,
+        "a_count": 437,
+        "b_count": 93,
+        "c_count": 21,
+        "d_count": 9,
+        "e_count": 2,
+        "unclassified_residual": 0,
+        "confidence": "P",
+        "note": "Official school seven-year table.",
+        "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL"],
+    },
+    {
+        "year": 2022,
+        "entries": None,
+        "a_star": 41.7,
+        "a_star_a": 76.3,
+        "a_star_b": 92.5,
+        "confidence": "P",
+        "note": "Post-pandemic qualification year; retained as published.",
+        "source_ids": ["FB146"],
+    },
+    {
+        "year": 2023,
+        "entries": None,
+        "a_star": 42.4,
+        "a_star_a": 79.6,
+        "a_star_b": 93.6,
+        "confidence": "P",
+        "note": "Post-remark PDF controls over provisional 40.7/77.9.",
+        "source_ids": ["FB146"],
+    },
+    {
+        "year": 2024,
+        "entries": None,
+        "a_star": 29.6,
+        "a_star_a": 68.9,
+        "a_star_b": 90.0,
+        "confidence": "P",
+        "note": "Reversion to stricter grading.",
+        "source_ids": ["FB146"],
+    },
+    {
+        "year": 2025,
+        "entries": None,
+        "a_star": 44.0,
+        "a_star_a": 75.0,
+        "a_star_b": 92.0,
+        "confidence": "P",
+        "note": None,
+        "source_ids": ["WIN_CURRENT_RESULTS_2025"],
+    },
+    {
+        "year": 2026,
+        "entries": None,
+        "pupils_at_least_3_astars_pct_approx": 25,
+        "confidence": "P",
+        "publication_status": "Pending detailed publication — no exact 2026 A-level grade-entry bands released as of 30 August 2026",
+        "note": "The official post says around a quarter of pupils achieved at least three A* grades. That pupil-level profile is context only and is not recast as an entry percentage.",
+        "source_ids": ["WIN_2026_RESULTS_HUB", "WIN_2026_ALEVEL_POST"],
+    },
+]
+
+
+WINCHESTER_ACCESS_HISTORY = [
+    {"period": "1836", "metric": "percent_of_leavers_to_oxbridge", "value": 64, "unit": "percent", "outcome_type": "historic destination estimate", "confidence": "S", "source_ids": ["FB140", "FB146"]},
+    {"period": "1893", "metric": "percent_of_over_16_leavers_to_oxbridge", "value": 56.6, "unit": "percent", "outcome_type": "historic destination estimate", "confidence": "S", "source_ids": ["FB140", "FB146"]},
+    {"period": "1893", "metric": "percent_of_all_leavers_to_any_university", "value": 49, "unit": "percent", "outcome_type": "historic destination estimate", "confidence": "S", "source_ids": ["FB140", "FB146"]},
+    {"period": "1886-1900", "metric": "open_oxbridge_scholarships_cumulative", "value": 146, "unit": "count", "outcome_type": "scholarships", "confidence": "S", "source_ids": ["FB140", "FB146"]},
+    {"period": "c.1968", "metric": "oxbridge_raw_count_per_year", "value": 80, "unit": "approx_count", "outcome_type": "approximate annual access", "confidence": "S", "source_ids": ["FB140", "FB146"]},
+    {"period": "2000", "metric": "expected_oxbridge_take_up_rate", "value": 40, "unit": "percent", "outcome_type": "expectation, not realised outcome", "confidence": "S", "note": "Contemporary approximate expectation only.", "source_ids": ["FB140", "FB146"]},
+    {"period": "2001", "metric": "successful_applications_or_admissions", "value": 47, "oxford": 30, "cambridge": 17, "outcome_type": "successful applications/admissions", "confidence": "P", "source_ids": ["WIN_OXBRIDGE_GUARDIAN_2001_2006"]},
+    {"period": "2002", "metric": "forecast_oxbridge_rate", "value": "30–40%", "outcome_type": "forecast, not realised outcome", "confidence": "S", "note": "Retained only as a forecast range.", "source_ids": ["FB140", "FB146"]},
+    {"period": "2002-2006", "metric": "oxbridge_admissions_aggregate", "value": 230, "rate_pct": 36.0, "outcome_type": "multi-year admissions aggregate", "denominator_basis": "university entrants", "confidence": "P", "source_ids": ["WIN_OXBRIDGE_SUTTON_2002_2008"]},
+    {"period": "2006", "metric": "successful_applications_or_admissions", "value": 56, "oxford": 38, "cambridge": 18, "outcome_type": "successful applications/admissions", "confidence": "P", "source_ids": ["WIN_OXBRIDGE_GUARDIAN_2001_2006"]},
+    {"period": "2007-2008", "metric": "oxbridge_admissions_aggregate", "value": 63, "leavers": 208, "rate_pct": 30.3, "outcome_type": "two-year admissions aggregate", "denominator_basis": "higher-education entrants", "confidence": "P", "source_ids": ["WIN_OXBRIDGE_SUTTON_2002_2008"]},
+    {"period": "2009", "metric": "oxbridge_places_or_offers", "value": 51, "oxford": 33, "cambridge": 18, "rate_pct": 37.5, "outcome_type": "source terminology conflict: places versus offers", "confidence": "P/CONFLICT", "note": "The school page says places; the annual report says conditional/firm offers secured. No final-destination label is imposed.", "source_ids": ["WIN_ALEVEL_2003_2009_SCHOOL", "WIN_ANNUAL_REPORT_2008"]},
+    {"period": "2010", "metric": "oxbridge_places", "value": 45, "rate_pct": 33.5, "outcome_type": "school-reported places", "confidence": "P", "source_ids": ["WIN_DESTINATIONS_2010_PAGE"]},
+    {"period": "2011", "metric": "derived_oxbridge_matriculations", "value": 44, "outcome_type": "derived annual matriculations", "confidence": "D/P", "note": "Five-cycle official total 238 less the preceding nested four-cycle total 194; not directly printed as an annual count.", "source_ids": ["WIN_DESTINATIONS_2010_PAGE", "WIN_DESTINATIONS_2011_PAGE"]},
+    {"period": "2012", "metric": "matriculations", "value": 38, "oxford": 17, "cambridge": 21, "outcome_type": "matriculations", "confidence": "P", "source_ids": ["WIN_DESTINATIONS_2012_PAGE"]},
+    {"period": "2013", "metric": "offers", "value": 41, "outcome_type": "school-reported offers", "confidence": "P", "source_ids": ["FB140", "FB146"]},
+    {"period": "2013", "metric": "reported_oxbridge_destinations", "value": 40, "outcome_type": "secondary reported destinations", "confidence": "S", "note": "Good Schools Guide figure; retained separately from the 41-offer row.", "source_ids": ["FB146"]},
+    {"period": "2014", "metric": "matriculations", "value": 43, "oxford": 31, "cambridge": 12, "outcome_type": "matriculations", "confidence": "P", "note": "Strict acceptances are 44; the one-place basis gap remains explicit.", "source_ids": ["FB140", "FB146"]},
+    {"period": "2015", "metric": "oxbridge_places", "value": 44, "outcome_type": "places, including deferred 2016", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2015"]},
+    {"period": "2015", "metric": "premier_us_places", "value": 16, "outcome_type": "places at premier US universities", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2015"]},
+    {"period": "2016", "metric": "matriculations", "value": 27, "oxford": 13, "cambridge": 14, "outcome_type": "matriculations", "confidence": "P", "note": "Strict acceptances are 26; the one-place basis gap remains explicit.", "source_ids": ["FB140", "FB146"]},
+    {"period": "2007/08-2014/15", "metric": "average_matriculations_per_year", "value": 45, "outcome_type": "multi-year average matriculations", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2015"]},
+    {"period": "2010-2018", "metric": "matriculation_rate", "value": 33, "unit": "percent", "outcome_type": "multi-year matriculation rate", "confidence": "P", "source_ids": ["FB140", "FB146"]},
+    {"period": "2017", "metric": "oxbridge_places", "value": 37, "outcome_type": "places for 2017 or deferred 2018", "confidence": "P", "source_ids": ["FB140", "FB146"]},
+    {"period": "2017", "metric": "premier_us_places", "value": 18, "outcome_type": "US places", "confidence": "P", "source_ids": ["FB140", "FB146"]},
+    {"period": "2017-2021", "metric": "cambridge_offers_five_cycles", "value": 61, "outcome_type": "five-cycle offer aggregate", "confidence": "P", "source_ids": ["FB140", "FB146"]},
+    {"period": "2018", "metric": "oxbridge_offers", "value": 37, "outcome_type": "signed-account offers", "confidence": "P/CONFLICT", "note": "A stricter application ledger carries 36; both source populations remain visible.", "source_ids": ["WIN_ACCOUNTS_2018", "FB146"]},
+    {"period": "2018", "metric": "north_american_places", "value": 11, "outcome_type": "North American places", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2018"]},
+    {"period": "2009-2018", "metric": "offers_cumulative", "value": 401, "outcome_type": "ten-year offer aggregate", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2018"]},
+    {"period": "2020", "metric": "oxbridge_offers", "value": 25, "outcome_type": "offers", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2020"]},
+    {"period": "2020", "metric": "premier_north_american_places", "value": 7, "outcome_type": "North American places", "confidence": "P", "source_ids": ["WIN_ACCOUNTS_2020"]},
+    {"period": "2023", "metric": "offers", "value": 31, "rate_pct": 17, "outcome_type": "school-reported offers", "confidence": "P", "source_ids": ["FB140", "FB146"]},
+    {"period": "2024/25", "metric": "oxbridge_offers", "value": 39, "cohort": 156, "arithmetic_offer_cohort_ratio_pct": 25.0, "outcome_type": "offers", "confidence": "P/D", "note": "39 ÷ 156 = 25.0% arithmetically, but the source does not establish that prior-leaver inclusion matches the displayed cohort. The arithmetic ratio is labelled and is not promoted as an official offer rate; the former 21% is retired.", "source_ids": ["WIN_CURRENT_RESULTS_2025"]},
+    {"period": "2024/25", "metric": "us_offers", "value": 50, "ivy_offers": 9, "ivy_league_plus_offers": 17, "outcome_type": "offers", "confidence": "P/CONFLICT", "note": "The dedicated results page's 50 controls. The official Sixth Form page carries 47 and remains a source variant.", "source_ids": ["WIN_CURRENT_RESULTS_2025", "WIN_CURRENT_SIXTH_FORM_2025"]},
+    {"period": "2024/25", "metric": "us_offers_companion_page_variant", "value": 47, "outcome_type": "official companion-page offer variant", "confidence": "P/CONFLICT", "source_ids": ["WIN_CURRENT_SIXTH_FORM_2025"]},
+    {"period": "2024/25", "metric": "uk_entrants_to_russell_group", "value": 90, "unit": "percent", "outcome_type": "UK entrant destinations", "confidence": "P", "source_ids": ["WIN_CURRENT_RESULTS_2025"]},
+    {"period": "2024/25", "metric": "other_international_universities", "value": 5, "unit": "count", "outcome_type": "number of other international universities, not offers", "confidence": "P", "source_ids": ["WIN_CURRENT_RESULTS_2025"]},
+    {"period": "2024/25", "metric": "oxford_choral_and_organ_scholarships", "value": 6, "unit": "count", "outcome_type": "scholarships", "confidence": "P", "source_ids": ["WIN_CURRENT_RESULTS_2025"]},
+    {"period": "2026", "metric": "oxbridge_offers_initial", "value": 38, "outcome_type": "initial offers reported to date", "confidence": "P/PROVISIONAL", "publication_status": "Initial total published in spring 2026; later revisions remain possible", "note": "The official release says 38 Oxford and Cambridge offers 'to date'. It also names early US offers from Stanford, Yale, Columbia, Chicago and Duke but gives no US total, so no numerical US row is created.", "source_ids": ["WIN_OXBRIDGE_2026_INITIAL"]},
+]
+
+
+WINCHESTER_DESTINATION_DISTRIBUTIONS = [
+    {
+        "period": "2010-2019",
+        "outcome_type": "final leaver destination distribution",
+        "oxford_pct": 17,
+        "cambridge_pct": 13,
+        "ucl_pct": 8,
+        "durham_pct": 8,
+        "bristol_pct": 8,
+        "imperial_pct": 6,
+        "edinburgh_pct": 6,
+        "north_america_pct": 4,
+        "published_labels_total_pct": 99,
+        "coverage_status": "selected named categories transcribed from the official rounded graphic",
+        "confidence": "P",
+        "note": "The source's complete rounded labels total 99%. Only the named categories recovered into this ledger are shown here; they are not resummed or renormalised.",
+        "source_ids": ["WIN_DESTINATIONS_2010_2019_PDF"],
+    },
+    {
+        "period": "2020",
+        "outcome_type": "final leaver destination distribution",
+        "durham_pct": 12,
+        "cambridge_pct": 10,
+        "bristol_pct": 9,
+        "oxford_pct": 8,
+        "exeter_pct": 7,
+        "ucl_pct": 7,
+        "imperial_pct": 7,
+        "edinburgh_pct": 6,
+        "usa_pct": 5,
+        "published_labels_total_pct": 95,
+        "coverage_status": "selected named categories transcribed from the official rounded graphic",
+        "confidence": "P",
+        "note": "The source's complete printed labels total 95%. The published values are retained exactly and are not renormalised.",
+        "source_ids": ["WIN_DESTINATIONS_2020_PDF"],
+    },
+    {
+        "period": "2021",
+        "outcome_type": "final leaver destination distribution",
+        "oxbridge_pct": 12,
+        "rest_uk_pct": 59,
+        "us_canada_pct": 10,
+        "post_application_or_reapplication_pct": 16,
+        "other_pct": 3,
+        "published_labels_total_pct": 100,
+        "coverage_status": "complete overall category graphic",
+        "confidence": "P/CONFLICT",
+        "note": "A separate component graphic reports Oxford 12% and Cambridge 5% while this official overall graphic says 12% Oxbridge. The component split is internally inconsistent and is not merged.",
+        "source_ids": ["WIN_DESTINATIONS_2021_IMAGE"],
+    },
+    {
+        "period": "2022",
+        "outcome_type": "final leaver destination distribution",
+        "oxford": 11,
+        "cambridge": 7,
+        "oxbridge_pct": 11,
+        "rest_uk_pct": 55,
+        "international_pct": 12,
+        "post_application_or_reapplication_pct": 16,
+        "other_pct": 6,
+        "published_labels_total_pct": 100,
+        "coverage_status": "complete overall categories plus exact UK-chart Oxbridge counts",
+        "confidence": "P",
+        "source_ids": ["WIN_DESTINATIONS_2022_UK_IMAGE", "WIN_DESTINATIONS_2022_OVERALL_IMAGE"],
+    },
+]
+
+
+WINCHESTER_CORRECTIONS = [
+    {
+        "id": "C18",
+        "school": "Winchester College",
+        "metric": "Pre-U annual primary series",
+        "period": "2012–2020",
+        "old": "partial companion-led rows",
+        "new": "direct official annual tables and signed-account headlines",
+        "status": "primary_archive_lock",
+        "source_refs": [
+            "WIN_PREU_2012_PDF",
+            "WIN_PREU_2013_PDF",
+            "WIN_PREU_2014_PDF",
+            "WIN_PREU_2015_ORIGINAL_PDF",
+            "WIN_PREU_2017_PDF",
+            "WIN_ACCOUNTS_2018",
+            "WIN_PREU_2019_PDF",
+            "WIN_ACCOUNTS_2020",
+        ],
+        "reason": "Direct annual evidence fills D1 and D1–M3 gaps, restores primary D1–M1 values and corrects 2019 D1–M2 to 92.6%.",
+    },
+    {
+        "id": "C19",
+        "school": "Winchester College",
+        "metric": "A-level A and A–B series",
+        "period": "2003–2009",
+        "old": "2003 only: 559 entries and 73.2% A",
+        "new": "official school seven-year table; 2003 controls at 506 entries, 75.9% A and 93.3% A–B",
+        "status": "primary_school_table_controls",
+        "source_refs": ["WIN_ALEVEL_2003_2009_SCHOOL", "WIN_ALEVEL_2003_TIMES"],
+        "reason": "The school table is a complete later official series; the contemporary 559-entry population remains an explicit denominator conflict.",
+    },
+    {
+        "id": "C20",
+        "school": "Winchester College",
+        "metric": "2021 mixed A-level/Pre-U result",
+        "period": 2021,
+        "old": "absent or liable to be appended to pure Pre-U",
+        "new": "separate mixed-qualification TAG ruler",
+        "status": "population_basis_split",
+        "source_refs": ["WIN_MIXED_RESULTS_2021_PDF"],
+        "reason": "The official 450-entry distribution combines qualifications and cannot extend either pure trend.",
+    },
+    {
+        "id": "C21",
+        "school": "Winchester College",
+        "metric": "2024/25 US university offers",
+        "period": "2024/25",
+        "old": 47,
+        "new": 50,
+        "status": "dedicated_results_page_controls",
+        "source_refs": ["WIN_CURRENT_RESULTS_2025", "WIN_CURRENT_SIXTH_FORM_2025"],
+        "reason": "The dedicated Exam Results & Futures page is the controlling surface; the Sixth Form page's 47 remains a labelled official variant.",
+    },
+    {
+        "id": "C22",
+        "school": "Winchester College",
+        "metric": "2024/25 Oxbridge offer rate",
+        "period": "2024/25",
+        "old": "21%",
+        "new": "official count 39 and cohort 156; 25.0% arithmetic ratio labelled as unvalidated",
+        "status": "unsupported_rate_retired",
+        "source_refs": ["WIN_CURRENT_RESULTS_2025"],
+        "reason": "The official page publishes no offer rate and does not explicitly guarantee identical prior-leaver treatment in numerator and cohort.",
+    },
+    {
+        "id": "C23",
+        "school": "Winchester College",
+        "metric": "Pre-U D1–M2",
+        "period": 2019,
+        "old": 92.7,
+        "new": 92.6,
+        "status": "integer_reconciliation",
+        "source_refs": ["WIN_PREU_2019_PDF"],
+        "reason": "The official integer grade counts round to 92.6%; 92.7% is impossible over 476 entries.",
+    },
+    {
+        "id": "C24",
+        "school": "Winchester College",
+        "metric": "university offers, admissions, matriculations and destinations",
+        "period": "2000–2025",
+        "old": "single heterogeneous destination-labelled ledger",
+        "new": "outcome-typed historic-access ledger plus separate final-destination distributions",
+        "status": "population_basis_split",
+        "source_refs": ["FB140", "WIN_DESTINATIONS_2010_2019_PDF", "WIN_DESTINATIONS_2020_PDF", "WIN_DESTINATIONS_2021_IMAGE", "WIN_DESTINATIONS_2022_OVERALL_IMAGE"],
+        "reason": "Offers and admissions are leading/selection outcomes; final destinations remain separately typed and published rounding is never normalised.",
+    },
+    {
+        "id": "C25",
+        "school": "Winchester College",
+        "metric": "2026 Oxbridge offers",
+        "period": 2026,
+        "old": "not represented",
+        "new": "38 initial offers reported to date",
+        "status": "provisional_current_year_addition",
+        "source_refs": ["WIN_OXBRIDGE_2026_INITIAL"],
+        "reason": "The March 2026 first-party newsletter supplies a current annual count, explicitly labelled initial and provisional rather than a final destination outcome.",
+    },
+]
+
+
+WINCHESTER_CONFLICTS = [
+    {
+        "id": "WC01",
+        "school": "Winchester College",
+        "period": 2003,
+        "metric": "A-level entries and A share",
+        "values": [
+            {"entries": 506, "grade_a": 75.9, "source": "WIN_ALEVEL_2003_2009_SCHOOL", "basis": "official school seven-year table"},
+            {"entries": 559, "grade_a": 73.2, "source": "WIN_ALEVEL_2003_TIMES", "basis": "contemporary ISC/Times population"},
+        ],
+        "treatment": "Display the complete school series; preserve the 559-entry population as a comparator and never average.",
+    },
+    {
+        "id": "WC02",
+        "school": "Winchester College",
+        "period": 2018,
+        "metric": "Oxbridge offers",
+        "values": [
+            {"value": 37, "source": "WIN_ACCOUNTS_2018", "basis": "signed accounts"},
+            {"value": 36, "source": "FB146", "basis": "strict application ledger"},
+        ],
+        "treatment": "Keep both source populations explicitly labelled; neither is a final destination count.",
+    },
+    {
+        "id": "WC03",
+        "school": "Winchester College",
+        "period": "2024/25",
+        "metric": "US university offers",
+        "values": [
+            {"value": 50, "source": "WIN_CURRENT_RESULTS_2025", "basis": "dedicated Exam Results & Futures page"},
+            {"value": 47, "source": "WIN_CURRENT_SIXTH_FORM_2025", "basis": "Sixth Form achievements page"},
+        ],
+        "treatment": "Display 50 on the controlling dedicated page basis and retain 47 as an official companion-page variant.",
+    },
+    {
+        "id": "WC04",
+        "school": "Winchester College",
+        "period": "2024/25",
+        "metric": "Oxbridge offers divided by cohort",
+        "values": [{"offers": 39, "cohort": 156, "arithmetic_ratio_pct": 25.0}],
+        "treatment": "Show the count and cohort. Label 25.0% only as arithmetic because the page does not define an official same-population offer rate; retire 21%.",
     },
 ]
 
@@ -2120,6 +2955,12 @@ def apply_st_pauls_history(javascript: str) -> str:
 def apply_winchester_history(javascript: str) -> str:
     javascript = _replace_once(
         javascript,
+        "Evidence snapshot · 30 Aug 2026",
+        "Evidence snapshot · 2 Sep 2026",
+        "evidence snapshot date after Winchester audit",
+    )
+    javascript = _replace_once(
+        javascript,
         "id:`winchester`,name:`Winchester College`,short:`Winchester`,applyCentreName:`Winchester College`,usName:`Winchester College`,accent:`#2563eb`,evidenceWindow:`2009–2026`",
         "id:`winchester`,name:`Winchester College`,short:`Winchester`,applyCentreName:`Winchester College`,usName:`Winchester College`,accent:`#2563eb`,evidenceWindow:`1994–2026`",
         "Winchester evidence window",
@@ -2132,6 +2973,191 @@ def apply_winchester_history(javascript: str) -> str:
         source_anchor,
         source_entries + source_anchor,
         "Winchester source catalogue",
+    )
+
+    javascript = _replace_once(
+        javascript,
+        "other_top_us_offers:{label:`Other named US offers`,kind:`count`},us_offers_min:",
+        "other_top_us_offers:{label:`Other named US offers`,kind:`count`},"
+        "ivy_league_plus_offers:{label:`Ivy League Plus offers`,kind:`count`},"
+        "other_international_universities:{label:`Other international universities`,kind:`count`},"
+        "us_offers_min:",
+        "Winchester current-offer field catalogue",
+    )
+    javascript = _replace_once(
+        javascript,
+        "u_count:{label:`U count`,kind:`count`},x_count:",
+        "u_count:{label:`U count`,kind:`count`},"
+        "d1_count:{label:`D1 count · reconstructed`,kind:`count`},"
+        "d2_count:{label:`D2 count · reconstructed`,kind:`count`},"
+        "d3_count:{label:`D3 count · reconstructed`,kind:`count`},"
+        "m1_m3_count:{label:`M1–M3 count · reconstructed`,kind:`count`},"
+        "p1_p3_count:{label:`P1–P3 count · reconstructed`,kind:`count`},"
+        "unclassified_residual:{label:`Unclassified residual`,kind:`count`},"
+        "x_count:",
+        "Winchester recovered-count field catalogue",
+    )
+    javascript = _replace_once(
+        javascript,
+        "rate_pct:{label:`Rate`,kind:`percent`},rate_approx_pct:",
+        "rate_pct:{label:`Rate`,kind:`percent`},"
+        "arithmetic_offer_cohort_ratio_pct:{label:`Arithmetic offers ÷ cohort · not an official rate`,kind:`percent`},"
+        "published_labels_total_pct:{label:`Printed labels total`,kind:`percent`},"
+        "oxford_pct:{label:`Oxford`,kind:`percent`},"
+        "cambridge_pct:{label:`Cambridge`,kind:`percent`},"
+        "oxbridge_pct:{label:`Oxbridge`,kind:`percent`},"
+        "ucl_pct:{label:`UCL`,kind:`percent`},"
+        "durham_pct:{label:`Durham`,kind:`percent`},"
+        "bristol_pct:{label:`Bristol`,kind:`percent`},"
+        "imperial_pct:{label:`Imperial`,kind:`percent`},"
+        "edinburgh_pct:{label:`Edinburgh`,kind:`percent`},"
+        "exeter_pct:{label:`Exeter`,kind:`percent`},"
+        "north_america_pct:{label:`North America`,kind:`percent`},"
+        "usa_pct:{label:`USA`,kind:`percent`},"
+        "rest_uk_pct:{label:`Rest of UK`,kind:`percent`},"
+        "us_canada_pct:{label:`USA / Canada`,kind:`percent`},"
+        "international_pct:{label:`International`,kind:`percent`},"
+        "post_application_or_reapplication_pct:{label:`Post-application / reapplication`,kind:`percent`},"
+        "other_pct:{label:`Other`,kind:`percent`},"
+        "rate_approx_pct:",
+        "Winchester destination-distribution field catalogue",
+    )
+    javascript = _replace_once(
+        javascript,
+        "coverage_status:{label:`Coverage status`,kind:`text`},destination_total:",
+        "coverage_status:{label:`Coverage status`,kind:`text`},"
+        "outcome_type:{label:`Outcome type`,kind:`text`},"
+        "denominator_basis:{label:`Denominator basis`,kind:`text`},"
+        "narrative_d1:{label:`Official D1 wording`,kind:`text`},"
+        "narrative_d2_grade_itself:{label:`Official D2-grade wording`,kind:`text`},"
+        "narrative_d1_d3:{label:`Official D1–D3 wording`,kind:`text`},"
+        "destination_total:",
+        "Winchester basis and narrative field catalogue",
+    )
+
+    pre_u_datasets = [
+        {
+            "dataset_id": "winchester_pre_u_two_ruler_2011_2019",
+            "school": "Winchester College",
+            "domain": "exam_results",
+            "basis": "pure Cambridge Pre-U principal-grade entry distributions; exact annual tables, signed-account headlines and a narrative-only 2010 row kept distinct",
+            "source_refs": [
+                "WIN_PREU_2010_PAGE",
+                "WIN_PREU_2011_PDF",
+                "WIN_PREU_2012_PDF",
+                "WIN_PREU_2013_PDF",
+                "WIN_PREU_2014_PDF",
+                "WIN_PREU_2015_ORIGINAL_PDF",
+                "WIN_ACCOUNTS_2015",
+                "WIN_PREU_2016_PAGE",
+                "WIN_PREU_2017_PDF",
+                "WIN_ACCOUNTS_2018",
+                "WIN_PREU_2019_PDF",
+                "WIN_ACCOUNTS_2020",
+            ],
+            "notes": "D1–D3 and D1–M1 remain distinct rulers. The 2020 CAG row is quarantined. Competing 2015, 2017 and 2019 source variants remain in the conflict register and are never averaged.",
+            "rows": WINCHESTER_PRE_U_HISTORY,
+        },
+        {
+            "dataset_id": "winchester_mixed_alevel_pre_u_2021",
+            "school": "Winchester College",
+            "domain": "exam_results",
+            "basis": "school-published combined A-level and Cambridge Pre-U equivalence ruler",
+            "source_refs": ["WIN_MIXED_RESULTS_2021_PDF"],
+            "notes": "Teacher-assessed pandemic result; kept separate from the pure A-level and pure Pre-U series.",
+            "rows": WINCHESTER_MIXED_RESULTS_2021,
+        },
+    ]
+    javascript = _replace_dataset_once(
+        javascript,
+        "winchester_pre_u_two_ruler_2011_2019",
+        pre_u_datasets,
+        "Winchester primary Pre-U and mixed-qualification datasets",
+        expected_rows=9,
+        expected_signatures=(
+            "entries:326,d1:25.2",
+            "d1_m2:92.7,d1_m3:96.6",
+        ),
+    )
+
+    alevel_dataset = {
+        "dataset_id": "winchester_alevel",
+        "school": "Winchester College",
+        "domain": "exam_results",
+        "basis": "official annual A-level grade-entry shares; pre-2010 rows use A and A–B, while modern rows use A*, A*–A and A*–B",
+        "source_refs": [
+            "WIN_ALEVEL_2003_2009_SCHOOL",
+            "WIN_ALEVEL_2003_TIMES",
+            "WIN_ALEVEL_2006_ISC",
+            "FB146",
+            "WIN_CURRENT_RESULTS_2025",
+        ],
+        "notes": "The school 2003–09 series controls. Conflicting 2003 and 2006 populations remain explicit and are not merged with the controlling denominators.",
+        "rows": WINCHESTER_ALEVEL_HISTORY,
+    }
+    javascript = _replace_dataset_once(
+        javascript,
+        "winchester_alevel",
+        [alevel_dataset],
+        "Winchester official A-level history",
+        expected_rows=6,
+        expected_signatures=(
+            "entries:559,a_star:null,a_star_a:73.2",
+            "publication_status:`Pending detailed publication — no exact 2026 A-level grade-entry bands",
+        ),
+    )
+
+    destination_datasets = [
+        {
+            "dataset_id": "winchester_destination_and_historic_access",
+            "school": "Winchester College",
+            "domain": "university_destinations",
+            "basis": "outcome-typed historic access, applications/admissions, offers, places and matriculations; not one continuous destination series",
+            "source_refs": [
+                "FB140",
+                "FB146",
+                "WIN_OXBRIDGE_GUARDIAN_2001_2006",
+                "WIN_OXBRIDGE_SUTTON_2002_2008",
+                "WIN_ANNUAL_REPORT_2008",
+                "WIN_DESTINATIONS_2010_PAGE",
+                "WIN_DESTINATIONS_2011_PAGE",
+                "WIN_DESTINATIONS_2012_PAGE",
+                "WIN_ACCOUNTS_2015",
+                "WIN_ACCOUNTS_2018",
+                "WIN_ACCOUNTS_2020",
+                "WIN_CURRENT_RESULTS_2025",
+                "WIN_CURRENT_SIXTH_FORM_2025",
+                "WIN_OXBRIDGE_2026_INITIAL",
+            ],
+            "notes": "Every row states its outcome type. Forecasts, rolling aggregates, offers, admissions and final matriculations must not be compared as if they shared one population.",
+            "rows": WINCHESTER_ACCESS_HISTORY,
+        },
+        {
+            "dataset_id": "winchester_final_destination_distributions_2010_2022",
+            "school": "Winchester College",
+            "domain": "university_destinations",
+            "basis": "official final-leaver destination distributions; rounded source labels retained without renormalisation",
+            "source_refs": [
+                "WIN_DESTINATIONS_2010_2019_PDF",
+                "WIN_DESTINATIONS_2020_PDF",
+                "WIN_DESTINATIONS_2021_IMAGE",
+                "WIN_DESTINATIONS_2022_UK_IMAGE",
+                "WIN_DESTINATIONS_2022_OVERALL_IMAGE",
+            ],
+            "notes": "2010–19 and 2020 rows transcribe the named categories recovered into the ledger and state their source-wide printed totals; 2021–22 overall category rows are complete. No row is renormalised.",
+            "rows": WINCHESTER_DESTINATION_DISTRIBUTIONS,
+        },
+    ]
+    javascript = _replace_dataset_once(
+        javascript,
+        "winchester_destination_and_historic_access",
+        destination_datasets,
+        "Winchester outcome-typed access and destination datasets",
+        expected_rows=17,
+        expected_signatures=(
+            "period:`1836`,metric:`percent_of_leavers_to_oxbridge`",
+            "period:`2025`,metric:`us_offers`,value:47",
+        ),
     )
 
     javascript = _replace_once(
@@ -2154,6 +3180,77 @@ def apply_winchester_history(javascript: str) -> str:
         "Winchester GCSE history rows",
     )
 
+    javascript = _replace_once(
+        javascript,
+        "e===`kcs_ib_hl`?o=`ib-hl`:e.includes(`pre_u`)||e===`westminster_pre_u`?o=`pre-u`:",
+        "e===`kcs_ib_hl`?o=`ib-hl`:"
+        "e===`winchester_mixed_alevel_pre_u_2021`?(o=`a-level-pre-u-crosswalk`,V(n,`a_star`,`a_star_equivalent`),V(n,`a_star_a`,`a_star_a_pre_u_equivalent`),V(n,`a_star_b`,`a_star_b_pre_u_equivalent`)):"
+        "e.includes(`pre_u`)||e===`westminster_pre_u`?o=`pre-u`:",
+        "Winchester 2021 mixed-qualification ruler",
+    )
+
+    javascript = _replace_once(
+        javascript,
+        "winchester_pre_u_two_ruler_2011_2019:`Pre-U grade distribution · two published rulers`,winchester_alevel:`A-level results`,winchester_gcse:",
+        "winchester_pre_u_two_ruler_2011_2019:`Pre-U grade distribution · 2010–20 primary archive`,"
+        "winchester_mixed_alevel_pre_u_2021:`Mixed A-level / Pre-U TAG ruler · 2021`,"
+        "winchester_alevel:`A-level results · official 2003–09 and modern series`,"
+        "winchester_gcse:",
+        "Winchester examination dataset labels",
+    )
+    javascript = _replace_once(
+        javascript,
+        "winchester_destination_and_historic_access:`Destination and historic-access measures`,spgs_destinations:",
+        "winchester_destination_and_historic_access:`Historic access, offers, places & matriculations · outcome typed`,"
+        "winchester_final_destination_distributions_2010_2022:`Final destination distributions · published rounding retained`,"
+        "spgs_destinations:",
+        "Winchester university dataset labels",
+    )
+
+    javascript = _replace_once(
+        javascript,
+        "{id:`X03`,school:`Winchester College`,period:2015,metric:`Pre-U entries`,values:[{value:443,source:`FB139`},{value:444,source:`FB146`}],treatment:`Unresolved; show denominator conflict.`}",
+        "{id:`X03`,school:`Winchester College`,period:2015,metric:`Pre-U entries and cumulative bands`,values:[{value:443,source:`WIN_PREU_2015_ORIGINAL_PDF`,basis:`complete original result table; controlling`},{value:444,source:`WIN_ACCOUNTS_2015`,basis:`later signed-accounts version; 99.4% pass is arithmetically impossible over this denominator`}],treatment:`Display the coherent 443-entry original table. Preserve the later 444-entry version as a conflict and never combine its rounded bands or pass claim with the original denominator.`}",
+        "Winchester 2015 Pre-U conflict treatment",
+    )
+
+    correction_entries = _compact_json(WINCHESTER_CORRECTIONS)[1:-1]
+    javascript = _replace_one_of_once(
+        javascript,
+        (
+            (
+                "}],Ss=[{id:`X01`",
+                "}," + correction_entries + "],Ss=[{id:`X01`",
+            ),
+            (
+                "}],xs=[{id:`X01`",
+                "}," + correction_entries + "],xs=[{id:`X01`",
+            ),
+        ),
+        "Winchester correction ledger additions",
+    )
+    conflict_entries = _compact_json(WINCHESTER_CONFLICTS)[1:-1]
+    javascript = _replace_one_of_once(
+        javascript,
+        (
+            (
+                "}],Cs=[{phase:`legacy clean/standardised`",
+                "}," + conflict_entries + "],Cs=[{phase:`legacy clean/standardised`",
+            ),
+            (
+                "}],Ss=[{phase:`legacy clean/standardised`",
+                "}," + conflict_entries + "],Ss=[{phase:`legacy clean/standardised`",
+            ),
+        ),
+        "Winchester conflict ledger additions",
+    )
+    javascript = _replace_once(
+        javascript,
+        "`For Winchester 2017/2019 Pre-U D1–M1, primary raw-count variants and later league candidates must remain distinct.`",
+        "`For Winchester 2015, keep the coherent 443-entry original Pre-U table separate from the later 444-entry accounts version. For 2017/2019 D1–M1, primary raw-count variants control and later league candidates remain distinct. Keep the 2021 mixed A-level/Pre-U TAG ruler out of both pure trends.`",
+        "Winchester qualification-basis guardrail",
+    )
+
     historic_exam_row_delta = (len(ST_PAULS_GCSE_HISTORY) - 1) + (len(ST_PAULS_ALEVEL_HISTORY) - 1)
     destination_row_delta = len(ST_PAULS_DESTINATION_HISTORY) - 16
     st_pauls_added_rows = sum(
@@ -2162,10 +3259,19 @@ def apply_winchester_history(javascript: str) -> str:
     )
     st_pauls_dataset_count = 45 + len(ST_PAULS_ADDITIONAL_DESTINATION_DATASETS)
     st_pauls_row_count = 555 + historic_exam_row_delta + destination_row_delta + st_pauls_added_rows
+    winchester_added_dataset_count = 2
+    winchester_row_delta = (
+        len(WINCHESTER_GCSE_HISTORY)
+        + (len(WINCHESTER_PRE_U_HISTORY) - 9)
+        + len(WINCHESTER_MIXED_RESULTS_2021)
+        + (len(WINCHESTER_ALEVEL_HISTORY) - 6)
+        + (len(WINCHESTER_ACCESS_HISTORY) - 17)
+        + len(WINCHESTER_DESTINATION_DISTRIBUTIONS)
+    )
     javascript = _replace_once(
         javascript,
         f"datasets:{st_pauls_dataset_count},rows:{st_pauls_row_count}",
-        f"datasets:{st_pauls_dataset_count},rows:{st_pauls_row_count + len(WINCHESTER_GCSE_HISTORY)}",
-        "scope row count after Winchester history",
+        f"datasets:{st_pauls_dataset_count + winchester_added_dataset_count},rows:{st_pauls_row_count + winchester_row_delta}",
+        "scope row and dataset counts after Winchester history",
     )
     return javascript

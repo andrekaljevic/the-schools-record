@@ -14,7 +14,7 @@ from site_patches import apply_st_pauls_history, apply_winchester_history
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
-DEPLOYMENT_REVISION = "2026-09-02-winchester-upper-bounds"
+DEPLOYMENT_REVISION = "2026-09-02-winchester-results-and-destinations-audit"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {

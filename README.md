@@ -4,7 +4,7 @@ A public, source-led statistical yearbook of examination results, university
 pathways and admissions evidence across leading UK independent schools.
 
 This repository contains the self-contained Streamlit deployment of The Schools
-Record and its auditable evidence snapshot dated 30 August 2026. Traced
+Record and its auditable evidence snapshot dated 2 September 2026. Traced
 St Paul’s and Winchester historical extensions were added in September 2026.
 
 ## Winchester historical GCSE extension
@@ -16,6 +16,17 @@ the full suppression intervals in the row notes while displaying their upper
 endpoints to one decimal place, and leaves unrecovered annual cells blank. It
 does not substitute pupil-level five-grade thresholds or government subsets
 that excluded substantial IGCSE provision.
+
+## Winchester results and destinations audit
+
+The Winchester audit restores the official 2010–20 Cambridge Pre-U spine,
+quarantines the mixed A-level/Pre-U teacher-assessed result for 2021, and adds
+the school’s exact 2003–09 A-level tables. Conflicting source populations remain
+visible rather than being averaged. University evidence is outcome-typed so
+forecasts, offers, admissions, places, matriculations and final destinations do
+not masquerade as a single series; published destination rounding is retained
+without renormalisation. Current evidence includes the controlling 2024/25
+offer totals and the separately labelled initial 2026 Oxbridge total.
 
 ## St Paul’s historical extension
 
