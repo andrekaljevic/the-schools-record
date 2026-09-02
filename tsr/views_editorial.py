@@ -110,60 +110,6 @@ def methodology() -> None:
 </main>""")
 
 
-@st.cache_data(show_spinner=False)
-def _evidence_register() -> list[tuple[str, list[str], int]]:
-    """Reference → (domains in first-seen order, linked dataset count)."""
-    register: dict[str, dict[str, dict[str, None]]] = {}
-    for entry in dataset.figures()["datasets"]:
-        for ref in entry.get("source_refs") or []:
-            record = register.setdefault(ref, {"datasets": {}, "domains": {}})
-            record["datasets"][entry["dataset_id"]] = None
-            record["domains"][entry["domain"]] = None
-    ordered = sorted(register.items(), key=lambda item: _natural_key(item[0]))
-    return [
-        (ref, list(record["domains"]), len(record["datasets"]))
-        for ref, record in ordered
-    ]
-
-
-def evidence() -> None:
-    ordered = _evidence_register()
-    entries = "".join(
-        f"""<article class="evidence-entry" id="source-{esc(ref)}">
-  <div><p class="source-ref">{esc(ref)}</p></div>
-  <div><h3>Public evidence reference {esc(ref)}</h3><p>{esc(" · ".join(domain.replace("_", " ") for domain in domains))}</p></div>
-  <dl>
-    <div><dt>Linked datasets</dt><dd>{linked}</dd></div>
-    <div><dt>Document location</dt><dd>Available on request</dd></div>
-  </dl>
-</article>"""
-        for ref, domains, linked in ordered
-    )
-
-    write(f"""
-<main id="main-content">
-  <div class="shell">{breadcrumbs([("Evidence", None)])}</div>
-  {page_hero(
-      "Public evidence register",
-      "Evidence without private locations",
-      "Stable references show what supports each dataset. Direct URLs, archive paths, Drive identifiers and internal research notes are withheld.",
-      "Underlying documents can be discussed for legitimate research or correction work. Publication remains subject to rights, privacy and source-security checks.",
-  )}
-  <section class="section shell">
-    <div class="evidence-key">
-      <div><span class="status-pill">Official / primary</span><p>Published by the originating school, university, regulator or examination body.</p></div>
-      <div><span class="status-pill">Calculated</span><p>Mechanically calculated from an official table, with the source values retained.</p></div>
-      <div><span class="status-pill">Estimated / bounded</span><p>Kept visibly distinct from an exact figure, with its method or limits where recorded.</p></div>
-    </div>
-    <div class="section-heading register-heading">
-      <div><p class="eyebrow">Register</p><h2>{len(ordered)} evidence references</h2></div>
-      <p>Snapshot {esc(dataset.metadata()["snapshot_version"])}</p>
-    </div>
-    <div class="evidence-register">{entries}</div>
-  </section>
-</main>""")
-
-
 OFFER_ONE = (
     "Examination and university-outcome charts",
     "Definitions, evidence statuses and limitations",

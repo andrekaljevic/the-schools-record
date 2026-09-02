@@ -26,16 +26,25 @@ python -m unittest discover -s tests -v
 | --- | --- |
 | `streamlit_app.py` | Entry point: page config, stylesheet injection, header, router, footer |
 | `tsr/dataset.py` | Loads the frozen dataset |
-| `tsr/records.py` | Dataset and row selection, ordering and labelling |
-| `tsr/format.py` | Field labels and display formatting |
+| `tsr/corpora.py` | Typed access to all four corpora, the corrections and differences ledgers, the source catalogue and school-entry material; resolves every school spelling the corpora use |
+| `tsr/records.py` | Figures-ledger selection, ordering, labelling and qualification families |
+| `tsr/format.py` | Field labels, display formatting and ledger column selection |
 | `tsr/comparison.py` | Like-for-like comparison series |
 | `tsr/chart.py` | The comparison chart and the small-multiple panels, drawn as inline SVG |
 | `tsr/trajectory.py` | Index panels and school results-by-year panels, assembled from the comparison series |
-| `tsr/components.py` | Data ledgers, evidence panels, latest-record cards |
-| `tsr/views_*.py` | One module per group of routes |
-| `tsr/forms.py` | Enquiry and correction forms |
+| `tsr/evidence.py` | The evidence index: a stable identifier, description and public route for every frozen record |
+| `tsr/sources.py` | Public source references and the approved public links behind them |
+| `tsr/components.py` | Data ledgers, evidence panels, series indexes, granular tables, latest-record cards |
+| `tsr/views_core.py` | Home, school index, school records, examination and university ledgers |
+| `tsr/views_evidence.py` | The evidence centre: records, sources, how the figures are checked |
+| `tsr/views_corpora.py` | Oxford and Cambridge records, US-university records, school entry |
+| `tsr/views_corrections.py` | Corrections and published differences; the correction report |
+| `tsr/views_compare.py`, `tsr/views_editorial.py` | Comparison tool; methodology, professional and static pages |
+| `tsr/forms.py`, `tsr/review_queue.py` | Enquiry and correction forms and where their submissions go |
+| `tsr/meta.py` | Page titles, descriptions and shareable metadata per route |
 | `tsr/styles.py` | Re-scopes the published stylesheet and styles the widgets |
 | `data/dataset.json` | The frozen production dataset |
+| `data/public_sources.json` | The approved public source links, derived from the reviewed public build |
 | `assets/site.css` | The published site's own stylesheet, reused verbatim |
 | `static/` | School artwork and the sample dossier PDF, served by Streamlit |
 | `pages_html/` | Static editorial pages (about, privacy, terms, changelog) |
@@ -45,7 +54,87 @@ python -m unittest discover -s tests -v
 Routes are carried in the `p` query parameter, so every page of the record has
 a shareable address: `?p=/schools/winchester/exam-results`. The comparison tool
 additionally reflects `schools`, `metric`, `from`, `to` and `view` in the URL,
-as the published site did.
+as the published site did; the school index reflects `series`; the evidence
+centre reflects its filters, `page`, `section` and `record`.
+
+| Route | Content |
+| --- | --- |
+| `/` | Overview, the four-corpus inventory and the seven school cards |
+| `/schools` | The school index with one like-for-like series panel per school |
+| `/schools/{id}` | School record: latest result, results by year, what the record holds, every section |
+| `/schools/{id}/exam-results` | Examination ledgers, series index, subject-level detail where held |
+| `/schools/{id}/university-destinations` | Application-cycle and destination ledgers, itemised destination lists where held |
+| `/schools/{id}/oxbridge` | The school's Oxford and Cambridge admissions records, filterable |
+| `/schools/{id}/us-universities` | The school's US and overseas university records, filterable |
+| `/schools/{id}/school-entry` | Published school-admissions process evidence and known gaps |
+| `/compare` | The like-for-like comparison tool |
+| `/evidence` | Evidence centre: search all 2,277 records (`section=records`), the source register (`sources`), how the figures are checked (`method`); `record=` opens one record, `dataset=…&period=…` traces a displayed figure |
+| `/oxbridge`, `/us-universities` | Corpus homes: by-school summaries, university-wide context, the 2007 historical table |
+| `/corrections` | Every recorded correction and published difference, filterable by school |
+| `/corrections/report` | The correction report form |
+| `/methodology`, `/professional`, `/sample-dossier`, `/about`, `/privacy`, `/terms`, `/changelog` | Editorial pages |
+
+### The four corpora
+
+The 2,277 frozen records are four corpora, and each has a public path:
+
+* **Figures** (1,274 rows in 62 ledgers) — the school examination and
+  university ledgers. Every ledger shows every field that carries a published
+  figure: identity, denominators, counts, percentages and the evidence status,
+  with no column cap; only annotations wait behind "Show the remaining
+  columns". Each row has an anchor, an evidence panel with its row-level and
+  dataset-level sources, and a link that traces the figure in the evidence
+  centre.
+* **Granular** (83 rows) — St Paul's 2010 subject-level results and 2009
+  itemised destination lists, shown as their own tables on the St Paul's
+  examination and university pages.
+* **Oxford and Cambridge** (571 records) — apply-centre outcomes by university
+  and cycle, derived combined outcomes, rounded subject and college releases,
+  the schools' own offer claims, university-wide outcomes, subject outcomes,
+  course competition and the 2007 five-year table. Records naming a collection
+  school are on that school's Oxbridge page; the rest are on `/oxbridge`.
+* **US and overseas universities** (349 records) — named institutions and
+  explicit aggregates by school, period and outcome type, with aggregates,
+  alternative published versions and canonical status flagged.
+
+`tsr/evidence.py` gives every record a stable identifier (`fig:…`, `gran:…`,
+`ox:…`, `us:…`) and a permanent link, and `tests/test_parity.py` fails if any
+record loses its public page.
+
+### Sources and privacy
+
+The frozen dataset identifies evidence by stable reference keys and carries no
+document locations. The reviewed public build kept links to first-party school
+pages, public-body releases and Internet Archive captures while redacting every
+private working document; `tools/build_public_sources.py` applies exactly that
+patch pipeline to the retained reference build and writes the surviving links
+for the references the dataset cites to `data/public_sources.json`.
+`tsr/sources.py` refuses to load any private location, withheld titles stay
+withheld, and `tests/test_privacy.py` renders every route and fails on any
+Drive or Docs link or private identifier.
+
+### Corrections and published differences
+
+The figures corpus records 29 locked corrections and 26 cases where credible
+publications disagree. `/corrections` shows each in plain English — the
+earlier value, the value the record uses, the reason, the sources and the
+treatment — together with which compilation controls. The report form is
+separate, at `/corrections/report`.
+
+### Forms and the review queue
+
+Submissions go through `tsr/review_queue.py`. With `TSR_REVIEW_WEBHOOK_URL`
+(and optionally `TSR_REVIEW_WEBHOOK_TOKEN`) configured, each submission is
+POSTed as JSON and confirmed only on a 2xx response. Without it, submissions
+are appended to `review-queue/*.jsonl` (or `TSR_REVIEW_QUEUE_DIR`), and the
+page says plainly that this deployment has no durable review store, shows a
+copy of the submission to keep, and reports a failed write as a failure.
+
+### Metadata
+
+Each route sets its own page title; the description, Open Graph fields, a
+canonical link and a schema.org Dataset description are written into the
+document head after render by a guarded script (`tsr/meta.py`).
 
 ### Styling
 
@@ -103,9 +192,33 @@ python tools/extract_dataset.py           # rewrite it from the bundle
 snapshot identity and a set of spot-checked figures, and re-extracts the bundle
 when Node is available.
 
+### Tests
+
+| Module | Guards |
+| --- | --- |
+| `tests/test_frozen_dataset.py` | The dataset's checksum, counts, snapshot identity and spot-checked figures |
+| `tests/test_streamlit_record.py` | Row selection, formatting, comparison series and the pinned comparison chart |
+| `tests/test_charts.py` | The index and results-by-year panels: determinism, the segment rule, exact values |
+| `tests/test_parity.py` | Reachability of every dataset, row and record; the feature matrix of the final public product; a crawl of every internal link; representative high-complexity ledgers; exact displayed values |
+| `tests/test_privacy.py` | No private location in any public output; the review queue never claims receipt it cannot prove |
+| `tests/test_responsive.py` | Representative pages at phone width in a real browser (skipped without Playwright and Chromium) |
+| `tests/test_*_history.py`, `test_kcs_entry_counts.py`, `test_premium_presentation.py`, `test_public_experience_updates.py` | The historical patch modules that document the reference build |
+
 ## Parity with the previously hosted site
 
-The rebuild was checked page by page against the published build:
+The native rebuild reproduces the final reviewed public product — the reference
+build in `bundle/app.js.gz` with its data and public-experience patches — not
+merely the shallower interim build it was first ported from. Its evidence
+centre, corrections and published-differences ledgers, Oxford and Cambridge
+and US-university records, school-entry material, row-level source tracing and
+approved public links are all native pages now. Two things from older bundles
+are deliberately not restored: private document links (redacted by the final
+public-experience pass) and the bulk CSV index and per-table download handlers
+that the same pass removed; per-ledger CSV downloads remain. The internal
+analytical findings carried in the figures corpus are not rendered either: they
+are working notes rather than published figures.
+
+The rebuild was also checked page by page against the interim published build:
 
 * every data table on every school page renders identical values, columns,
   ordering, evidence statuses and blank cells;
@@ -129,11 +242,9 @@ figures are carried by the flattened columns beside it.
 
 ## Enquiries and corrections
 
-The published site posted these forms to server endpoints. This deployment has
-no such backend, so submissions are appended to `review-queue/*.jsonl` next to
-the application. On Streamlit Community Cloud that storage is ephemeral and is
-cleared when the app restarts — wire the forms to a durable destination before
-relying on them.
+The published site posted these forms to server endpoints. See "Forms and the
+review queue" above: configure `TSR_REVIEW_WEBHOOK_URL` for durable receipt;
+without it the page says so and never claims more than a local write.
 
 ## Regenerating assets
 
@@ -141,6 +252,7 @@ relying on them.
 python -m pip install -r requirements-dev.txt
 python tools/build_static_images.py                      # static/schools/*.webp
 python tools/build_sample_pdf.py http://127.0.0.1:8502/  # the sample dossier PDF
+python tools/build_public_sources.py                     # data/public_sources.json
 ```
 
 ## Historical material

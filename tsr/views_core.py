@@ -6,7 +6,7 @@ from typing import Any, Sequence
 
 import streamlit as st
 
-from . import comparison, components, dataset, records, trajectory
+from . import comparison, components, corpora, dataset, evidence, records, trajectory
 from .icons import icon
 from .ui import (
     LAST_REVIEWED_SHORT,
@@ -19,10 +19,24 @@ from .ui import (
     write,
 )
 
+find_school = records.find_school
+
+
 @st.cache_data(show_spinner=False)
 def _dataset_stack(slug: str, domains: tuple[str, ...], school_name: str) -> str:
     """Ledger markup is deterministic for a frozen dataset, so build it once."""
     return components.dataset_stack(records.school_datasets(slug, list(domains)), school_name)
+
+
+@st.cache_data(show_spinner=False)
+def _granular_stack(slug: str, domains: tuple[str, ...], school_name: str) -> str:
+    entries = [entry for entry in corpora.granular_datasets(slug) if entry["domain"] in domains]
+    return components.granular_stack(entries, school_name)
+
+
+@st.cache_data(show_spinner=False)
+def _school_inventory(slug: str) -> str:
+    return inventory_markup(slug)
 
 
 @st.cache_data(show_spinner=False)
@@ -57,6 +71,7 @@ HOME_QUESTIONS = (
 def home() -> None:
     span = records.collection_span()
     total = records.frozen_record_count()
+    counts = corpora.corpus_counts()
     schools = dataset.schools()
 
     cards = []
@@ -108,6 +123,40 @@ def home() -> None:
 
   <section class="principle-band">
     <div class="shell principle-inner">{icon("scale")}<p>We do not treat offers as destinations, pupils as exam entries, or incompatible grading systems as one continuous league table.</p></div>
+  </section>
+
+  <section class="section shell" aria-labelledby="inventory-title">
+    <div class="section-heading">
+      <div><p class="eyebrow">What the record holds</p><h2 id="inventory-title">{total:,} frozen records, four corpora</h2></div>
+      {link("/evidence", f'Search every record {icon("arrow-right")}', "text-link")}
+    </div>
+    <div class="inventory-grid">
+      <article class="inventory-card">
+        <p class="eyebrow">School results and destinations</p>
+        <p class="inventory-figure">{counts["figures"]:,}</p>
+        <p>Year-by-year ledgers of examination results, applications, offers, acceptances and destinations for each school.</p>
+        {link("/schools", f'School records {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="inventory-card">
+        <p class="eyebrow">Subject and destination detail</p>
+        <p class="inventory-figure">{counts["granular"]:,}</p>
+        <p>Subject-level grade counts and itemised destination lists from a school's own booklet.</p>
+        {link("/schools/st-pauls/exam-results#st_pauls_subject_results_2010_alevel", f'Subject tables {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="inventory-card">
+        <p class="eyebrow">Oxford and Cambridge admissions</p>
+        <p class="inventory-figure">{counts["oxbridge"]:,}</p>
+        <p>Apply-centre applications, offers and admissions by university and entry cycle, with university-wide context.</p>
+        {link("/oxbridge", f'Oxford and Cambridge records {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="inventory-card">
+        <p class="eyebrow">US and overseas universities</p>
+        <p class="inventory-figure">{counts["us"]:,}</p>
+        <p>Named institutions, counts and outcome types by school and year, with aggregates and published differences flagged.</p>
+        {link("/us-universities", f'US university records {icon("arrow-right")}', "text-link")}
+      </article>
+    </div>
+    <p class="inventory-note">{len(corpora.corrections())} corrections and {len(corpora.conflicts())} published differences are recorded and {link("/corrections", "kept visible")}.</p>
   </section>
 
   <section class="section shell" aria-labelledby="collection-title">
@@ -282,6 +331,24 @@ def school_record(slug: str) -> bool:
     )
     applications = records.school_datasets(slug, ["university_admissions"])
     span = records.school_year_span(slug)
+    school_counts = corpora.school_corpus_counts(slug)
+    corpus_counts = {
+        "figures_exam": sum(len(entry["rows"]) for entry in exam),
+        "figures_university": sum(len(entry["rows"]) for entry in university),
+        "oxbridge": school_counts["oxbridge"],
+        "us": school_counts["us"],
+        "total": sum(school_counts.values()),
+    }
+    exam_families = list(dict.fromkeys(records.dataset_family(entry) for entry in exam))
+    university_families = list(dict.fromkeys(records.dataset_family(entry) for entry in university))
+    ox_low, ox_high = corpora.years_of(corpora.oxbridge_year(item) for item in corpora.oxbridge_records(slug))
+    ox_span = f"{ox_low}–{ox_high}" if ox_low else "none"
+    us_low, us_high = corpora.years_of(corpora.us_year(item) for item in corpora.us_records(slug))
+    us_span = f"{us_low}–{us_high}" if us_low else "none"
+    process = corpora.admissions_process(slug) or {}
+    entry_status = process.get("status", "not reviewed")
+    corrections = corpora.corrections(slug)
+    conflicts = corpora.conflicts(slug)
 
     write(f"""
 <main id="main-content">
@@ -318,32 +385,66 @@ def school_record(slug: str) -> bool:
   </section>
 
   <section class="school-route-band">
-    <div class="shell route-card-grid">
+    <div class="shell route-card-grid route-card-grid-wide">
       <article class="route-card">
         {icon("graduation-cap")}
-        <p class="eyebrow">{len(exam)} datasets</p>
+        <p class="eyebrow">{len(exam)} ledgers · {corpus_counts["figures_exam"]} rows</p>
         <h2>Examination results</h2>
-        <p>A-level, GCSE, IB and Cambridge Pre-U records, each retained on the scale and denominator supplied by the source.</p>
+        <p>{esc(" · ".join(exam_families))}. Each ledger stays on the scale and denominator its source published.</p>
         {link(f"/schools/{slug}/exam-results", f'Open examination record {icon("arrow-right")}', "text-link")}
       </article>
       <article class="route-card">
         {icon("library-big")}
-        <p class="eyebrow">{len(university)} datasets</p>
+        <p class="eyebrow">{len(university)} ledgers · {corpus_counts["figures_university"]} rows</p>
         <h2>University outcomes</h2>
-        <p>Application-cycle figures and final destinations are labelled precisely and kept apart.</p>
+        <p>{esc(" · ".join(university_families))}. Applications, offers, acceptances and destinations are labelled precisely and kept apart.</p>
         {link(f"/schools/{slug}/university-destinations", f'Open university record {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="route-card">
+        {icon("scale")}
+        <p class="eyebrow">{corpus_counts["oxbridge"]} records · cycles {ox_span}</p>
+        <h2>Oxford and Cambridge</h2>
+        <p>Apply-centre applications, offers and admissions by university and entry cycle, with rounded subject and college releases.</p>
+        {link(f"/schools/{slug}/oxbridge", f'Open the Oxbridge records {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="route-card">
+        {icon("book-open")}
+        <p class="eyebrow">{corpus_counts["us"]} records · {us_span}</p>
+        <h2>US and overseas universities</h2>
+        <p>Named institutions, counts and outcome types by year; aggregates and alternative published versions stay flagged.</p>
+        {link(f"/schools/{slug}/us-universities", f'Open the US records {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="route-card">
+        {icon("file-text")}
+        <p class="eyebrow">School entry · {esc(entry_status)}</p>
+        <h2>School entry</h2>
+        <p>Published admissions-process evidence and known gaps. School entry is kept apart from university admissions.</p>
+        {link(f"/schools/{slug}/school-entry", f'Open the school entry evidence {icon("arrow-right")}', "text-link")}
+      </article>
+      <article class="route-card">
+        {icon("search")}
+        <p class="eyebrow">{len(corrections)} corrections · {len(conflicts)} published differences</p>
+        <h2>Corrections and evidence</h2>
+        <p>Every corrected figure and every case of disagreeing publications for this school, with the value the record uses; every record traceable to public references.</p>
+        {link(f"/corrections?school={slug}", f'Corrections for this school {icon("arrow-right")}', "text-link")}
+        {link(f"/evidence?school={slug}", f'Search this school’s records {icon("arrow-right")}', "text-link")}
       </article>
     </div>
   </section>
 
-  <section class="section shell">
+  <section class="section shell" aria-labelledby="inventory-heading">
+    <div class="section-heading">
+      <div><p class="eyebrow">What this record holds</p><h2 id="inventory-heading">Evidence by qualification and outcome</h2></div>
+      <p>Every ledger, the years it covers and the published scales it carries. Rows are frozen values; a scale change is a break, not a conversion.</p>
+    </div>
+    {_school_inventory(slug)}
     <div class="record-inventory">
       <p class="eyebrow">At a glance</p>
       <dl>
         <div><dt>Reviewed period</dt><dd>{esc(school["evidenceWindow"])}</dd></div>
-        <div><dt>Examination datasets</dt><dd>{len(exam)}</dd></div>
-        <div><dt>University datasets</dt><dd>{len(university)}</dd></div>
-        <div><dt>Application-cycle datasets</dt><dd>{len(applications)}</dd></div>
+        <div><dt>Frozen records naming this school</dt><dd>{corpus_counts["total"]:,}</dd></div>
+        <div><dt>Examination ledgers</dt><dd>{len(exam)}</dd></div>
+        <div><dt>University ledgers</dt><dd>{len(university)}</dd></div>
       </dl>
     </div>
   </section>
@@ -358,6 +459,19 @@ def dataset_page(slug: str, kind: str) -> bool:
     is_exam = kind == "exam"
     domains = ["exam_results"] if is_exam else ["university_admissions", "university_destinations"]
     entries = records.school_datasets(slug, domains)
+    granular = [entry for entry in corpora.granular_datasets(slug) if entry["domain"] in domains]
+    granular_index = ""
+    granular_section = ""
+    if granular:
+        granular_index = (
+            '<nav class="series-index series-index-granular" aria-label="Subject and destination detail"><p class="eyebrow">Subject and destination detail</p><ol>'
+            + "".join(
+                f'<li><a href="#{esc(entry["dataset_id"])}"><span class="series-family">Itemised · {esc(entry["period"])}</span><strong>{esc(corpora.granular_label(entry))}</strong><span class="series-meta">{len(entry["rows"])} rows</span></a></li>'
+                for entry in granular
+            )
+            + "</ol></nav>"
+        )
+        granular_section = f"""<div class="section-heading granular-heading"><div><p class="eyebrow">Subject and destination detail</p><h2>Itemised tables from the school's own booklet</h2></div><p>Counts as printed, subject by subject or university by university. These rows are the granular corpus; they are not re-summed into the ledgers above.</p></div>{_granular_stack(slug, tuple(domains), school["name"])}"""
     title = "Examination results" if is_exam else "University outcomes"
     intro = (
         "Published grade-entry results are presented on their original qualification and grading scales. Structural breaks remain visible."
@@ -397,8 +511,14 @@ def dataset_page(slug: str, kind: str) -> bool:
     </div>
   </section>
 
+  <section class="shell series-index-section">
+    {components.series_index(entries, "Ledgers in this record")}
+    {granular_index}
+  </section>
+
   <section class="ledger-section shell" aria-label="{esc(title)} datasets">
     {_dataset_stack(slug, tuple(domains), school["name"])}
+    {granular_section}
   </section>
 </main>""")
     return True
@@ -412,3 +532,63 @@ def not_found() -> None:
   <p>The address may be incomplete or out of date.</p>
   {link("/", "Return home", "button button-primary")}
 </main>""")
+
+
+def inventory_markup(slug: str) -> str:
+    """Every ledger of a school with its family, years, published scales and row count."""
+    rows = []
+    for domain_group, label in (
+        (("exam_results",), "Examination results"),
+        (("university_admissions",), "University applications"),
+        (("university_destinations",), "University destinations"),
+    ):
+        entries = records.school_datasets(slug, list(domain_group))
+        page = "exam-results" if domain_group[0] == "exam_results" else "university-destinations"
+        for entry in entries:
+            scales: dict[str, list[int]] = {}
+            for row in entry["rows"]:
+                year = records.row_year(row)
+                key = " · ".join(str(row[k]) for k in ("level", "scale") if row.get(k)) or "as published"
+                if year is not None:
+                    scales.setdefault(key, []).append(year)
+            scale_text = "; ".join(
+                f"{key} {min(years)}–{max(years)}" if min(years) != max(years) else f"{key} {min(years)}"
+                for key, years in scales.items()
+            ) or "undated"
+            rows.append(
+                f'<tr><td>{esc(label)}</td><td>{esc(records.dataset_family(entry))}</td>'
+                f'<th scope="row">{link("/schools/" + slug + "/" + page + "#" + entry["dataset_id"], esc(records.dataset_label(entry)))}</th>'
+                f'<td>{esc(components.dataset_span(entry))}</td><td class="cell-note">{esc(scale_text)}</td><td>{len(entry["rows"])}</td></tr>'
+            )
+    for entry in corpora.granular_datasets(slug):
+        page = "exam-results" if entry["domain"] == "exam_results" else "university-destinations"
+        rows.append(
+            f'<tr><td>Subject and destination detail</td><td>Itemised</td>'
+            f'<th scope="row">{link("/schools/" + slug + "/" + page + "#" + entry["dataset_id"], esc(corpora.granular_label(entry)))}</th>'
+            f'<td>{esc(entry["period"])}</td><td class="cell-note">counts as printed</td><td>{len(entry["rows"])}</td></tr>'
+        )
+    ox = corpora.oxbridge_records(slug)
+    if ox:
+        low, high = corpora.years_of(corpora.oxbridge_year(item) for item in ox)
+        families = " · ".join(sorted({corpora.oxbridge_family(item)["label"] for item in ox}))
+        rows.append(
+            f'<tr><td>Oxford and Cambridge admissions</td><td>Apply-centre records</td>'
+            f'<th scope="row">{link("/schools/" + slug + "/oxbridge", "Oxford and Cambridge records")}</th>'
+            f'<td>{low}–{high}</td><td class="cell-note">{esc(families)}</td><td>{len(ox)}</td></tr>'
+        )
+    us = corpora.us_records(slug)
+    if us:
+        low, high = corpora.years_of(corpora.us_year(item) for item in us)
+        types = " · ".join(sorted({corpora.us_metric_label(item) for item in us}))
+        rows.append(
+            f'<tr><td>US and overseas universities</td><td>Institution records</td>'
+            f'<th scope="row">{link("/schools/" + slug + "/us-universities", "US and overseas university records")}</th>'
+            f'<td>{low}–{high}</td><td class="cell-note">{esc(types)}</td><td>{len(us)}</td></tr>'
+        )
+    return f"""<div class="table-scroll" tabindex="0" aria-label="Scrollable table: what this record holds">
+  <table class="data-table inventory-table">
+    <caption>Every ledger and record set for this school, with the years and published scales it carries.</caption>
+    <thead><tr><th scope="col">Section</th><th scope="col">Family</th><th scope="col">Ledger</th><th scope="col">Years</th><th scope="col">Published scales and bases</th><th scope="col">Rows</th></tr></thead>
+    <tbody>{"".join(rows)}</tbody>
+  </table>
+</div>"""

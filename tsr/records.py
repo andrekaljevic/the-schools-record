@@ -59,6 +59,36 @@ DATASET_LABELS = {
 }
 
 
+# Qualification family or outcome family of a ledger, for headings and indexes.
+_FAMILY_RULES: tuple[tuple[str, str], ...] = (
+    ("mixed_alevel_pre_u", "A level / Pre-U · mixed ruler"),
+    ("combined_alevel_ib", "A level / IB · school crosswalk"),
+    ("pre_u", "Cambridge Pre-U"),
+    ("ib_hl", "IB Higher Level"),
+    ("gcse", "GCSE / IGCSE"),
+    ("alevel", "A level"),
+    ("exam_anchors", "Published examination results · mixed qualifications"),
+    ("oxford_strict", "Oxford apply-centre cycles"),
+    ("cambridge_and_combined", "Cambridge and combined Oxbridge cycles"),
+    ("oxbridge_cycle", "Oxbridge application cycles"),
+    ("destinations_and_offers", "Leaver destinations and offers"),
+    ("offer", "Offers and offer rates"),
+    ("current_cycle", "Current cycle"),
+    ("entry_year", "University entry year"),
+    ("by_university", "Destinations by university"),
+    ("destination", "Leaver destinations"),
+    ("oxbridge_counts", "Oxbridge destination counts"),
+)
+
+
+def dataset_family(entry: dict[str, Any]) -> str:
+    dataset_id = entry["dataset_id"]
+    for needle, label in _FAMILY_RULES:
+        if needle in dataset_id:
+            return label
+    return entry["domain"].replace("_", " ").capitalize()
+
+
 def school_aliases(school: dict[str, Any]) -> set[str]:
     return {
         school["name"],
@@ -159,11 +189,39 @@ def school_year_span(school_id: str) -> dict[str, int | None]:
     return {"min": min(years) if years else None, "max": max(years) if years else None}
 
 
+_LABEL_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^oxford_strict_"), "Oxford apply-centre cycles"),
+    (re.compile(r"^cambridge_and_combined_"), "Cambridge and combined Oxbridge cycles"),
+    (re.compile(r"^st_pauls_destinations_(\d{4})_complete_by_university$"), "Leaver destinations by university · {0} · complete list"),
+    (re.compile(r"^st_pauls_destinations_(\d{4})_entry_year_by_university$"), "University entry-year destinations by university · {0}"),
+    (re.compile(r"^st_pauls_destinations_(\d{4})_by_university$"), "Leaver destinations by university · {0}"),
+    (re.compile(r"^st_pauls_destinations$"), "Leaver destinations"),
+    (re.compile(r"^st_pauls_oxbridge_cycle_overview$"), "Oxbridge application cycles · overview"),
+    (re.compile(r"^st_pauls_university_entry_year_destinations$"), "University entry-year destinations"),
+    (re.compile(r"^eton_destinations_2000_2015$"), "Leaver destinations · 2000–2015"),
+    (re.compile(r"^eton_later_oxbridge_counts$"), "Oxbridge destination counts · later years"),
+    (re.compile(r"^westminster_destinations$"), "Leaver destinations"),
+    (re.compile(r"^kcs_offer_layer$"), "Oxbridge offers · school-reported layer"),
+    (re.compile(r"^kcs_offer_rate_2009_2016$"), "Offer rates · 2009–2016"),
+    (re.compile(r"^kcs_destinations$"), "Leaver destinations"),
+    (re.compile(r"^winchester_destination_and_historic_access$"), "Leaver destinations and historic access"),
+    (re.compile(r"^winchester_final_destination_distributions_2010_2022$"), "Final destination distributions · 2010–2022"),
+    (re.compile(r"^spgs_destinations$"), "Leaver destinations"),
+    (re.compile(r"^wycombe_destinations_and_offers$"), "Leaver destinations and offers"),
+    (re.compile(r"^current_cycle_2026$"), "Current cycle · 2026"),
+)
+
+
 def dataset_label(entry: dict[str, Any]) -> str:
-    label = DATASET_LABELS.get(entry["dataset_id"])
+    dataset_id = entry["dataset_id"]
+    label = DATASET_LABELS.get(dataset_id)
     if label:
         return label
-    words = entry["dataset_id"].replace("_", " ")
+    for pattern, template in _LABEL_PATTERNS:
+        match = pattern.match(dataset_id)
+        if match:
+            return template.format(*match.groups())
+    words = dataset_id.replace("_", " ")
     return re.sub(r"\b\w", lambda match: match.group(0).upper(), words)
 
 

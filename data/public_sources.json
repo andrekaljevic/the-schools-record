@@ -1,0 +1,246 @@
+{
+  "derived_from": "bundle/app.js.gz with the retained data and public-experience patches applied",
+  "policy": "Only links the reviewed public build kept after redacting private working documents; keys limited to references the frozen dataset cites.",
+  "sources": {
+    "ETON_2026_GCSE_POST": {
+      "id": "eton-2026-gcse-post",
+      "title": "Eton College · D Block results-day post · 20 August 2026",
+      "url": "https://www.instagram.com/p/DcQWk7Blu3Z/",
+      "role": "official qualitative announcement; no grade-entry percentages or counts"
+    },
+    "KCS_2026_IB_RELEASE": {
+      "id": "kcs-2026-ib-release",
+      "title": "King's College School Wimbledon · IB Diploma results 2026",
+      "url": "https://www.kcs.org.uk/senior-school/news/record-breaking-results-for-kings-ib-diploma-class-of-2026",
+      "role": "current official release controlling over an earlier 42.2-point social post"
+    },
+    "SPS_2002_EXAM_CC": {
+      "id": "st-pauls-2002-exam-results-common-crawl",
+      "title": "St Paul’s School · 2002 examination results · Common Crawl recovery",
+      "url": "https://index.commoncrawl.org/CC-MAIN-2009-2010-index?url=www.stpaulsschool.org.uk/st-pauls/academic/archive/2002-exam-results&output=json",
+      "role": "first-party page recovered at ARC offset 69,280,402; supplies 92.5% GCSE A*/A and 92.5% A-level A/B school headlines"
+    },
+    "SPS_ALEVEL_2000_TES": {
+      "id": "st-pauls-alevel-2000-tes",
+      "title": "TES · independent-school A-level analysis 2000",
+      "url": "https://www.tes.com/magazine/archive/independents-widen-top-level-grade-lead?amp=",
+      "role": "contemporary per-pupil and per-entry old-scale rankings"
+    },
+    "SPS_ALEVEL_2006_ISC": {
+      "id": "st-pauls-alevel-2006-isc",
+      "title": "ISC · Year 13 boys examination workbook 2006",
+      "url": "https://www.isc.co.uk/media/2474/2006_examresults_year13_boys_isc.xls",
+      "role": "raw ISC counts retained as a competing population against the school’s five-year headline"
+    },
+    "SPS_ALEVEL_2007_ISC": {
+      "id": "st-pauls-alevel-2007-isc",
+      "title": "ISC · Year 13 boys examination workbook 2007",
+      "url": "https://www.isc.co.uk/media/2475/2007_examresults_year13_boys_isc.xls",
+      "role": "raw ISC counts corroborating the rounded school headline"
+    },
+    "SPS_DEST_2014_PAGE": {
+      "id": "st-pauls-destinations-2014-page",
+      "title": "St Paul’s School · University Destinations 2014",
+      "url": "https://www.stpaulsschool.org.uk/ivy-league-and-oxbridge-offers-up-on-last-year/",
+      "role": "first-party final destination categories; medicine overlaps university categories"
+    },
+    "SPS_DEST_2015_PAGE": {
+      "id": "st-pauls-destinations-2015-page",
+      "title": "St Paul’s School · University Destinations of 2015 leavers",
+      "url": "https://www.stpaulsschool.org.uk/university-destinations/",
+      "role": "first-party reconciliation: 153 UK plus 28 North American university-bound leavers"
+    },
+    "SPS_DEST_2016_PDF": {
+      "id": "st-pauls-destinations-2016-pdf",
+      "title": "St Paul’s School · Destination of St Paul’s leavers 2016",
+      "url": "https://web.archive.org/web/20191115012525id_/https://www.stpaulsschool.org.uk/assets/img/banners/SPS-PROS_2017-18_WEB2-35.pdf",
+      "role": "first-party final leaver table, correct as at 1 September 2017; printed total 190 but the itemized university-side rows reconcile to 189"
+    },
+    "SPS_DEST_2017_GAP": {
+      "id": "st-pauls-destinations-2017-gap",
+      "title": "St Paul’s School · Pauline university destinations · 2017 publication promise",
+      "url": "https://web.archive.org/web/20181123223247id_/https://www.stpaulsschool.org.uk/st-pauls/news/academic-news/pauline-university-destinations",
+      "role": "archived first-party page still promising a future 2017 list after its stated publication date and linking only the explicit 2016 table; no 2017 table was recovered"
+    },
+    "SPS_DEST_2018_PDF": {
+      "id": "st-pauls-destinations-2018-pdf",
+      "title": "St Paul’s School · 2018 university destinations",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2019/11/2018-Leavers-Destinations-Nov-2019-1.pdf",
+      "role": "first-party full institution table: 162 UK or college destinations plus 42 abroad"
+    },
+    "SPS_DEST_2019_PDF": {
+      "id": "st-pauls-destinations-2019-pdf",
+      "title": "St Paul’s School · Destination of St Paul’s leavers 2019",
+      "url": "https://web.archive.org/web/20211203162243id_/https://www.stpaulsschool.org.uk/wp-content/uploads/2021/09/2019-Leavers-Destinations-for-website.pdf",
+      "role": "first-party final table, correct as at 22 September 2020: 190 leavers, including 23 abroad; extraction was verified from the rendered/archived original because the live text layer is unusable"
+    },
+    "SPS_DEST_2020_PDF": {
+      "id": "st-pauls-destinations-entry-year-2020-pdf",
+      "title": "St Paul’s School · leavers starting university in 2020 · updated 26 May 2021",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2021/05/2020-Leavers-Destinations-for-website-updated-May-2021.pdf",
+      "role": "first-party university-entry-year table: 175 main plus 27 abroad; the later May update controls because the earlier February file is blank"
+    },
+    "SPS_DEST_2021_PDF": {
+      "id": "st-pauls-destinations-entry-year-2021-pdf",
+      "title": "St Paul’s School · leavers starting university in 2021",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2022/03/2021-destinations-for-website-page-Feb-2022.pdf",
+      "role": "first-party university-entry-year table, as at 17 February 2022: 127 main plus 31 abroad"
+    },
+    "SPS_DEST_2022_PDF": {
+      "id": "st-pauls-destinations-2022-pdf",
+      "title": "St Paul’s School · Destination of St Paul’s leavers 2022",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2022/11/2022-Destinations-as-at-18-Oct-2022.pdf",
+      "role": "first-party final November table, as at 18 October 2022: 180 main plus 39 abroad; the similarly named October upload is incomplete"
+    },
+    "SPS_DEST_2023_PDF": {
+      "id": "st-pauls-destinations-2023-pdf",
+      "title": "St Paul’s School · Destinations of St Paul’s Leavers 2023",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2023/09/UPDATED-2023-Destinations-as-at-14-Sep-2023.pdf",
+      "role": "first-party updated final table, as at 14 September 2023: 186 main plus 42 abroad"
+    },
+    "SPS_DEST_2024_PDF": {
+      "id": "st-pauls-destinations-2024-pdf",
+      "title": "St Paul’s School · Destinations of St Paul’s Leavers 2024",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2024/09/2024-Destinations-as-at-25-Sept-2024.pdf",
+      "role": "first-party year-labelled final table, as at 25 September 2024: 143 UK plus 32 abroad"
+    },
+    "SPS_DEST_2025_PDF": {
+      "id": "st-pauls-destinations-2025-pdf",
+      "title": "St Paul’s School · 2025 university destinations",
+      "url": "https://www.stpaulsschool.org.uk/wp-content/uploads/2025/09/2025-Leavers-Destinations-5-September-2025.pdf",
+      "role": "first-party full institution table: 143 UK destinations plus 42 abroad"
+    },
+    "SPS_DFE_HISTORIC": {
+      "id": "st-pauls-dfe-historic-results",
+      "title": "DfE · historical school-performance downloads",
+      "url": "https://www.compare-school-performance.service.gov.uk/download-data",
+      "role": "official historical pupil-threshold and points measures; not interchangeable with grade-entry shares"
+    },
+    "WIN_2026_GCSE_POST": {
+      "id": "winchester-2026-gcse-post",
+      "title": "Winchester College · GCSE results post · 20 August 2026",
+      "url": "https://www.instagram.com/p/DcQ1fqxt7nR/",
+      "role": "official candidate-level headline only; no grade-entry bands"
+    },
+    "WIN_ACCOUNTS_2015": {
+      "id": "winchester-accounts-2015",
+      "title": "Winchester College · signed financial statements 2015",
+      "url": "https://web.archive.org/web/20160330195140id_/http://www.winchestercollege.org/UserFiles/Winchester%20College%20Financial%20Statements%2031%20August%202015%20Signed.pdf",
+      "role": "later 444-entry Pre-U version and university-place evidence; retained as a competing source, not merged with the original result table"
+    },
+    "WIN_ACCOUNTS_2018": {
+      "id": "winchester-accounts-2018",
+      "title": "Winchester College · signed accounts 2018",
+      "url": "https://web.archive.org/web/20211130031905id_/https://www.winchestercollege.org/assets/files/uploads/Winchester%20College%20Accounts%202018%20-%20FINAL%20SIGNED.pdf",
+      "role": "official Pre-U headline and university-offer evidence"
+    },
+    "WIN_ACCOUNTS_2020": {
+      "id": "winchester-accounts-2020",
+      "title": "Winchester College · signed annual accounts 2020",
+      "url": "https://web.archive.org/web/20220211185131id_/https://www.winchestercollege.org/assets/files/uploads/winchester-college-annual-accounts-2020.pdf",
+      "role": "official centre-assessed Pre-U headline and university-offer evidence"
+    },
+    "WIN_ALEVEL_2006_ISC": {
+      "id": "winchester-alevel-2006-isc-variant",
+      "title": "ISC · Year 13 boys examination workbook 2006",
+      "url": "https://www.isc.co.uk/media/2474/2006_examresults_year13_boys_isc.xls",
+      "role": "narrower 546-full-A-level-entry population plus 128 AS entries; never merged with the school 641-entry table"
+    },
+    "WIN_DFE_KS5_2010": {
+      "id": "winchester-dfe-ks5-2010-school-record",
+      "title": "DfE · Winchester College KS5 performance record 2010",
+      "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20130118071731id_/http://www.education.gov.uk/cgi-bin/schools/performance/archive/school_10.pl?Mode=Z&No=8506037&Type=LA&Begin=b&Num=850&Phase=2&Year=10&Base=a",
+      "role": "official denominator anchor: 131 end-of-study students, 1,051.7 points per student and 265.4 points per entry; the implied 519.1 entries are approximate because the averages are rounded"
+    },
+    "WIN_DFE_KS5_2011": {
+      "id": "winchester-dfe-ks5-2011-national-data",
+      "title": "DfE · KS5 school and college performance data 2011",
+      "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20130103214236id_/http://www.education.gov.uk/schools/performance/2011/download/csv/england_ks5.csv",
+      "role": "official comparison denominator: Winchester has 132 end-of-study students, 1,019.6 points per student and 269.5 points per entry; the implied 499.4 entries are approximate because the averages are rounded"
+    },
+    "WIN_GCSE_2001_ISBI": {
+      "id": "winchester-gcse-2001-isbi-profile",
+      "title": "Winchester College · archived ISBI school-updated profile",
+      "url": "https://web.archive.org/web/20030515195823id_/http://www.isbi.com/isbi-viewschool/408-WINCHESTER_COLLEGE.html",
+      "role": "strongly attributed summer-2001 entry/pass total; pass threshold is unstated and is not recast as a requested grade band"
+    },
+    "WIN_GCSE_2006_ISC": {
+      "id": "winchester-gcse-2006-isc",
+      "title": "ISC · Year 11 examination results 2006",
+      "url": "https://www.isc.co.uk/research/exam-results/exam-results-2006/",
+      "role": "official final post-remarks counts: 1,069 entries, including 502 A*, 429 A and 109 B grades"
+    },
+    "WIN_GCSE_2012_DFE": {
+      "id": "winchester-gcse-2012-dfe-underlying-data",
+      "title": "DfE · 2012 KS4 underlying school-level data",
+      "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20140111002934id_/http://www.education.gov.uk/schools/performance/2012/download/2012_KS4_Underlying_Data_School_Level.zip",
+      "role": "official 1,191-entry file; 1,185 grades disclosed and six lawfully suppressed, producing exact percentage intervals"
+    },
+    "WIN_GCSE_2020_PDF": {
+      "id": "winchester-gcse-2020-official-pdf",
+      "title": "Winchester College · GCSE Results Summer 2020 · final",
+      "url": "https://www.winchestercollege.org/assets/files/uploads/GCSE%20Results%20Summer%202020_FINAL.pdf",
+      "role": "official complete subject table; 1,189 GCSE/IGCSE entries, with 58 Additional Mathematics entries reported separately"
+    },
+    "WIN_GCSE_2021_PDF": {
+      "id": "winchester-gcse-2021-official-pdf",
+      "title": "Winchester College · IGCSE and GCSE results 2021 · official",
+      "url": "https://web.archive.org/web/20211023173550id_/https://www.winchestercollege.org/assets/files/uploads/igcse-and-gcse-results-2021-official.pdf",
+      "role": "official complete subject table; 1,258 GCSE/IGCSE entries, with 59 Additional Mathematics entries reported separately"
+    },
+    "WIN_GCSE_HMC_1997": {
+      "id": "winchester-gcse-hmc-inspection-1997",
+      "title": "Winchester College · HMC inspection report · October 1997",
+      "url": "https://web.archive.org/web/20040501054423id_/http://www.wincoll.ac.uk/academic/inspector.asp",
+      "role": "first-party inspection evidence for the 1996 and 1997 whole-school A*/A and A*–B entry shares"
+    },
+    "WIN_PREU_2010_PAGE": {
+      "id": "winchester-pre-u-2010-results-page",
+      "title": "Winchester College · Cambridge Pre-U results 2010",
+      "url": "https://web.archive.org/web/20120507094642id_/http://www.winchestercollege.org/cambridge-pre-u-results-",
+      "role": "first-party narrative only: nearly one-fifth D1, about one-third D2 itself and over three-quarters D1–D3; no exact table survives"
+    },
+    "WIN_PREU_2011_PDF": {
+      "id": "winchester-pre-u-2011-pdf",
+      "title": "Winchester College · Pre-U results 2011",
+      "url": "https://web.archive.org/web/20120205020119id_/http://www.winchestercollege.org/UserFiles/pdfs/pre%20u%202011.pdf",
+      "role": "official complete subject and total grade-count table"
+    },
+    "WIN_PREU_2012_PDF": {
+      "id": "winchester-pre-u-2012-pdf",
+      "title": "Winchester College · Pre-U results 2012",
+      "url": "https://web.archive.org/web/20161118135039id_/http://www.winchestercollege.org/UserFiles/pdfs/2012%20Pre%20U%20Results.pdf",
+      "role": "official annual Pre-U distribution"
+    },
+    "WIN_PREU_2013_PDF": {
+      "id": "winchester-pre-u-2013-revised-pdf",
+      "title": "Winchester College · revised Pre-U results 2013",
+      "url": "https://web.archive.org/web/20140710091715id_/http://www.winchestercollege.org/UserFiles/pdfs/pre-U_results_revised.pdf",
+      "role": "official revised annual Pre-U distribution"
+    },
+    "WIN_PREU_2014_PDF": {
+      "id": "winchester-pre-u-2014-pdf",
+      "title": "Winchester College · Pre-U results 2014",
+      "url": "https://web.archive.org/web/20150613062522id_/http://www.winchestercollege.org/UserFiles/pdfs/pre-u_results-2014.pdf",
+      "role": "official annual Pre-U distribution"
+    },
+    "WIN_PREU_2016_PAGE": {
+      "id": "winchester-pre-u-2016-results-page",
+      "title": "Winchester College · examinations and universities · 2016 capture",
+      "url": "https://web.archive.org/web/20180409133837id_/http%3A%2F%2Fwww.winchestercollege.org%2Fexams-and-universities",
+      "role": "first-party cumulative Pre-U headlines; no surviving entry-count table"
+    },
+    "WIN_PREU_2017_PDF": {
+      "id": "winchester-pre-u-2017-pdf",
+      "title": "Winchester College · Pre-U summer results 2017",
+      "url": "https://web.archive.org/web/20181223050819id_/http://www.winchestercollege.org:80/UserFiles/Pre-U%20summer%202017%20results%20for%20website.xlsx.pdf",
+      "role": "official annual grade counts; primary D1–M1 computation controls"
+    },
+    "WIN_PREU_2019_PDF": {
+      "id": "winchester-pre-u-2019-pdf",
+      "title": "Winchester College · Pre-U summer results 2019",
+      "url": "https://web.archive.org/web/20190919111217id_/https://www.winchestercollege.org/assets/files/uploads/Pre%20U%20Results%20Summer%202019.pdf",
+      "role": "official annual grade-count table; controls D1, D1–M1 and D1–M2"
+    }
+  }
+}

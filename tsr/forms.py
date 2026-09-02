@@ -1,21 +1,17 @@
 """Enquiry and correction forms.
 
-The published site posts to server endpoints that a Streamlit deployment does
-not provide, so submissions are appended to a local JSON Lines review file and
-the submitter sees the same confirmation copy.  Nothing here touches the record.
+Submissions go through ``review_queue``; the confirmation the submitter sees
+states exactly where the submission went and whether that store is durable,
+and a failed write is shown as a failure together with a copy of the text so
+nothing is lost.  Nothing here touches the record.
 """
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
-from pathlib import Path
-
 import streamlit as st
 
-from .ui import controls, write
-
-REVIEW_DIR = Path(__file__).resolve().parents[1] / "review-queue"
+from . import review_queue
+from .ui import controls, esc, write
 
 ROLES = (
     "Parent or prospective parent",
@@ -43,27 +39,36 @@ BUDGETS = (
 )
 
 
-def _record(kind: str, payload: dict[str, object]) -> None:
-    try:
-        REVIEW_DIR.mkdir(parents=True, exist_ok=True)
-        line = json.dumps(
-            {"kind": kind, "received": datetime.now(timezone.utc).isoformat(), **payload},
-            ensure_ascii=False,
-        )
-        with REVIEW_DIR.joinpath(f"{kind}.jsonl").open("a", encoding="utf-8") as handle:
-            handle.write(line + "\n")
-    except OSError:
-        # A read-only deployment must never lose the page over a log write.
-        pass
+def receipt_markup(receipt: review_queue.Receipt, fields: dict[str, object], kind_label: str) -> str:
+    copy = esc(review_queue.transcript(fields))
+    if receipt.status == review_queue.FORWARDED:
+        eyebrow, heading = f"{kind_label} received", "Thank you. Your submission has been received for review."
+        tone = "form-success"
+    elif receipt.status == review_queue.STORED:
+        eyebrow, heading = f"{kind_label} recorded", "Thank you. Your submission has been written to this deployment's review file."
+        tone = "form-success form-success-local"
+    else:
+        eyebrow, heading = f"{kind_label} not recorded", "Your submission could not be stored."
+        tone = "form-error-block"
+    durability = (
+        ""
+        if receipt.durable
+        else "<p><strong>Please keep a copy.</strong> This deployment has no durable review store configured, so the entry below is your record of what was sent.</p>"
+    )
+    return f"""<div class="{tone}" role="status">
+  <p class="eyebrow">{esc(eyebrow)}</p>
+  <h2>{esc(heading)}</h2>
+  <p>{esc(receipt.detail)} Reference <code>{esc(receipt.reference)}</code>.</p>
+  <p>No payment has been taken and no automated email has been sent. A human review is the next step.</p>
+  {durability}
+  <details class="submission-copy"><summary>Copy of your submission</summary><pre>{copy}</pre></details>
+</div>"""
 
 
 def enquiry_form() -> None:
-    if st.session_state.get("enquiry_sent"):
-        write("""<main class="narrow-shell section no-top-space"><div class="form-success" role="status">
-  <p class="eyebrow">Enquiry received</p>
-  <h2>Thank you. Your request is in the review queue.</h2>
-  <p>No payment has been taken and no automated email has been sent. A human review is the next step.</p>
-</div></main>""")
+    sent = st.session_state.get("enquiry_receipt")
+    if sent:
+        write(f'<main class="narrow-shell section no-top-space">{receipt_markup(sent["receipt"], sent["fields"], "Enquiry")}</main>')
         return
 
     with controls("tsr-enquiry-form"), st.form("professional-enquiry", clear_on_submit=False):
@@ -99,22 +104,20 @@ def enquiry_form() -> None:
         if missing:
             st.error("Please complete every required field and confirm the privacy notice.")
             return
-        _record("professional-enquiry", {
+        fields = {
             "name": name, "email": email, "role": role, "organisation": organisation,
             "schools": schools, "deliverable": deliverable, "deadline": deadline,
             "budgetBand": budget, "intendedUse": intended_use,
-        })
-        st.session_state["enquiry_sent"] = True
+        }
+        receipt = review_queue.submit("professional-enquiry", fields)
+        st.session_state["enquiry_receipt"] = {"receipt": receipt, "fields": fields}
         st.rerun()
 
 
 def correction_form() -> None:
-    if st.session_state.get("correction_sent"):
-        write("""<div class="form-success" role="status">
-  <p class="eyebrow">Report received</p>
-  <h2>Thank you. Your correction report is in the review queue.</h2>
-  <p>The existing record remains unchanged while the issue is assessed.</p>
-</div>""")
+    sent = st.session_state.get("correction_receipt")
+    if sent:
+        write(receipt_markup(sent["receipt"], sent["fields"], "Report"))
         return
 
     with controls("tsr-correction-form"), st.form("correction-report", clear_on_submit=False):
@@ -141,10 +144,11 @@ def correction_form() -> None:
         if not all([name.strip(), email.strip(), school.strip(), issue.strip(), consent]):
             st.error("Please complete every required field and confirm the privacy notice.")
             return
-        _record("correction-report", {
+        fields = {
             "name": name, "email": email, "school": school, "period": period,
             "dataset": dataset_or_page, "issue": issue,
             "evidenceReference": evidence_reference,
-        })
-        st.session_state["correction_sent"] = True
+        }
+        receipt = review_queue.submit("correction-report", fields)
+        st.session_state["correction_receipt"] = {"receipt": receipt, "fields": fields}
         st.rerun()

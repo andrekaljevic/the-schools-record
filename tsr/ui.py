@@ -34,10 +34,14 @@ def href(path: str) -> str:
     """Map an in-record path onto this deployment's query-string router."""
     if path.startswith("#") or path.startswith("http") or path.startswith("mailto:"):
         return path
+    fragment = ""
     if "#" in path:
-        route, fragment = path.split("#", 1)
-        return f"?{ROUTE_PARAM}={route}#{fragment}"
-    return f"?{ROUTE_PARAM}={path}"
+        path, fragment = path.split("#", 1)
+        fragment = f"#{fragment}"
+    if "?" in path:
+        route, query = path.split("?", 1)
+        return f"?{ROUTE_PARAM}={route}&{query}{fragment}"
+    return f"?{ROUTE_PARAM}={path}{fragment}"
 
 
 def link(path: str, label: str, css_class: str = "", attrs: str = "") -> str:
@@ -84,7 +88,16 @@ def header() -> str:
 
 def footer() -> str:
     snapshot = esc(dataset.metadata()["snapshot_version"])
-    items = ("About", "/about"), ("Corrections", "/corrections"), ("Privacy", "/privacy"), ("Terms", "/terms"), ("Changelog", "/changelog")
+    items = (
+        ("About", "/about"),
+        ("Evidence centre", "/evidence"),
+        ("Oxford and Cambridge records", "/oxbridge"),
+        ("US university records", "/us-universities"),
+        ("Corrections", "/corrections"),
+        ("Privacy", "/privacy"),
+        ("Terms", "/terms"),
+        ("Changelog", "/changelog"),
+    )
     nav = "".join(link(path, esc(label)) for label, path in items)
     return f"""
 <footer class="site-footer">

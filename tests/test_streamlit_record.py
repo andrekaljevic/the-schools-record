@@ -107,26 +107,25 @@ class FormattingTests(unittest.TestCase):
         row = {"a_star": 44.0}
         self.assertEqual(fmt.format_value("a_star", 44.0, row), "44.0%")
 
-    def test_winchester_pre_u_columns_match_the_published_table(self) -> None:
+    def test_winchester_pre_u_columns_keep_every_published_figure(self) -> None:
+        """The published build capped ledgers at nine columns; the native
+        record shows every figure a row carries and keeps only annotations
+        behind the expanded view."""
         entry = next(
             item
             for item in dataset.figures()["datasets"]
             if item["dataset_id"] == "winchester_pre_u_two_ruler_2011_2019"
         )
+        summary = fmt.table_fields(entry["rows"])
         self.assertEqual(
-            fmt.table_fields(entry["rows"]),
-            [
-                "year",
-                "scale",
-                "entries",
-                "d1",
-                "d1_d2",
-                "d1_m2",
-                "d1_m3",
-                "pre_u_pass",
-                "confidence",
-            ],
+            summary[:9],
+            ["year", "scale", "entries", "d1", "d1_d2", "d1_m2", "d1_m3", "pre_u_pass", "d1_d3_honest_astar_a"],
         )
+        for field in ("d1_m1_published", "fold_pp", "d1_count", "u_count"):
+            self.assertIn(field, summary)
+        self.assertEqual(summary[-2:], ["confidence", "publication_status"])
+        hidden = [field for field in fmt.table_fields(entry["rows"], expanded=True) if field not in summary]
+        self.assertEqual(hidden, ["estimate_basis", "estimate_range_summary", "estimate_status", "note", "source_ids"])
 
     def test_latest_record_matches_the_published_card(self) -> None:
         markup = components.latest_record(
