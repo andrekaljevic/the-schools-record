@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 import streamlit as st
 
+from kcs_entry_updates import apply_kcs_entry_updates
 from site_patches import apply_st_pauls_history, apply_winchester_history
 from winchester_entry_updates import apply_winchester_gcse_entry_updates
 
@@ -15,7 +16,7 @@ from winchester_entry_updates import apply_winchester_gcse_entry_updates
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
-DEPLOYMENT_REVISION = "2026-09-02-winchester-gcse-entry-denominators"
+DEPLOYMENT_REVISION = "2026-09-02-kcs-exam-entry-denominators"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {
@@ -149,6 +150,7 @@ frontend_css, frontend_js = extend_frontend_for_school_sketches(*load_frontend()
 frontend_js = apply_st_pauls_history(frontend_js)
 frontend_js = apply_winchester_history(frontend_js)
 frontend_js = apply_winchester_gcse_entry_updates(frontend_js)
+frontend_js = apply_kcs_entry_updates(frontend_js)
 initial_query = serialise_query()
 school_sketches = load_school_sketches()
 

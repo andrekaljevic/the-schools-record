@@ -7,6 +7,18 @@ This repository contains the self-contained Streamlit deployment of The Schools
 Record and its auditable evidence snapshot dated 2 September 2026. Traced
 St Paul’s and Winchester historical extensions were added in September 2026.
 
+## KCS Wimbledon examination-count audit
+
+The KCS result ledgers now carry the exact candidate and subject-entry
+denominators recovered from the school result tables and contemporary Old
+King's Club reports. A-level pathway pupils, actual A-level takers, IB
+candidates and IB Higher-Level entries remain separate, including the 2024 and
+2025 crossover pupil. Combined sixth-form entry totals use only A-level entries
+plus IB Higher-Level entries. GCSE candidate totals, numbered/lettered entry
+components and excluded Additional Mathematics entries are also typed
+separately. Historic secondary league-table figures and lower bounds remain
+explicitly labelled and are never silently promoted to primary exact data.
+
 ## Winchester historical GCSE extension
 
 The Winchester GCSE ledger now begins with the introduction of A* in 1994 and
