@@ -10,6 +10,7 @@ import streamlit as st
 
 from kcs_entry_updates import apply_kcs_entry_updates
 from premium_presentation import apply_premium_presentation
+from public_experience_updates import apply_public_experience_updates
 from site_patches import apply_st_pauls_history, apply_winchester_history
 from winchester_entry_updates import apply_winchester_gcse_entry_updates
 
@@ -17,7 +18,7 @@ from winchester_entry_updates import apply_winchester_gcse_entry_updates
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
-DEPLOYMENT_REVISION = "2026-09-02-premium-presentation"
+DEPLOYMENT_REVISION = "2026-09-02-dad-feedback-pass"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {
@@ -59,7 +60,7 @@ SCHOOL_SKETCH_SPECS = {
 }
 
 st.set_page_config(
-    page_title="The Schools Record — Longitudinal Evidence",
+    page_title="The Schools Record | UK Independent School Results",
     page_icon="SR",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -153,6 +154,7 @@ frontend_js = apply_st_pauls_history(frontend_js)
 frontend_js = apply_winchester_history(frontend_js)
 frontend_js = apply_winchester_gcse_entry_updates(frontend_js)
 frontend_js = apply_kcs_entry_updates(frontend_js)
+frontend_css, frontend_js = apply_public_experience_updates(frontend_css, frontend_js)
 initial_query = serialise_query()
 school_sketches = load_school_sketches()
 
@@ -167,8 +169,15 @@ document = f"""<!doctype html>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#f4f1ea" />
-  <meta name="description" content="A sourced statistical yearbook of examination results, university pathways and school-admissions evidence across leading UK independent schools." />
-  <title>The Schools Record — Longitudinal Evidence</title>
+  <meta name="description" content="Historical A level, GCSE, IGCSE, IB and Cambridge Pre-U results, university destinations and admissions figures for leading UK independent schools, presented year by year." />
+  <meta name="keywords" content="UK independent school results, A level results, GCSE results, IGCSE results, IB results, Cambridge Pre-U results, university destinations, Oxbridge admissions" />
+  <meta property="og:title" content="The Schools Record" />
+  <meta property="og:description" content="Published examination results and university outcomes from leading UK independent schools, brought together year by year." />
+  <meta property="og:type" content="website" />
+  <title>The Schools Record | UK Independent School Results</title>
+  <script type="application/ld+json">
+    {{"@context":"https://schema.org","@type":"Dataset","name":"The Schools Record","description":"A historical record of published examination results, university destinations and admissions figures from leading UK independent schools.","keywords":["UK independent school results","A level results","GCSE results","IGCSE results","IB results","Cambridge Pre-U results","university destinations","Oxbridge admissions"],"spatialCoverage":"United Kingdom","isAccessibleForFree":true}}
+  </script>
   <style>{safe_css}</style>
 </head>
 <body>
