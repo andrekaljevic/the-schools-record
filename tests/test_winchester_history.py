@@ -20,6 +20,11 @@ from site_patches import (
     apply_st_pauls_history,
     apply_winchester_history,
 )
+from winchester_entry_updates import (
+    WINCHESTER_GCSE_ENTRY_CORRECTION,
+    WINCHESTER_GCSE_ENTRY_SOURCES,
+    apply_winchester_gcse_entry_updates,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,7 +37,9 @@ def load_connector_bundle() -> str:
 
 
 def load_patched_bundle() -> str:
-    return apply_winchester_history(apply_st_pauls_history(load_connector_bundle()))
+    return apply_winchester_gcse_entry_updates(
+        apply_winchester_history(apply_st_pauls_history(load_connector_bundle()))
+    )
 
 
 def load_fallback_bundle() -> str:
@@ -72,6 +79,29 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
             '"year":2012,"scale":"A*-G","entries":1191,"top_equivalent":69.0,"astar_a_equivalent":93.5,"astar_b_or_9_6":99.0',
         ):
             self.assertIn(fragment, self.javascript)
+
+    def test_modern_gcse_entry_denominators_are_reconciled(self) -> None:
+        for fragment in (
+            "{year:2017,scale:`transition`,entries:1359",
+            "{year:2018,scale:`9-1/IGCSE`,entries:1283",
+            "{year:2020,scale:`9-1 CAG`,entries:1189",
+            "{year:2021,scale:`9-1 TAG`,entries:1258",
+        ):
+            self.assertIn(fragment, self.javascript)
+        self.assertNotIn("{year:2020,scale:`9-1 CAG`,entries:1178", self.javascript)
+        self.assertIn("58 Additional Mathematics entries are separate and excluded", self.javascript)
+        self.assertIn("59 Additional Mathematics entries are separate and excluded", self.javascript)
+        self.assertIn("WIN_GCSE_2020_PDF", self.javascript)
+        self.assertIn("WIN_GCSE_2021_PDF", self.javascript)
+        self.assertIn(f'"id":"{WINCHESTER_GCSE_ENTRY_CORRECTION["id"]}"', self.javascript)
+        self.assertTrue(
+            all(
+                source["url"].startswith(
+                    ("https://www.winchestercollege.org/", "https://web.archive.org/")
+                )
+                for source in WINCHESTER_GCSE_ENTRY_SOURCES.values()
+            )
+        )
 
     def test_requested_bands_are_monotonic_when_comparable(self) -> None:
         for row in WINCHESTER_GCSE_HISTORY:
@@ -126,11 +156,15 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
         self.assertNotIn("Evidence snapshot · 30 Aug 2026", self.javascript)
 
     def test_fallback_source_catalogue_remains_valid_json(self) -> None:
-        patched = apply_winchester_history(apply_st_pauls_history(load_fallback_bundle()))
+        patched = apply_winchester_gcse_entry_updates(
+            apply_winchester_history(apply_st_pauls_history(load_fallback_bundle()))
+        )
         match = re.search(r"_s=JSON\.parse\(`(.*?)`\),vs=", patched)
         self.assertIsNotNone(match)
         catalogue = json.loads(match.group(1))
         for source_key in WINCHESTER_SOURCES:
+            self.assertIn(source_key, catalogue)
+        for source_key in WINCHESTER_GCSE_ENTRY_SOURCES:
             self.assertIn(source_key, catalogue)
 
     def test_scope_count_includes_both_historical_extensions(self) -> None:
@@ -341,12 +375,17 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
     def test_patch_is_fail_closed(self) -> None:
         with self.assertRaises(RuntimeError):
             apply_winchester_history(self.javascript)
+        with self.assertRaises(RuntimeError):
+            apply_winchester_gcse_entry_updates(self.javascript)
 
     def test_fallback_bundle_accepts_the_same_patch(self) -> None:
-        patched = apply_winchester_history(apply_st_pauls_history(load_fallback_bundle()))
+        patched = apply_winchester_gcse_entry_updates(
+            apply_winchester_history(apply_st_pauls_history(load_fallback_bundle()))
+        )
         self.assertIn('"year":2012,"scale":"A*-G","entries":1191', patched)
         self.assertIn('"dataset_id":"winchester_mixed_alevel_pre_u_2021"', patched)
         self.assertIn('"year":2003,"entries":506,"grade_a":75.9,"grade_a_b":93.3', patched)
+        self.assertIn("{year:2020,scale:`9-1 CAG`,entries:1189", patched)
 
 
 if __name__ == "__main__":
