@@ -5,9 +5,11 @@ hosted site (snapshot ``production-818c7c2-data-frozen-v1``).  Its immutable
 data module is a plain object literal, so it is lifted out with brace matching
 and evaluated by Node, then written out verbatim as JSON.
 
-    python tools/extract_dataset.py            # writes data/dataset.json
-    python tools/extract_dataset.py --check    # verifies the committed file
+    python tools/extract_dataset.py --check            # verify the frozen snapshot
+    python tools/extract_dataset.py --output snap.json # write the raw snapshot
 
+The committed ``data/dataset.json`` is this snapshot plus the revisions in
+``data/revisions.json``; rebuild or verify it with ``tools/apply_revisions.py``.
 Requires Node. Nothing here is used at runtime; it exists so the provenance of
 the frozen dataset stays reproducible.
 """
@@ -16,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import subprocess
 import sys
@@ -26,6 +29,9 @@ ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "bundle" / "latest.js.gz"
 TARGET = ROOT / "data" / "dataset.json"
 MARKER = "\tcorpora: /* @__PURE__ */ JSON.parse("
+
+# SHA-256 of the serialised frozen snapshot production-818c7c2-data-frozen-v1.
+FROZEN_SNAPSHOT_SHA256 = "245f2d8176f8fca0d53f41689f096734dd13e9023af9a67931314334251b9f6f"
 
 
 def _object_literal(source: str) -> str:
@@ -87,18 +93,24 @@ def serialise(data: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--check", action="store_true", help="verify the bundle still yields the frozen snapshot")
+    parser.add_argument("--output", type=Path, help="write the raw frozen snapshot to this path")
     args = parser.parse_args()
     payload = serialise(extract())
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
     if args.check:
-        current = TARGET.read_text(encoding="utf-8")
-        if current != payload:
-            print("data/dataset.json does not match the published bundle", file=sys.stderr)
+        if digest != FROZEN_SNAPSHOT_SHA256:
+            print("the published bundle no longer yields the frozen snapshot", file=sys.stderr)
             return 1
-        print("data/dataset.json matches the published bundle")
+        print("the published bundle yields the frozen snapshot production-818c7c2-data-frozen-v1")
+        print("verify data/dataset.json with: python tools/apply_revisions.py --check")
         return 0
-    TARGET.write_text(payload, encoding="utf-8")
-    print(f"wrote {TARGET} ({len(payload):,} bytes)")
+    if args.output is None:
+        parser.error("give --output PATH to write the raw snapshot; data/dataset.json is rebuilt by tools/apply_revisions.py")
+    if args.output.resolve() == TARGET.resolve():
+        parser.error("refusing to overwrite data/dataset.json with the raw snapshot; use tools/apply_revisions.py")
+    args.output.write_text(payload, encoding="utf-8")
+    print(f"wrote {args.output} ({len(payload):,} bytes, sha256 {digest})")
     return 0
 
 

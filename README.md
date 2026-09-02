@@ -168,11 +168,34 @@ untouched.
 
 ## The frozen data
 
-`data/dataset.json` is a **verbatim extraction** of the immutable data module
-inside the published front-end bundle (`bundle/latest.js.gz`, snapshot
-`production-818c7c2-data-frozen-v1`, baseline commit `818c7c2`). It holds all
-2,277 frozen records: 1,274 figure rows, 83 granular rows, 571 Oxbridge records
-and 349 US records.
+`data/dataset.json` is the immutable data module inside the published front-end
+bundle (`bundle/latest.js.gz`, snapshot `production-818c7c2-data-frozen-v1`,
+baseline commit `818c7c2`) **plus the recorded revisions** in
+`data/revisions.json`. It holds all 2,277 records: 1,274 figure rows, 83
+granular rows, 571 Oxbridge records and 349 US records.
+
+### Revisions
+
+Every statistical change since the frozen snapshot is a versioned revision.
+`data/revisions.json` records each change with the dataset, row, field, the
+exact value replaced and the value now used, the row note before and after, and
+the ledger entry that documents it. `tools/apply_revisions.py` rebuilds the
+dataset as *bundle extraction + revisions* and refuses to apply a change whose
+`from` value is not exactly what the data holds:
+
+```bash
+python tools/apply_revisions.py            # rebuild data/dataset.json
+python tools/apply_revisions.py --check    # verify the committed file
+```
+
+The current snapshot is `production-818c7c2-data-revised-v2`. Revision v2
+reverses the five locked examination-result corrections (C01, C02, C03, C05,
+C06) because the earlier published figures are the post-remark results; each
+reversal is a new corrections-ledger entry (`R-C01` …) and the superseded entry
+stays visible with its status changed. `tests/test_frozen_dataset.py` pins the
+file's SHA-256, the frozen snapshot's own SHA-256, the record counts, the
+snapshot identity, the revised values and the untouched locked entries, and
+rebuilds the file from the bundle when Node is available.
 
 Nothing in this application alters, infers, recalculates, normalises, rounds,
 corrects or replaces a stored figure. Blanks stay blank, ranges keep both
@@ -184,13 +207,10 @@ applications and is labelled as such — exactly as the published site did.
 To reproduce or verify the extraction (requires Node):
 
 ```bash
-python tools/extract_dataset.py --check   # verify the committed file
-python tools/extract_dataset.py           # rewrite it from the bundle
+python tools/extract_dataset.py --check          # the bundle still yields the frozen snapshot
+python tools/apply_revisions.py --check          # the committed file is snapshot + revisions
 ```
 
-`tests/test_frozen_dataset.py` pins the file's SHA-256, its record counts, its
-snapshot identity and a set of spot-checked figures, and re-extracts the bundle
-when Node is available.
 
 ### Tests
 

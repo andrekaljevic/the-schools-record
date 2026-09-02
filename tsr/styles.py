@@ -526,6 +526,8 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
 .tsr .ledger-entry { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 1.5rem; padding: 1.5rem 0; border-bottom: 1px solid var(--tsr-line-dark); scroll-margin-top: 1.5rem; }
 .tsr .ledger-id { display: grid; gap: 0.5rem; align-content: start; }
 .tsr .ledger-id span:first-child { color: var(--brass); font: 800 0.85rem var(--mono); }
+.tsr .ledger-lineage { margin: 0; font-size: 0.7rem; color: var(--tsr-ink-soft); }
+.tsr .ledger-lineage a { color: var(--tsr-teal); font-weight: 700; text-decoration: underline !important; }
 .tsr .ledger-entry h3 { font-size: 1.45rem; line-height: 1.15; }
 .tsr .ledger-entry h3 a { color: var(--tsr-ink); }
 .tsr .ledger-metric { margin: 0.35rem 0 0.6rem; color: var(--tsr-ink-soft); font-size: 0.86rem; }

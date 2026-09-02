@@ -26,7 +26,7 @@ from tsr.format import to_fixed  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 DATASET_PATH = ROOT / "data" / "dataset.json"
-DATASET_SHA256 = "245f2d8176f8fca0d53f41689f096734dd13e9023af9a67931314334251b9f6f"
+DATASET_SHA256 = "23e1f1e3376385322c0e60b6011da5ba87d7f483f0f8217e51610fa591144279"
 
 
 def normalise(markup: str) -> str:

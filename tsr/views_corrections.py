@@ -36,9 +36,21 @@ def _school_link(name: str) -> str:
     return link(f"/schools/{school_id}", esc(school["name"])) if school else esc(name)
 
 
+def _lineage(item: dict[str, Any]) -> str:
+    lines = []
+    if item.get("reverses"):
+        lines.append(f'Reverses <a href="#{esc(item["reverses"])}">{esc(item["reverses"])}</a>')
+    if item.get("superseded_by"):
+        lines.append(f'Superseded by <a href="#{esc(item["superseded_by"])}">{esc(item["superseded_by"])}</a>')
+    if item.get("revision"):
+        lines.append(f"Revision {esc(item['revision'])}")
+    return f'<p class="ledger-lineage">{" · ".join(lines)}</p>' if lines else ""
+
+
 def _correction(item: dict[str, Any]) -> str:
+    status = str(item.get("status", "")).replace("_", " ").capitalize()
     return f"""<article class="ledger-entry" id="{esc(item["id"])}">
-  <div class="ledger-id"><span>{esc(item["id"])}</span>{status_pill(str(item.get("status", "")).capitalize())}</div>
+  <div class="ledger-id"><span>{esc(item["id"])}</span>{status_pill(status)}{_lineage(item)}</div>
   <div>
     <h3>{_school_link(item["school"])} · {esc(item["period"])}</h3>
     <p class="ledger-metric">{esc(item["metric"])}</p>

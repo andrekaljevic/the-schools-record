@@ -1,0 +1,98 @@
+{
+  "policy": "Every statistical change to data/dataset.json after the frozen snapshot is recorded here and applied by tools/apply_revisions.py on top of a fresh extraction from the published bundle. A change is applied only when the value it replaces is exactly the value recorded in `from`; otherwise the tool refuses. Nothing is applied silently.",
+  "revisions": [
+    {
+      "id": "v2",
+      "applied": "2026-09-02",
+      "snapshot_version": "production-818c7c2-data-revised-v2",
+      "title": "Post-remark examination results control",
+      "basis": "On the record owner's instruction, the locked examination-result corrections in the figures corpus are reversed: the earlier published figures are the post-remark results, and the values that replaced them were recomputed from pre-remark tables. Each reversal is recorded as a new ledger entry; the superseded entry is kept with its status changed so the lineage stays visible. Locked entries concerning university applications, offers and destinations (C04, C07, C08, C09) are not examination results and are not affected.",
+      "changes": [
+        {
+          "reverses": "C01",
+          "reversal": "R-C01",
+          "school": "Winchester College",
+          "metric": "Pre-U honest D1–D3",
+          "period": 2012,
+          "dataset_id": "winchester_pre_u_two_ruler_2011_2019",
+          "row": {"year": 2012},
+          "fields": [
+            {"field": "d1_d3_honest_astar_a", "from": 80.1, "to": 79}
+          ],
+          "note_from": "Official annual table; the newly recovered D1 and D1–M3 endpoints complete the published ladder.",
+          "note_to": "Official annual table; the newly recovered D1 and D1–M3 endpoints complete the published ladder. Post-remark D1–D3 79 controls (revision v2); the pre-remark raw-grade recomputation 80.1 is retained in the corrections ledger as C01, reversed by R-C01.",
+          "reason": "Post-remark results control. The 80.1 recomputation was made from the pre-remark grade table; the earlier 79 is the post-remark figure and is retained for lineage. Versioned revision v2 on the record owner's instruction.",
+          "source_refs": ["FB139", "FB146", "WIN_PREU_2012_PDF"]
+        },
+        {
+          "reverses": "C02",
+          "reversal": "R-C02",
+          "school": "Winchester College",
+          "metric": "GCSE A* / A*–A",
+          "period": 2016,
+          "dataset_id": "winchester_gcse",
+          "row": {"year": 2016},
+          "fields": [
+            {"field": "top_equivalent", "from": 68.3, "to": 69.1},
+            {"field": "astar_a_equivalent", "from": 93.9, "to": 94.1}
+          ],
+          "note_from": "subject-table recomputation; supersedes 69.1/94.1",
+          "note_to": "post-remark published results 69.1/94.1 control (revision v2); the pre-remark 1,298-entry subject-table recomputation 68.3/93.9 is retained in the corrections ledger as C02, reversed by R-C02",
+          "reason": "Post-remark results control. The 1,298-entry subject-table recomputation (68.3 / 93.9) was made from the pre-remark table; the school's post-remark published bands are 69.1 / 94.1. Versioned revision v2 on the record owner's instruction.",
+          "source_refs": ["FB141", "FB146"]
+        },
+        {
+          "reverses": "C03",
+          "reversal": "R-C03",
+          "school": "Winchester College",
+          "metric": "GCSE grade 9 / 9–8 / 9–7 / 9–6",
+          "period": 2019,
+          "dataset_id": "winchester_gcse",
+          "row": {"year": 2019},
+          "fields": [
+            {"field": "grade_9", "from": 43.9, "to": 44.4},
+            {"field": "top_equivalent", "from": 71.9, "to": 72.4},
+            {"field": "astar_a_equivalent", "from": 87.3, "to": 87.5},
+            {"field": "astar_b_or_9_6", "from": 95.1, "to": 95.3}
+          ],
+          "note_from": "controlling source compilation controlling school-PDF lock; another updated PDF prints 44.4/72.4/87.5/95.3 and remains a preserved source conflict",
+          "note_to": "post-remark updated school PDF 44.4/72.4/87.5/95.3 controls (revision v2); the earlier 1,246-entry PDF lock 43.9/71.9/87.3/95.1 is retained in the corrections ledger as C03, reversed by R-C03",
+          "reason": "Post-remark results control. The 1,246-entry school PDF lock (43.9 / 71.9 / 87.3, with 95.1 at 9–6) was the pre-remark release; the school's updated post-remark PDF prints 44.4 / 72.4 / 87.5 / 95.3. The 9–6 band is taken from the same updated PDF named in the row note; C03 itself listed only the first three bands. Versioned revision v2 on the record owner's instruction.",
+          "source_refs": ["FB139A", "FB141", "FB146"]
+        },
+        {
+          "reverses": "C05",
+          "reversal": "R-C05",
+          "school": "St Paul's School",
+          "metric": "GCSE top-3",
+          "period": 2012,
+          "dataset_id": "st_pauls_gcse",
+          "row": {"year": 2012},
+          "fields": [
+            {"field": "top_3", "from": 99.8, "to": 98.8}
+          ],
+          "note_from": "v14.6 correction: top-3 99.8, not 98.8",
+          "note_to": "post-remark top-3 98.8 controls (revision v2); the v14.6 archive-check value 99.8 is retained in the corrections ledger as C05, reversed by R-C05",
+          "reason": "Post-remark results control. The archive-check value 99.8 replaced the school's post-remark published band 98.8; the published band is restored. Versioned revision v2 on the record owner's instruction.",
+          "source_refs": ["FB146"]
+        },
+        {
+          "reverses": "C06",
+          "reversal": "R-C06",
+          "school": "St Paul's School",
+          "metric": "A-level A*",
+          "period": 2014,
+          "dataset_id": "st_pauls_alevel",
+          "row": {"year": 2014},
+          "fields": [
+            {"field": "a_star", "from": 47.7, "to": 47.8}
+          ],
+          "note_from": "v14.6 correction: A*=47.7, not 47.8",
+          "note_to": "post-remark A* 47.8 controls (revision v2); the v14.6 archive-check value 47.7 is retained in the corrections ledger as C06, reversed by R-C06",
+          "reason": "Post-remark results control. The archive-check value 47.7 replaced the school's post-remark published A* share 47.8; the published figure is restored. Versioned revision v2 on the record owner's instruction.",
+          "source_refs": ["FB146"]
+        }
+      ]
+    }
+  ]
+}

@@ -26,7 +26,7 @@ from support import page, render  # noqa: E402
 from tsr import components, corpora, dataset, evidence, format as fmt, records, sources  # noqa: E402
 
 DATASET_PATH = ROOT / "data" / "dataset.json"
-DATASET_SHA256 = "245f2d8176f8fca0d53f41689f096734dd13e9023af9a67931314334251b9f6f"
+DATASET_SHA256 = "23e1f1e3376385322c0e60b6011da5ba87d7f483f0f8217e51610fa591144279"
 NOT_FOUND = "That page is not in the record"
 
 
@@ -380,10 +380,30 @@ class NumericalParityTests(unittest.TestCase):
 
     def test_corrections_ledger_shows_old_and_new_values(self) -> None:
         markup = page("/corrections")
-        for old, new in (("79", "80.1"), ("98.8", "99.8"), ("179 / 96 / 91", "166 / 80 / 73")):
+        for old, new in (("80.1", "79"), ("99.8", "98.8"), ("179 / 96 / 91", "166 / 80 / 73")):
             self.assertIn(old, markup)
             self.assertIn(new, markup)
-        self.assertEqual(markup.count('class="ledger-entry"'), 29 + 26)
+        self.assertEqual(markup.count('class="ledger-entry"'), 34 + 26)
+        self.assertIn('id="R-C02"', markup)
+        self.assertIn("Superseded", markup)
+        self.assertIn('Reverses <a href="#C02">C02</a>', markup)
+
+    def test_revised_rows_display_the_post_remark_values(self) -> None:
+        markup = page("/schools/winchester/exam-results")
+        row_start = markup.index('<tr id="winchester_gcse-2019"')
+        row = markup[row_start: markup.index("</tr>", row_start)]
+        # The crosswalk bands carry no percent spec in the frozen presentation
+        # and print as the published build printed them.
+        for value in ("44.4%", ">72.4<", ">87.5<", ">95.3<"):
+            self.assertIn(value, row)
+        row_start = markup.index('<tr id="winchester_gcse-2016"')
+        row = markup[row_start: markup.index("</tr>", row_start)]
+        self.assertIn(">69.1<", row)
+        self.assertIn(">94.1<", row)
+        markup = page("/schools/st-pauls/exam-results")
+        row_start = markup.index('<tr id="st_pauls_alevel-2014"')
+        row = markup[row_start: markup.index("</tr>", row_start)]
+        self.assertIn("47.8%", row)
 
 
 class SourceTests(unittest.TestCase):
