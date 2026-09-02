@@ -49,8 +49,6 @@ jobs:
           git reset --hard "$BASE_COMMIT"
           git clean -fdx
 
-          # Preserve the large frozen bundle/public/sketch assets already on main,
-          # but clear every mutable source/generated area so no stale files survive.
           rm -rf data static pages_html tests tools tsr
           rm -f deployment_bootstrap.py packages.txt assets/site.css
           tar -xzf /tmp/native-source.tar.gz -C .
@@ -83,16 +81,8 @@ jobs:
 
           path = Path('static/the-schools-record-sample-dossier.pdf')
           data = path.read_bytes()
-          data, n1 = re.subn(
-              rb"/CreationDate \(D:\d{14}\+00'00'\)",
-              b"/CreationDate (D:20260902175448+00'00')",
-              data,
-          )
-          data, n2 = re.subn(
-              rb"/ModDate \(D:\d{14}\+00'00'\)",
-              b"/ModDate (D:20260902175448+00'00')",
-              data,
-          )
+          data, n1 = re.subn(rb"/CreationDate \(D:\d{14}\+00'00'\)", b"/CreationDate (D:20260902175448+00'00')", data)
+          data, n2 = re.subn(rb"/ModDate \(D:\d{14}\+00'00'\)", b"/ModDate (D:20260902175448+00'00')", data)
           if n1 != 1 or n2 != 1:
               raise SystemExit(f'unexpected PDF metadata matches: creation={n1}, mod={n2}')
           path.write_bytes(data)
@@ -108,20 +98,16 @@ jobs:
           TREE="$(git write-tree)"
           echo "built tree:   $TREE"
           echo "target tree:  $TARGET_TREE"
+          git config user.name 'Andre Kaljevic'
+          git config user.email 'andre.kaljevic@googlemail.com'
+
           if [ "$TREE" != "$TARGET_TREE" ]; then
-            echo 'Tree mismatch. Cached diff:'
-            git status --short
-            git diff --cached --stat
-            echo 'Generated school blobs:'
-            find static/schools -type f -print0 | sort -z | xargs -0 -n1 git hash-object
-            echo 'Streamlit log tail:'
-            tail -100 /tmp/streamlit.log || true
+            git commit -m "Diagnostic candidate native rebuild $TREE"
+            git push --force origin HEAD:refs/heads/diagnostic-native-candidate
             exit 1
           fi
 
           test "$PDF_BLOB" = "$TARGET_PDF_BLOB"
-          git config user.name 'Andre Kaljevic'
-          git config user.email 'andre.kaljevic@googlemail.com'
           git commit -m 'Deploy exact native Streamlit rebuild'
           test "$(git rev-parse HEAD^{tree})" = "$TARGET_TREE"
 
