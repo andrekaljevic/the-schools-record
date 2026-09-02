@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      BASE_COMMIT: 52f64027820b3c512a4fa4142dbf40b1bbc9dc31
       TARGET_TREE: 1f1e3fff8b4f3eed5ac7c6c71f11030f0d5f9015
       TARGET_DATA_BLOB: bce3fc95f80c8ccc7738e38d7200475651ea63a1
       TARGET_PDF_BLOB: 234173f27721a47281a226faf228db067ac50014
@@ -40,15 +39,20 @@ jobs:
           base64 -d /tmp/native-source.tar.gz.b64 > /tmp/native-source.tar.gz
           echo '1b229ab8b3f03241576a9bc6b026b1f17950b2b9d39971c31dd9e63ae2bb1388  /tmp/native-source.tar.gz' | sha256sum -c -
 
-      - name: Build exact target tree from production base
+      - name: Build exact target tree from current production
         shell: bash
         run: |
           set -euxo pipefail
           git fetch origin main
-          REMOTE_MAIN="$(git rev-parse origin/main)"
-          test "$REMOTE_MAIN" = "$BASE_COMMIT"
+          BASE_COMMIT="$(git rev-parse origin/main)"
+          echo "$BASE_COMMIT" > /tmp/base-commit
           git reset --hard "$BASE_COMMIT"
           git clean -fdx
+
+          # Preserve the large frozen bundle/public/sketch assets already on main,
+          # but clear every mutable source/generated area so no stale files survive.
+          rm -rf data static pages_html tests tools tsr
+          rm -f deployment_bootstrap.py packages.txt assets/site.css
           tar -xzf /tmp/native-source.tar.gz -C .
 
           python -m pip install --upgrade pip
@@ -118,13 +122,14 @@ jobs:
           test "$PDF_BLOB" = "$TARGET_PDF_BLOB"
           git config user.name 'Andre Kaljevic'
           git config user.email 'andre.kaljevic@googlemail.com'
-          git commit -m 'Deploy native Streamlit rebuild'
+          git commit -m 'Deploy exact native Streamlit rebuild'
           test "$(git rev-parse HEAD^{tree})" = "$TARGET_TREE"
 
       - name: Fast-forward main to verified exact tree
         shell: bash
         run: |
           set -euxo pipefail
+          BASE_COMMIT="$(cat /tmp/base-commit)"
           git fetch origin main
           test "$(git rev-parse origin/main)" = "$BASE_COMMIT"
           test "$(git rev-parse HEAD^{tree})" = "$TARGET_TREE"
