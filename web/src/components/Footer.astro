@@ -1,0 +1,12 @@
+---
+import { site } from '../lib/data';
+import { FOOTER_NAV } from '../lib/routes';
+const data = site();
+---
+<footer class="site-footer">
+  <div class="shell footer-grid">
+    <div><strong>The Schools Record</strong><p>A source-led longitudinal record. Figures retain their original definitions and limits.</p></div>
+    <nav aria-label="Footer navigation">{FOOTER_NAV.map(([label, href]) => <a href={href}>{label}</a>)}</nav>
+    <p class="footer-meta">Snapshot {data.snapshot}<br />Last reviewed {data.lastReviewed}</p>
+  </div>
+</footer>

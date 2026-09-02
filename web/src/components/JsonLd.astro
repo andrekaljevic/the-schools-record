@@ -1,0 +1,7 @@
+---
+interface Props { data: Record<string, unknown> }
+const { data } = Astro.props;
+// JSON-LD is inert data; the closing-tag sequence is escaped so it can never break out of the script element.
+const json = JSON.stringify(data).replace(/<\//g, '<\\/');
+---
+<script is:inline type="application/ld+json" set:html={json} />

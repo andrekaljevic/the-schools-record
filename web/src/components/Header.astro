@@ -1,0 +1,20 @@
+---
+import { NAV } from '../lib/routes';
+const current = Astro.url.pathname;
+const isCurrent = (href: string) => (href === '/' ? current === '/' : current.startsWith(href));
+---
+<header class="site-header">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="masthead shell">
+    <a class="wordmark" href="/" aria-label="The Schools Record, home"><span class="wordmark-mark" aria-hidden="true">SR</span><span>The Schools Record</span></a>
+    <nav class="desktop-nav" aria-label="Primary navigation">
+      {NAV.map(([label, href]) => <a href={href} aria-current={isCurrent(href) ? 'page' : undefined}>{label}</a>)}
+    </nav>
+    <details class="mobile-menu">
+      <summary aria-label="Open the menu">Menu</summary>
+      <nav aria-label="Mobile navigation">
+        {NAV.map(([label, href]) => <a href={href} aria-current={isCurrent(href) ? 'page' : undefined}>{label}</a>)}
+      </nav>
+    </details>
+  </div>
+</header>

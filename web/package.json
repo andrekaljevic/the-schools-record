@@ -1,0 +1,42 @@
+{
+  "name": "the-schools-record-web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The Schools Record \u2014 static public frontend built from the tested Python data layer's public projection.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "projection": "python3 ../tools/build_public_projection.py",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "budgets": "node scripts/check-budgets.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "icons": "node scripts/build-icons.mjs",
+    "privacy": "node scripts/privacy-scan.mjs",
+    "security": "node scripts/security-scan.mjs",
+    "verify": "npm run check && npm run test:unit && npm run build && npm run privacy && npm run security && npm run budgets && npm run test:e2e"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "3.7.4",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/newsreader": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "astro": "7.2.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.62.1",
+    "@types/node": "22.20.1",
+    "lighthouse": "13.4.1",
+    "sharp": "0.35.4",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

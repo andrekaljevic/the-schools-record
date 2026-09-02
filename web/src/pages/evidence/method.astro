@@ -1,0 +1,42 @@
+---
+import Base from '../../layouts/Base.astro';
+import EvidenceHead from '../../components/EvidenceHead.astro';
+import { method as loadMethod } from '../../lib/data';
+import { titled } from '../../lib/meta';
+const method = loadMethod();
+const humanise = (key: string) => key.replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+---
+<Base meta={{ title: titled('How the figures are checked'), description: 'Evidence status codes, definitions, grade mappings, presentation rules and the lineage of the compilation behind the frozen record.' }} crumbs={[{ label: 'Evidence', href: '/evidence/' }, { label: 'How the figures are checked', href: null }]} bodyClass="page-evidence">
+  <main id="main-content">
+    <EvidenceHead active="method" />
+    <section class="section shell section-flush-top content-grid">
+      <article class="prose">
+        <h2>How the figures are checked</h2>
+        <p>Every figure keeps the definition its publisher used. Where a later, better source corrects an earlier value, the record uses the corrected value and keeps the change visible; where credible publications disagree, both values stay visible with the treatment applied. <a href="/corrections/">Read the corrections and published differences</a>.</p>
+        <h3 id="status-codes">Evidence status codes</h3>
+        <table><thead><tr><th scope="col">Code</th><th scope="col">Meaning</th></tr></thead><tbody>{Object.entries(method.confidenceCodes).map(([code, meaning]) => <tr><th scope="row">{code}</th><td>{meaning}</td></tr>)}</tbody></table>
+        <h3 id="definitions">Definitions used by the ledgers</h3>
+        <div class="method-grid">{Object.entries(method.definitions).map(([term, text]) => <section class="method-card"><p class="eyebrow">Definition</p><h3>{humanise(term)}</h3><p>{text}</p></section>)}</div>
+        <h3 id="grade-mappings">Grade mappings</h3>
+        <div class="method-grid">{Object.entries(method.gradeMapping).map(([key, text]) => <section class="method-card"><p class="eyebrow">Grade mapping</p><h3>{key === 'kcs_ib' ? 'KCS internal IB headline' : key.replace(/_/g, ' ').toUpperCase()}</h3><p>{text}</p></section>)}</div>
+        <h3 id="rules">Rules the presentation follows</h3>
+        <ol>{method.guardrails.map((item) => <li>{item}</li>)}</ol>
+        <h3 id="authority">Which compilation controls</h3>
+        <p>The source compilations are layered: a later companion does not overwrite a detailed annual table it merely elides.</p>
+        <table><thead><tr><th scope="col">Order</th><th scope="col">Version</th><th scope="col">Controls</th><th scope="col">Does not control</th></tr></thead><tbody>{method.versionAuthority.map((item) => <tr><th scope="row">{item.order}</th><td>{item.version}</td><td>{item.controls}</td><td>{item.doesNotControl ?? '—'}</td></tr>)}</tbody></table>
+        <h3 id="lineage">Lineage of the compilation</h3>
+        <ol class="timeline">{method.lineage.map((item) => <li><time>{item.versions}</time><div><h3>{humanise(item.phase)}</h3><p>{item.effect}</p></div></li>)}</ol>
+        <h3 id="oxbridge">Oxford and Cambridge records</h3>
+        <table><tbody>{Object.entries(method.oxbridgeDefinitions).map(([key, text]) => <tr><th scope="row">{humanise(key)}</th><td>{text}</td></tr>)}</tbody></table>
+        <h3 id="us">US and overseas university records</h3>
+        <ul>{method.usSafeguards.map((item) => <li>{item}</li>)}</ul>
+      </article>
+      <aside class="side-index">
+        <h2>On this page</h2>
+        <nav aria-label="On this page"><a href="#status-codes">Status codes</a><a href="#definitions">Definitions</a><a href="#grade-mappings">Grade mappings</a><a href="#rules">Presentation rules</a><a href="#authority">Which compilation controls</a><a href="#lineage">Lineage</a><a href="#oxbridge">Oxford and Cambridge</a><a href="#us">US records</a></nav>
+        <h2 style="margin-top:1.5rem">Related</h2>
+        <nav aria-label="Related pages"><a href="/methodology/">Methodology</a><a href="/corrections/">Corrections and published differences</a><a href="/oxbridge/">Oxford and Cambridge records</a><a href="/us-universities/">US university records</a></nav>
+      </aside>
+    </section>
+  </main>
+</Base>

@@ -1,0 +1,13 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "types": ["astro/client", "node"],
+    "baseUrl": ".",
+    "paths": { "@/*": ["src/*"] },
+    "verbatimModuleSyntax": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src/**/*", "functions/**/*", "scripts/**/*", "tests/**/*", "astro.config.mjs"],
+  "exclude": ["dist", "node_modules"]
+}

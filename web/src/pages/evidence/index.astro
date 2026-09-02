@@ -1,0 +1,53 @@
+---
+import Base from '../../layouts/Base.astro';
+import EvidenceHead from '../../components/EvidenceHead.astro';
+import EvidenceRecord from '../../components/EvidenceRecord.astro';
+import Icon from '../../components/Icon.astro';
+import { evidenceRecords, site } from '../../lib/data';
+import { titled } from '../../lib/meta';
+import { formatCount } from '../../lib/html';
+
+const PAGE_SIZE = 25;
+const data = site();
+const records = evidenceRecords();
+const years = records.map((record) => record.year).filter((year): year is number => year !== null);
+const low = Math.min(...years);
+const high = Math.max(...years);
+const first = records.slice(0, PAGE_SIZE);
+const pages = Math.ceil(records.length / PAGE_SIZE);
+const statuses = ['Primary', 'Secondary', 'Derived', 'Reconstructed', 'Conflict', 'Not stated'];
+---
+<Base meta={{ title: titled('Evidence centre'), description: 'Search every frozen record, trace a displayed figure to its source references, and read how the figures are checked.', dataset: true }} crumbs={[{ label: 'Evidence', href: null }]} bodyClass="page-evidence">
+  <main id="main-content">
+    <EvidenceHead active="records" />
+    <section class="shell">
+      <div class="claim-banner" data-claim hidden>
+        <p class="eyebrow">Tracing a displayed figure</p>
+        <h2 data-claim-title></h2>
+        <p data-claim-count></p>
+        <a class="text-link" href="/evidence/">Clear and search everything <Icon name="arrow-right" /></a>
+      </div>
+      <form class="evidence-filters" role="search" aria-label="Search the frozen records" method="get" action="/evidence/" data-island="evidence-search" data-low={low} data-high={high}>
+        <div class="field ev-span-2"><label for="ev-q">Search records</label><input id="ev-q" name="q" type="search" placeholder="School, year, subject, university or measure" autocomplete="off" /></div>
+        <div class="field"><label for="ev-corpus">Record type</label><select id="ev-corpus" name="corpus"><option value="">All records</option>{Object.entries(data.corpusLabels).map(([key, label]) => <option value={key}>{label}</option>)}</select></div>
+        <div class="field"><label for="ev-school">School</label><select id="ev-school" name="school"><option value="">All schools</option>{data.schools.map((school) => <option value={school.id}>{school.name}</option>)}</select></div>
+        <div class="field"><label for="ev-domain">Outcome</label><select id="ev-domain" name="domain"><option value="">All outcomes</option>{Object.entries(data.domainLabels).map(([key, label]) => <option value={key}>{label}</option>)}</select></div>
+        <div class="field"><label for="ev-status">Evidence status</label><select id="ev-status" name="status"><option value="">Any status</option>{statuses.map((status) => <option value={status}>{status}</option>)}</select></div>
+        <div class="field"><label for="ev-from">From</label><input id="ev-from" name="from" type="number" inputmode="numeric" min={low} max={high} placeholder={String(low)} /></div>
+        <div class="field"><label for="ev-to">To</label><input id="ev-to" name="to" type="number" inputmode="numeric" min={low} max={high} placeholder={String(high)} /></div>
+        <div class="field ev-submit"><span aria-hidden="true">&nbsp;</span><button class="button button-primary" type="submit">Search</button></div>
+      </form>
+      <p class="result-count" aria-live="polite" data-result-count>{formatCount(records.length)} records · showing 1–{first.length}</p>
+      <p class="mute small">Every record can also be read page by page without search: <a href="/evidence/browse/all/">browse all records</a>, or one corpus at a time from the counts above.</p>
+      <div class="evidence-list" data-results>
+        {first.map((record) => <EvidenceRecord record={record} heading="h2" />)}
+      </div>
+      <nav class="evidence-pager" aria-label="Result pages" data-pager>
+        <span></span><span>Page 1 of {pages}</span><a href="/evidence/browse/all/2/" rel="next">Next <Icon name="arrow-right" /></a>
+      </nav>
+    </section>
+  </main>
+  <script>
+    import '../../islands/evidence-search.ts';
+  </script>
+</Base>

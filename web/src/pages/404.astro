@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import { DEFAULT_DESCRIPTION, titled } from '../lib/meta';
+---
+<Base meta={{ title: titled('Not found'), description: DEFAULT_DESCRIPTION, noindex: true }} legacyRedirect>
+  <main id="main-content" class="section narrow-shell not-found">
+    <p class="eyebrow">Not found</p>
+    <h1>That page is not in the record</h1>
+    <p>The address may be incomplete or out of date. Links from the previous edition of the site are redirected automatically where a page still exists.</p>
+    <div class="button-row">
+      <a class="button button-primary" href="/">Return home</a>
+      <a class="button button-secondary" href="/schools/">School records</a>
+      <a class="button button-secondary" href="/evidence/">Search every record</a>
+    </div>
+  </main>
+</Base>

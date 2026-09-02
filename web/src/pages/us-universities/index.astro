@@ -1,0 +1,42 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import PageHero from '../../components/PageHero.astro';
+import { us as loadUs, site } from '../../lib/data';
+import { titled } from '../../lib/meta';
+import { schoolPath } from '../../lib/routes';
+const data = loadUs();
+const schools = site().schools;
+const types = Object.entries(data.metricCounts).sort((a, b) => b[1] - a[1]);
+---
+<Base meta={{ title: titled('US and overseas university records'), description: 'Named US and overseas destinations, offers and acceptances by school and year, with aggregates and published differences flagged.', dataset: true }} crumbs={[{ label: 'US and overseas university records', href: null }]} bodyClass="page-corpus">
+  <main id="main-content">
+    <PageHero eyebrow={`Third corpus · ${data.total} records`} title="US and overseas university records" intro="Named institutions and explicit aggregates by school and period, each typed by outcome: a leaver destination, a firm place, an acceptance, a named offer or a presence-only mention." note="Aggregate rows are never summed with institution rows; a named institution without a count is never read as one; and where two official versions disagree both stay visible." />
+    <section class="section shell">
+      <div class="section-heading"><div><p class="eyebrow">By school</p><h2>Records by school</h2></div><p>{data.grain}</p></div>
+      <div class="corpus-grid">
+        {schools.map((school) => {
+          const entry = data.schools[school.id]!;
+          return (
+            <article class="corpus-card">
+              <p class="eyebrow">{school.short}</p>
+              <h3><a href={schoolPath(school.id, 'us-universities')}>{school.name}</a></h3>
+              <p class="corpus-figure"><strong>{entry.count}</strong> records · {entry.from}–{entry.to}</p>
+              <p>{entry.institutions} named institutions · {entry.aggregates} aggregate rows</p>
+              <a class="text-link" href={schoolPath(school.id, 'us-universities')}>Open the school's records <Icon name="arrow-right" /></a>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+    <section class="section shell section-flush-top content-grid">
+      <article class="prose">
+        <h2>Outcome types in this corpus</h2>
+        <table><thead><tr><th scope="col">Outcome type</th><th scope="col">Records</th></tr></thead><tbody>{types.map(([label, count]) => <tr><th scope="row">{label}</th><td>{count}</td></tr>)}</tbody></table>
+        <h3>Safeguards</h3>
+        <ul>{data.safeguards.map((item) => <li>{item}</li>)}</ul>
+      </article>
+      <aside class="side-index"><h2>Related</h2><nav aria-label="Related pages"><a href="/evidence/?corpus=us">Search these records</a><a href="/oxbridge/">Oxford and Cambridge records</a><a href="/methodology/">Methodology</a></nav></aside>
+    </section>
+  </main>
+</Base>

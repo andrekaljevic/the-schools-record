@@ -1,0 +1,19 @@
+---
+import PageHero from './PageHero.astro';
+import { site } from '../lib/data';
+import { formatCount } from '../lib/html';
+interface Props { active: 'records' | 'sources' | 'method' }
+const { active } = Astro.props;
+const data = site();
+const sections = [['records', 'Records', '/evidence/'], ['sources', 'Sources', '/evidence/sources/'], ['method', 'How the figures are checked', '/evidence/method/']] as const;
+---
+<PageHero eyebrow="Evidence centre" title="Every record, traceable" intro={`Search the ${formatCount(data.counts.total)} frozen records across all four corpora, move from a displayed figure back to its public sources, and read how the figures are checked.`} note="Private working documents stay private. Each record is identified by stable public references, and linked where the source is itself public." />
+<section class="shell evidence-head">
+  <div class="evidence-inventory">
+    {Object.entries(data.corpusLabels).map(([key, label]) => <a href={`/evidence/browse/${key}/`}><strong>{formatCount(data.counts[key as keyof typeof data.counts])}</strong><span>{label}</span></a>)}
+    <a href="/corrections/"><strong>{data.corrections + data.conflicts}</strong><span>corrections and published differences</span></a>
+  </div>
+  <nav class="evidence-sections" aria-label="Evidence sections">
+    {sections.map(([key, label, href]) => <a href={href} aria-current={key === active ? 'page' : undefined}>{label}</a>)}
+  </nav>
+</section>

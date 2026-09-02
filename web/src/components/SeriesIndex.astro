@@ -1,0 +1,24 @@
+---
+import type { GranularLedger, Ledger } from '../lib/types';
+import { plural } from '../lib/html';
+interface Props { ledgers: Ledger[]; granular?: GranularLedger[]; title?: string }
+const { ledgers, granular = [], title = 'Ledgers in this record' } = Astro.props;
+---
+<nav class="series-index" aria-label={title}>
+  <p class="eyebrow">{title}</p>
+  <ol>
+    {ledgers.map((ledger) => (
+      <li><a href={`#${ledger.id}`}><span class="series-family">{ledger.family} · {ledger.span}</span><strong>{ledger.label}</strong><span class="series-meta">{ledger.rowCount} {plural(ledger.rowCount, 'row')}</span></a></li>
+    ))}
+  </ol>
+  {granular.length > 0 && (
+    <>
+      <p class="eyebrow" style="margin-top:1.5rem">Subject and destination detail</p>
+      <ol>
+        {granular.map((ledger) => (
+          <li><a href={`#${ledger.id}`}><span class="series-family">Itemised · {ledger.period}</span><strong>{ledger.label}</strong><span class="series-meta">{ledger.rowCount} {plural(ledger.rowCount, 'row')}</span></a></li>
+        ))}
+      </ol>
+    </>
+  )}
+</nav>

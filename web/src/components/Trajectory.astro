@@ -1,0 +1,43 @@
+---
+import type { Trajectory } from '../lib/types';
+interface Props { trajectory: Trajectory; schoolName: string }
+const { trajectory, schoolName } = Astro.props;
+---
+{trajectory.panels.length === 0 ? (
+  <p class="mute">No like-for-like examination series is defined for this record.</p>
+) : (
+  <div class="trajectory">
+    {trajectory.panels.map((panel) => (
+      <section class="trajectory-panel" aria-labelledby={`trajectory-${panel.key}-heading`}>
+        <header>
+          <p class="eyebrow">{panel.qualification}</p>
+          <h3 id={`trajectory-${panel.key}-heading`}>{panel.label}</h3>
+          <p class="panel-meta">{panel.first}–{panel.last} · {panel.denominator}</p>
+          <div class="series-legend">{panel.series.map((series) => <span><i class="series-colour" style={`background:${series.colour}`}></i>{series.label}</span>)}</div>
+        </header>
+        <div>
+          <Fragment set:html={panel.svgDesktop} />
+          <Fragment set:html={panel.svgMobile} />
+          {panel.note && <p class="panel-note">{panel.note}</p>}
+        </div>
+        <details>
+          <summary>Exact values, {panel.first}–{panel.last}</summary>
+          <div class="table-scroll" tabindex="0">
+            <table class="data-table">
+              <caption>{schoolName}: {panel.label}, year by year</caption>
+              <thead><tr><th scope="col">Year</th>{panel.series.map((series) => <th scope="col">{series.label}</th>)}<th scope="col">Evidence status</th></tr></thead>
+              <tbody>{panel.table.map((row) => <tr><th scope="row">{row.year}</th>{row.values.map((value) => <td class={value === null ? 'blank-value' : undefined}>{value ?? '—'}</td>)}<td class="text">{row.status}</td></tr>)}</tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+    ))}
+    <p class="panel-note">{trajectory.gapRule}</p>
+    {trajectory.notCharted.length > 0 && (
+      <div class="not-charted">
+        <strong>Published on rulers the comparison tool does not define, so listed rather than drawn:</strong>
+        <ul>{trajectory.notCharted.map((item) => <li>{item.label} · {item.span}</li>)}</ul>
+      </div>
+    )}
+  </div>
+)}

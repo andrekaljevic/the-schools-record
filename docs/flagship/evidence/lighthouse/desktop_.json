@@ -1,0 +1,43 @@
+{
+  "requestedUrl": "http://127.0.0.1:4321/",
+  "fetchTime": "2026-09-02T23:10:43.526Z",
+  "lighthouseVersion": "13.4.1",
+  "categories": {
+    "performance": 1,
+    "accessibility": 1,
+    "best-practices": 1,
+    "seo": 1
+  },
+  "audits": {
+    "largest-contentful-paint": {
+      "score": 0.99,
+      "numericValue": 707.65705,
+      "displayValue": "0.7 s"
+    },
+    "cumulative-layout-shift": {
+      "score": 1,
+      "numericValue": 0,
+      "displayValue": "0"
+    },
+    "total-blocking-time": {
+      "score": 1,
+      "numericValue": 0,
+      "displayValue": "0 ms"
+    },
+    "first-contentful-paint": {
+      "score": 1,
+      "numericValue": 487.65704999999997,
+      "displayValue": "0.5 s"
+    },
+    "total-byte-weight": {
+      "score": 1,
+      "numericValue": 1441915,
+      "displayValue": "Total size was 1,408 KiB"
+    },
+    "speed-index": {
+      "score": 1,
+      "numericValue": 487.65704999999997,
+      "displayValue": "0.5 s"
+    }
+  }
+}

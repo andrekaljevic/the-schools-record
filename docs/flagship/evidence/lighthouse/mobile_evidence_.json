@@ -1,0 +1,43 @@
+{
+  "requestedUrl": "http://127.0.0.1:4321/evidence/",
+  "fetchTime": "2026-09-02T23:10:22.309Z",
+  "lighthouseVersion": "13.4.1",
+  "categories": {
+    "performance": 0.97,
+    "accessibility": 1,
+    "best-practices": 1,
+    "seo": 1
+  },
+  "audits": {
+    "largest-contentful-paint": {
+      "score": 0.91,
+      "numericValue": 2417.1531000000004,
+      "displayValue": "2.4 s"
+    },
+    "cumulative-layout-shift": {
+      "score": 1,
+      "numericValue": 0,
+      "displayValue": "0"
+    },
+    "total-blocking-time": {
+      "score": 1,
+      "numericValue": 0,
+      "displayValue": "0 ms"
+    },
+    "first-contentful-paint": {
+      "score": 0.91,
+      "numericValue": 1742.1531000000004,
+      "displayValue": "1.7 s"
+    },
+    "total-byte-weight": {
+      "score": 1,
+      "numericValue": 253962,
+      "displayValue": "Total size was 248 KiB"
+    },
+    "speed-index": {
+      "score": 1,
+      "numericValue": 1742.1531000000004,
+      "displayValue": "1.7 s"
+    }
+  }
+}

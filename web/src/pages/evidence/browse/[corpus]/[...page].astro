@@ -1,0 +1,39 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import EvidenceHead from '../../../../components/EvidenceHead.astro';
+import EvidenceRecord from '../../../../components/EvidenceRecord.astro';
+import Icon from '../../../../components/Icon.astro';
+import { evidenceRecords, site } from '../../../../lib/data';
+import { titled } from '../../../../lib/meta';
+import { formatCount } from '../../../../lib/html';
+import type { EvidenceRecord as RecordType } from '../../../../lib/types';
+import type { GetStaticPaths } from 'astro';
+
+export const getStaticPaths = (({ paginate }) => {
+  const records = evidenceRecords();
+  const corpora = ['all', ...Object.keys(site().corpusLabels)];
+  return corpora.flatMap((corpus) =>
+    paginate(corpus === 'all' ? records : records.filter((record) => record.corpus === corpus), { params: { corpus }, pageSize: 25 }),
+  );
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+const { corpus } = Astro.params;
+const label = corpus === 'all' ? 'All records' : (site().corpusLabels[corpus] ?? corpus);
+const items = page.data as RecordType[];
+const crumbs = [{ label: 'Evidence', href: '/evidence/' }, { label: `${label}, page ${page.currentPage}`, href: null }];
+---
+<Base meta={{ title: titled(`${label} · page ${page.currentPage} of ${page.lastPage}`), description: `Every frozen record in the ${label.toLowerCase()} corpus, page ${page.currentPage} of ${page.lastPage}.`, noindex: page.currentPage > 1 }} crumbs={crumbs} bodyClass="page-evidence">
+  <main id="main-content">
+    <EvidenceHead active="records" />
+    <section class="shell">
+      <p class="result-count">{label} · {formatCount(page.total)} records · showing {page.start + 1}–{page.end + 1} · <a href="/evidence/">search and filter instead</a></p>
+      <div class="evidence-list">{items.map((record) => <EvidenceRecord record={record} heading="h2" />)}</div>
+      <nav class="evidence-pager" aria-label="Result pages">
+        {page.url.prev ? <a href={page.url.prev} rel="prev"><Icon name="arrow-right" /> Previous</a> : <span></span>}
+        <span>Page {page.currentPage} of {page.lastPage}</span>
+        {page.url.next ? <a href={page.url.next} rel="next">Next <Icon name="arrow-right" /></a> : <span></span>}
+      </nav>
+    </section>
+  </main>
+</Base>

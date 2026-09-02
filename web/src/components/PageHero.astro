@@ -1,0 +1,19 @@
+---
+interface Props { eyebrow: string; title: string; intro?: string; note?: string; noteTitle?: string; quote?: boolean; narrow?: boolean }
+const { eyebrow, title, intro, note, noteTitle, quote = false, narrow = false } = Astro.props;
+---
+<header class="page-hero">
+  <div class={narrow ? 'narrow-shell' : 'shell page-hero-grid'}>
+    <div>
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      {intro && <p class="page-intro">{intro}</p>}
+      <slot name="actions" />
+    </div>
+    {note && !quote && (
+      <p class="page-note">{noteTitle && <strong>{noteTitle}</strong>}{note}</p>
+    )}
+    {note && quote && <blockquote class="page-note">{note}</blockquote>}
+    <slot name="aside" />
+  </div>
+</header>

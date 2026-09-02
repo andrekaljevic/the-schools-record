@@ -1,0 +1,42 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageHero from '../../../components/PageHero.astro';
+import Notice from '../../../components/Notice.astro';
+import SourceList from '../../../components/SourceList.astro';
+import UsTable from '../../../components/UsTable.astro';
+import { us as loadUs, schoolSummary, site } from '../../../lib/data';
+import { schoolMeta } from '../../../lib/meta';
+import { schoolPath } from '../../../lib/routes';
+import { plural } from '../../../lib/html';
+export function getStaticPaths() {
+  return site().schools.map((entry) => ({ params: { school: entry.id } }));
+}
+const slug = Astro.params.school;
+const school = schoolSummary(slug)!;
+const data = loadUs();
+const entry = data.schools[slug]!;
+const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, href: schoolPath(slug) }, { label: 'US and overseas university records', href: null }];
+---
+<Base meta={schoolMeta(school, 'us-universities')} crumbs={crumbs} bodyClass="page-corpus">
+  <main id="main-content">
+    <PageHero eyebrow={school.name} title="US and overseas university records" intro="Named institutions and explicit aggregates by school and period, each typed by outcome: a leaver destination, a firm place, an acceptance, a named offer or a presence-only mention." note="Aggregate rows are never summed with institution rows; a named institution without a count is never read as one; and where two official versions disagree both stay visible." />
+    <section class="shell">
+      <form class="corpus-filters" data-island="corpus-filter" aria-label="Filter the records" method="get" action={schoolPath(slug, 'us-universities')}>
+        <div class="field"><label for="us-period">Period</label><select id="us-period" name="period" data-filter="period"><option value="">All periods</option>{entry.periods.map((period) => <option value={period}>{period}</option>)}</select></div>
+        <div class="field"><label for="us-type">Outcome type</label><select id="us-type" name="type" data-filter="type"><option value="">All outcome types</option>{entry.metricTypes.map((type) => <option value={type}>{data.metricTypes[type] ?? type}</option>)}</select></div>
+        <div class="field"><label for="us-region">Region</label><select id="us-region" name="region" data-filter="region"><option value="">All regions</option>{entry.regions.map((region) => <option value={region}>{region}</option>)}</select></div>
+        <div class="field"><label for="us-rows">Rows</label><select id="us-rows" name="rows" data-filter="rows"><option value="">Institutions and aggregates</option><option value="institution">Named institutions only</option><option value="aggregate">Aggregate rows only</option></select></div>
+      </form>
+      <p class="result-count" aria-live="polite"><span data-shown>{entry.count}</span> of {entry.count} records · <a href={schoolPath(slug, 'university-destinations')}>the school's destination ledgers</a> carry the published totals these rows itemise</p>
+      <div data-filter-scope>
+        <UsTable rows={entry.rows} caption={`${school.name} · US and overseas university records`} />
+        <div class="empty-state" data-empty hidden><h2>No records match</h2><p>Change the period or outcome type. A missing year is never interpolated.</p></div>
+      </div>
+      <details class="dataset-sources"><summary>Sources behind this school's records · {entry.sources.length} {plural(entry.sources.length, 'reference')}</summary><SourceList sources={entry.sources} /></details>
+      <Notice title="Read each row on its own basis"><ul class="notice-list">{data.safeguards.map((item) => <li>{item}</li>)}</ul></Notice>
+    </section>
+  </main>
+  <script>
+    import '../../../islands/corpus-filter.ts';
+  </script>
+</Base>

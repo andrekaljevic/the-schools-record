@@ -1,0 +1,22 @@
+---
+import Icon from './Icon.astro';
+import type { LatestRecord } from '../lib/types';
+interface Props { latest: LatestRecord | null; href: string; label?: string }
+const { latest, href, label = 'Open the full ledger' } = Astro.props;
+---
+{latest ? (
+  <section class="latest-record" aria-labelledby={`latest-${latest.datasetId}`}>
+    <p class="eyebrow">Latest published year · {latest.year}</p>
+    <h2 id={`latest-${latest.datasetId}`}>{latest.label}</h2>
+    <p class="latest-line">{latest.family} · evidence status {latest.status}</p>
+    <dl class="latest-values">
+      {latest.values.map((pair) => <div><dt>{pair.label}</dt><dd>{pair.value}</dd></div>)}
+    </dl>
+    <div class="latest-foot">
+      {latest.moreFields > 0 && <span>{latest.moreFields} further published {latest.moreFields === 1 ? 'column' : 'columns'} in the ledger</span>}
+      <a class="text-link" href={`${href}#${latest.anchor}`}>{label} <Icon name="arrow-right" /></a>
+    </div>
+  </section>
+) : (
+  <section class="latest-record"><p class="eyebrow">Latest published year</p><p class="mute">No dated row in this record.</p></section>
+)}

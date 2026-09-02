@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 review-queue/
+web/node_modules/
+web/dist/
+web/.astro/
+web/src/generated/
+web/test-results/
+web/playwright-report/
+web/.lighthouse/

@@ -1,0 +1,84 @@
+name: Flagship frontend
+
+on:
+  push:
+    branches: ['claude/tsr-flagship-10x', 'main']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  data-layer:
+    name: Python data layer (frozen dataset, parity, privacy, projection)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Verify the frozen dataset hash
+        run: |
+          echo "245f2d8176f8fca0d53f41689f096734dd13e9023af9a67931314334251b9f6f  data/dataset.json" | sha256sum -c -
+      - name: Data, parity, privacy, chart and projection tests
+        run: python -m unittest discover -s tests -v
+      - name: Build the public projection and chart fixture
+        run: |
+          python tools/build_public_projection.py
+          python tools/build_public_projection.py --check
+          python tools/build_chart_fixtures.py
+          git diff --exit-code -- web/tests/fixtures/comparison-charts.json
+      - name: Verify data/ is untouched
+        run: git diff --exit-code -- data/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: projection
+          path: web/src/generated
+          retention-days: 7
+
+  frontend:
+    name: Frontend (types, unit, build, privacy, budgets, e2e, accessibility)
+    needs: data-layer
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: projection
+          path: web/src/generated
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm run check
+      - run: npm run test:unit
+      - run: npm run build
+      - name: Privacy scan of the built site
+        run: npm run privacy
+      - name: Security scan of the built site (CSP conformance)
+        run: npm run security
+      - name: Performance budgets
+        run: npm run budgets
+      - run: npx playwright install --with-deps chromium
+      - name: End-to-end, journeys, accessibility and responsive checks
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: web/dist
+          retention-days: 7

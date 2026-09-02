@@ -1,0 +1,8 @@
+---
+interface Props { title: string; tone?: 'brass' | 'teal' | 'danger' }
+const { title, tone = 'brass' } = Astro.props;
+---
+<div class={`notice${tone === 'brass' ? '' : ` notice-${tone}`}`}>
+  <strong>{title}</strong>
+  <slot />
+</div>

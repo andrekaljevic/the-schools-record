@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import EvidenceHead from '../../components/EvidenceHead.astro';
+import Icon from '../../components/Icon.astro';
+import { site, sourceRegister } from '../../lib/data';
+import { titled } from '../../lib/meta';
+const data = site();
+const register = sourceRegister();
+const linked = register.filter((entry) => entry.linkedDatasets.length > 0).length;
+const publicLinks = register.filter((entry) => entry.url).length;
+---
+<Base meta={{ title: titled('Source register'), description: `${register.length} stable source references behind the frozen record, linked where the source is itself public.` }} crumbs={[{ label: 'Evidence', href: '/evidence/' }, { label: 'Sources', href: null }]} bodyClass="page-evidence">
+  <main id="main-content">
+    <EvidenceHead active="sources" />
+    <section class="section shell section-flush-top">
+      <div class="evidence-key">
+        <div><span class="status-pill">Official / primary</span><p>Published by the originating school, university, regulator or examination body.</p></div>
+        <div><span class="status-pill">Calculated</span><p>Mechanically calculated from an official table, with the source values retained.</p></div>
+        <div><span class="status-pill">Estimated / bounded</span><p>Kept visibly distinct from an exact figure, with its method or limits where recorded.</p></div>
+      </div>
+      <div class="section-heading">
+        <div><p class="eyebrow">Register</p><h2>{register.length} source references</h2></div>
+        <p>{linked} cited by the ledgers · {publicLinks} with an approved public link · snapshot {data.snapshot}</p>
+      </div>
+      <p class="register-note">A reference is stable even when its document is private. First-party school pages, public-body releases and Internet Archive captures kept by the reviewed public edition are linked; private working documents, archive paths and research notes are not, and their titles are withheld.</p>
+      <div class="evidence-register">
+        {register.map((entry) => (
+          <article class="evidence-entry" id={`source-${entry.key}`}>
+            <div><p class="source-ref">{entry.key}</p></div>
+            <div>
+              <h3>{entry.url ? <a class="source-link" href={entry.url} target="_blank" rel="noreferrer noopener">{entry.title} <Icon name="arrow-right" /></a> : entry.withheld ? <span class="source-withheld">{entry.title}</span> : entry.title}</h3>
+              {entry.role && <p class="source-role">{entry.role}</p>}
+              <p>{entry.domains.length > 0 ? entry.domains.map((domain) => data.domainLabels[domain] ?? domain).join(' · ') : 'Cited by the Oxford, Cambridge or US corpora'}</p>
+            </div>
+            <dl class="definition-list">
+              <div><dt>Linked datasets</dt><dd>{entry.linkedDatasets.length}</dd></div>
+              <div><dt>Location</dt><dd>{entry.url ? 'Public link above' : 'Withheld · available on request'}</dd></div>
+            </dl>
+          </article>
+        ))}
+      </div>
+    </section>
+  </main>
+</Base>

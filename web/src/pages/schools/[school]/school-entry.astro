@@ -1,0 +1,49 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Notice from '../../../components/Notice.astro';
+import { school as loadSchool, site } from '../../../lib/data';
+import { schoolMeta } from '../../../lib/meta';
+import { schoolPath } from '../../../lib/routes';
+export function getStaticPaths() {
+  return site().schools.map((entry) => ({ params: { school: entry.id } }));
+}
+const slug = Astro.params.school;
+const school = loadSchool(slug);
+const process = school.entry;
+const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, href: schoolPath(slug) }, { label: 'School entry', href: null }];
+---
+<Base meta={schoolMeta(school, 'school-entry')} crumbs={crumbs} bodyClass="page-entry">
+  <main id="main-content">
+    <header class="page-hero">
+      <div class="shell page-hero-grid">
+        <div>
+          <p class="eyebrow">{school.name} · school entry</p>
+          <h1>Published process and known limits</h1>
+          <p class="page-intro">What the reviewed evidence establishes about how pupils enter the school, and what it does not. This is school admissions evidence; university admissions are recorded separately.</p>
+        </div>
+        <p class="page-note"><strong>{process?.status ?? 'Not reviewed'}</strong>Evidence freshness: {process?.freshness ?? 'not stated'}</p>
+      </div>
+    </header>
+    <section class="section shell content-grid">
+      <article class="prose">
+        {process ? (
+          <>
+            <h2>Entry points evidenced</h2>
+            <ul>{(process.entryPoints ?? []).map((item) => <li>{item}</li>)}</ul>
+            <h2>Process as published</h2>
+            <ol class="question-list entry-steps" style="color:inherit">{(process.steps ?? []).map((step, index) => <li><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{step.label}</h3><p style="color:var(--ink-soft)">{step.detail}</p></div></li>)}</ol>
+            <h2>What is not known</h2>
+            <Notice title="Evidence boundary"><p>{process.limit}</p></Notice>
+          </>
+        ) : (
+          <div class="empty-state"><h2>No school-entry evidence reviewed</h2><p>The frozen corpus carries no admissions-process record for this school.</p></div>
+        )}
+      </article>
+      <aside class="side-index">
+        <h2>Source</h2>
+        <p class="side-note">{process?.sourceTitle ?? 'No school-authored entry guide in the reviewed corpus'}</p>
+        <nav aria-label="Related pages"><a href={schoolPath(slug)}>Back to the school record</a><a href={schoolPath(slug, 'oxbridge')}>University admissions records</a><a href="/methodology/">Methodology</a></nav>
+      </aside>
+    </section>
+  </main>
+</Base>

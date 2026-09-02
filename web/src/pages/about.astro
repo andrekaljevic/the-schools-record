@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import { titled } from '../lib/meta';
+---
+<Base meta={{ title: titled('About'), description: 'A permanent public record of school outcomes, not a ranking.' }} crumbs={[{ label: 'About', href: null }]} bodyClass="page-static">
+  <main id="main-content">
+    <header class="page-hero"><div class="shell page-hero-grid"><div><p class="eyebrow">About the record</p><h1>A permanent public record, not a ranking</h1><p class="page-intro">The Schools Record reconstructs historical examination and university-outcome evidence that is otherwise fragmented, inconsistently defined and difficult to interpret.</p></div><p class="page-note">The founding collection covers seven schools. Its focus reflects the source corpus, not a judgement about which schools matter.</p></div></header>
+    <section class="section narrow-shell prose">
+      <h2>Purpose</h2>
+      <p>The project gives parents, researchers, journalists and education professionals a more dependable way to read published school outcomes over time. Its strongest claim is methodological: distinctions that conventional rankings often lose remain visible here.</p>
+      <h2>Editorial independence</h2>
+      <p>The record is independently assembled. Inclusion does not constitute endorsement, and no school's payment or commercial relationship determines a statistical value, evidence status or editorial treatment.</p>
+      <h2>What the evidence cannot establish</h2>
+      <p>Published examination results and university outcomes do not, by themselves, establish teaching quality or causation. Admissions selection, prior attainment, subject mix and cohort characteristics matter. The site therefore avoids "best school" claims and winner language.</p>
+      <h2>Frozen data, rebuilt presentation</h2>
+      <p>This edition presents the owner-approved production dataset without altering any statistical record. Architecture, accessibility, privacy and presentation have changed; the frozen data has not. The dataset hash, snapshot and record counts are printed in the <a href="/changelog/">changelog</a>.</p>
+      <div class="button-row"><a class="button button-primary" href="/methodology/">Read the methodology</a><a class="button button-secondary" href="/corrections/report/">Report a correction</a></div>
+    </section>
+  </main>
+</Base>

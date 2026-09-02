@@ -1,0 +1,28 @@
+---
+/**
+ * A progressively enhanced form.  Without JavaScript it posts to the handler and
+ * receives a plain HTML receipt; with JavaScript the island validates inline,
+ * posts as JSON and renders the receipt in place.  The receipt never claims a
+ * submission was kept unless a durable receiver confirmed it.
+ */
+interface Props { kind: 'professional-enquiry' | 'correction-report'; action: string; submitLabel: string; id: string }
+const { kind, action, submitLabel, id } = Astro.props;
+---
+<form class="record-form" id={id} method="post" action={action} data-island="form" data-kind={kind} novalidate>
+  <div class="form-grid">
+    <slot />
+  </div>
+  <div class="honeypot" aria-hidden="true">
+    <label for={`${id}-website`}>Leave this field empty</label>
+    <input type="text" id={`${id}-website`} name="website" tabindex="-1" autocomplete="off" />
+  </div>
+  <input type="hidden" name="started" value="" data-started />
+  <div class="form-actions">
+    <button class="button button-primary" type="submit">{submitLabel}</button>
+    <span class="form-status" role="status" aria-live="polite" data-status></span>
+  </div>
+  <div class="form-receipt" data-receipt hidden tabindex="-1"></div>
+</form>
+<script>
+  import '../islands/form.ts';
+</script>

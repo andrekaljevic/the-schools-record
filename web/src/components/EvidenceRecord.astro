@@ -1,0 +1,34 @@
+---
+import Icon from './Icon.astro';
+import SourceList from './SourceList.astro';
+import StatusPill from './StatusPill.astro';
+import type { EvidenceRecord } from '../lib/types';
+import { recordPath, schoolPath } from '../lib/routes';
+interface Props { record: EvidenceRecord; open?: boolean; heading?: 'h1' | 'h2' | 'h3' }
+const { record, open = false, heading = 'h3' } = Astro.props;
+const Heading = heading;
+const ledgerHref = record.route.startsWith('/') ? record.route.replace(/^(\/schools\/[^/#]+\/[^/#]+)(#|$)/, '$1/$2').replace(/^(\/schools\/[^/#]+)(#|$)/, '$1/$2').replace(/^\/(oxbridge|us-universities|evidence)(#|$)/, '/$1/$2') : record.route;
+---
+<article class="evidence-record" id={record.id}>
+  <header>
+    <div class="record-kicker"><StatusPill text={record.corpusLabel} tone="teal" /><span>{record.outcome}</span></div>
+    <Heading>{record.title}</Heading>
+    <p class="record-line">
+      {record.schoolId ? <a href={schoolPath(record.schoolId)}>{record.school}</a> : <span>{record.school}</span>} · <span>{record.period}</span> · <span class="record-status">Evidence status: {record.status}</span>
+    </p>
+  </header>
+  <dl class="summary-list">{record.summary.map((pair) => <div><dt>{pair.label}</dt><dd>{pair.value}</dd></div>)}</dl>
+  <details class="record-details" open={open}>
+    <summary>{open ? 'Published fields' : 'Show details'}</summary>
+    {record.derived && <p class="record-note">Derived record: calculated by the source corpus from other frozen counts and labelled as such.</p>}
+    {record.conflictGroup && (
+      <p class="record-note">Part of published-difference group <code>{record.conflictGroup}</code>: {record.canonical ? 'this version is the one used for analysis.' : 'another published version of this figure is used for analysis; this one is kept visible.'}</p>
+    )}
+    <dl class="definition-list">{record.detail.map((pair) => <div><dt>{pair.label}</dt><dd>{pair.value}</dd></div>)}</dl>
+    <div class="record-sources"><p class="eyebrow">Public sources</p><SourceList sources={record.sources} /></div>
+    <div class="record-actions">
+      <a class="text-link" href={ledgerHref}>Open where this figure is displayed <Icon name="arrow-right" /></a>
+      <a class="text-link" href={recordPath(record.id)}>Permanent link to this record</a>
+    </div>
+  </details>
+</article>

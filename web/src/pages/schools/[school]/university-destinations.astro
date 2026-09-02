@@ -1,0 +1,8 @@
+---
+import LedgerPage from '../../../components/LedgerPage.astro';
+import { site } from '../../../lib/data';
+export function getStaticPaths() {
+  return site().schools.map((entry) => ({ params: { school: entry.id } }));
+}
+---
+<LedgerPage slug={Astro.params.school} kind="university" />

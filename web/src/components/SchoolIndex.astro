@@ -1,0 +1,91 @@
+---
+/** The school index for one charted series (the default, or /schools/series/{metric}/). */
+import Base from '../layouts/Base.astro';
+import Icon from './Icon.astro';
+import PageHero from './PageHero.astro';
+import { indexPanels, site } from '../lib/data';
+import { schoolPath } from '../lib/routes';
+import { titled } from '../lib/meta';
+interface Props { metricId: string }
+const { metricId } = Astro.props;
+const data = site();
+const panels = indexPanels();
+const metric = panels[metricId];
+if (!metric) throw new Error(`Unknown index series ${metricId}`);
+const isDefault = metricId === 'a_level_astar';
+const gapRule = 'Lines join consecutive published years only; a break in a line is a gap in the record, not an estimate.';
+const meta = {
+  title: titled(isDefault ? 'School records' : `School records · ${metric.label}`),
+  description: 'Seven school records: examination results, university outcomes, Oxford and Cambridge admissions and US-university evidence, year by year.',
+  dataset: true,
+  noindex: !isDefault,
+};
+---
+<Base meta={meta} crumbs={[{ label: 'Schools', href: null }]} bodyClass="page-index">
+  <main id="main-content">
+    <PageHero eyebrow="The founding collection" title="School records" intro="Explore examination results, university destinations and application-cycle evidence without collapsing unlike measures into a ranking." note="Seven highly selective UK independent schools. The collection is focused, not exhaustive, and carries no claim that these are the only schools worth examining." />
+    <section class="shell">
+      <form class="index-controls" role="search" aria-label="Filter and chart the school index" data-island="school-index" action="/schools/" method="get">
+        <div class="field">
+          <label for="school-search">Search schools</label>
+          <input type="search" id="school-search" name="q" placeholder="Search by school name" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="index-series">Charted series</label>
+          <select id="index-series" name="series" data-series-select>
+            {Object.values(panels).map((option) => <option value={option.id} selected={option.id === metricId}>{option.label}</option>)}
+          </select>
+        </div>
+      </form>
+      <div class="index-series-note">
+        <p>{metric.definition}</p>
+        <p><strong>Comparison limit.</strong> {metric.note}</p>
+        {metric.derived && <p>Calculated rates are generated at display time from frozen source values and are not stored as new public claims.</p>}
+        <p>{gapRule} Rows stay in alphabetical order: a higher line is not a claim that one school is better.</p>
+        <a class="text-link" href={`/compare/?metric=${metricId}`}>Compare two schools on this series <Icon name="arrow-right" /></a>
+        <ul class="series-links" aria-label="Other charted series">
+          {Object.values(panels).map((option) => <li><a href={option.id === 'a_level_astar' ? '/schools/' : `/schools/series/${option.id}/`} aria-current={option.id === metricId ? 'page' : undefined}>{option.shortLabel}</a></li>)}
+        </ul>
+      </div>
+      <p class="result-count" aria-live="polite" data-result-count>{data.schools.length} schools</p>
+      <div class="index-list" data-index-list>
+        {data.schools.map((school) => {
+          const panel = metric.panels[school.id];
+          return (
+            <article class="index-row" data-name={`${school.name} ${school.short}`.toLowerCase()} id={school.id}>
+              <div class="index-letter-cell"><p class="index-letter" aria-hidden="true">{school.name.charAt(0)}</p></div>
+              <div class="index-copy">
+                <h2><a href={schoolPath(school.id)}>{school.name}</a></h2>
+                <p>{school.oneLine}</p>
+              </div>
+              <div class="index-panel">
+                {panel ? (
+                  <>
+                    <Fragment set:html={panel.svg} />
+                    <p class="index-panel-latest">Latest {panel.latest.year}: {panel.latest.value} · {panel.latest.status} · {panel.count} published years</p>
+                    <details>
+                      <summary>Exact values</summary>
+                      <table class="data-table"><caption class="visually-hidden">{school.name}: {metric.label}</caption><thead><tr><th scope="col">Year</th><th scope="col">Value</th><th scope="col">Status</th></tr></thead><tbody>{panel.table.map((row) => <tr><th scope="row">{row.year}</th><td>{row.value}</td><td class="text">{row.status}</td></tr>)}</tbody></table>
+                    </details>
+                  </>
+                ) : (
+                  <p class="index-panel-empty">No like-for-like {metric.shortLabel} series is published for this school; nothing is drawn.</p>
+                )}
+              </div>
+              <dl class="facts">
+                <div><dt>Available years</dt><dd>{school.evidenceWindow}</dd></div>
+                <div><dt>Datasets</dt><dd>{school.datasetCount}</dd></div>
+                <div><dt>Latest verified</dt><dd>{school.latestVerifiedYear ?? '—'}</dd></div>
+              </dl>
+              <a class="row-action" href={schoolPath(school.id)} aria-label={`View ${school.name}`}><Icon name="arrow-right" /></a>
+            </article>
+          );
+        })}
+        <div class="empty-state" data-empty hidden><h2>No school found</h2><p>Try another spelling. The founding collection currently contains seven schools.</p></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    import '../islands/school-index.ts';
+  </script>
+</Base>

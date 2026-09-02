@@ -1,0 +1,7 @@
+---
+/** A numeric table cell; an em dash is a blank, styled as such. */
+interface Props { value: string | number | null | undefined }
+const { value } = Astro.props;
+const text = value === null || value === undefined || value === '' ? '—' : String(value);
+---
+<td class={text === '—' ? 'blank-value' : undefined}>{text}</td>

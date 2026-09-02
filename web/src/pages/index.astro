@@ -1,0 +1,139 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Artwork from '../components/Artwork.astro';
+import { site } from '../lib/data';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '../lib/meta';
+import { formatCount } from '../lib/html';
+import { schoolPath } from '../lib/routes';
+
+const data = site();
+const questions = [
+  ['How have results changed?', 'Follow the published record year by year without smoothing away gaps.'],
+  ['What does an Oxbridge figure mean?', 'See whether it records an application, offer, acceptance or final destination.'],
+  ['Which years are comparable?', 'Grading reforms, qualification changes and exceptional years remain visibly separate.'],
+  ['What population is measured?', 'Candidate, pupil and subject-entry denominators are never treated as interchangeable.'],
+];
+---
+<Base meta={{ title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, dataset: true }} legacyRedirect>
+  <main id="main-content">
+    <section class="home-hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow">The independent evidence record</p>
+        <h1>Independent school results, year by year.</h1>
+        <p class="hero-deck">Published examination results and university outcomes from seven highly selective UK schools, reconstructed as a careful historical record.</p>
+        <div class="button-row">
+          <a class="button button-primary" href="/schools/">Explore schools <Icon name="arrow-right" /></a>
+          <a class="button button-secondary" href="/compare/">Compare schools</a>
+        </div>
+      </div>
+      <div class="hero-ledger" aria-label="Coverage of the record">
+        <p class="ledger-kicker">The founding collection</p>
+        <dl>
+          <div><dt>Schools</dt><dd>{data.schools.length}</dd></div>
+          <div><dt>Historical span</dt><dd>{data.spanFrom}–{data.spanTo}</dd></div>
+          <div><dt>Frozen records</dt><dd>{formatCount(data.counts.total)}</dd></div>
+          <div><dt>Last reviewed</dt><dd>{data.lastReviewed.replace('September', 'Sep')}</dd></div>
+        </dl>
+        <p class="ledger-note">The collection is deliberately focused. It does not imply that only these schools matter.</p>
+      </div>
+    </section>
+
+    <section class="principle-band">
+      <div class="shell principle-inner"><Icon name="scale" /><p>We do not treat offers as destinations, pupils as exam entries, or incompatible grading systems as one continuous league table.</p></div>
+    </section>
+
+    <section class="section shell" aria-labelledby="inventory-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">What the record holds</p><h2 id="inventory-title">{formatCount(data.counts.total)} frozen records, four corpora</h2></div>
+        <a class="text-link" href="/evidence/">Search every record <Icon name="arrow-right" /></a>
+      </div>
+      <div class="inventory-grid">
+        <article class="inventory-card">
+          <p class="eyebrow">School results and destinations</p>
+          <p class="inventory-figure">{formatCount(data.counts.figures)}</p>
+          <p>Year-by-year ledgers of examination results, applications, offers, acceptances and destinations for each school.</p>
+          <a class="text-link" href="/schools/">School records <Icon name="arrow-right" /></a>
+        </article>
+        <article class="inventory-card">
+          <p class="eyebrow">Subject and destination detail</p>
+          <p class="inventory-figure">{formatCount(data.counts.granular)}</p>
+          <p>Subject-level grade counts and itemised destination lists from a school's own booklet.</p>
+          <a class="text-link" href="/schools/st-pauls/exam-results/#st_pauls_subject_results_2010_alevel">Subject tables <Icon name="arrow-right" /></a>
+        </article>
+        <article class="inventory-card">
+          <p class="eyebrow">Oxford and Cambridge admissions</p>
+          <p class="inventory-figure">{formatCount(data.counts.oxbridge)}</p>
+          <p>Apply-centre applications, offers and admissions by university and entry cycle, with university-wide context.</p>
+          <a class="text-link" href="/oxbridge/">Oxford and Cambridge records <Icon name="arrow-right" /></a>
+        </article>
+        <article class="inventory-card">
+          <p class="eyebrow">US and overseas universities</p>
+          <p class="inventory-figure">{formatCount(data.counts.us)}</p>
+          <p>Named institutions, counts and outcome types by school and year, with aggregates and published differences flagged.</p>
+          <a class="text-link" href="/us-universities/">US university records <Icon name="arrow-right" /></a>
+        </article>
+      </div>
+      <p class="inventory-note">{data.corrections} corrections and {data.conflicts} published differences are recorded and <a href="/corrections/">kept visible</a>.</p>
+    </section>
+
+    <section class="section shell" aria-labelledby="collection-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">Browse the collection</p><h2 id="collection-title">Seven school records</h2></div>
+        <a class="text-link" href="/schools/">Search all schools <Icon name="arrow-right" /></a>
+      </div>
+      <div class="school-grid">
+        {data.schools.map((school, index) => (
+          <article class={`school-card${index === 0 ? ' school-card-feature' : ''}`}>
+            <a href={schoolPath(school.id)} aria-label={`View ${school.name}`}>
+              <Artwork schoolId={school.id} alt={school.artworkAlt} decorative />
+              <div class="school-card-copy">
+                <p class="card-meta">{school.evidenceWindow}</p>
+                <h3>{school.name}</h3>
+                <p>{school.oneLine}</p>
+                <span class="card-action">View record <Icon name="arrow-right" /></span>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="question-section">
+      <div class="shell question-layout">
+        <div class="question-intro">
+          <p class="eyebrow">Read the evidence properly</p>
+          <h2>Questions a league table cannot answer</h2>
+          <p>The record starts with definitions, not rankings. Every figure keeps the context needed to interpret it.</p>
+          <a class="text-link" href="/methodology/">Read the methodology <Icon name="arrow-right" /></a>
+        </div>
+        <ol class="question-list">
+          {questions.map(([title, body], index) => (
+            <li><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{title}</h3><p>{body}</p></div></li>
+          ))}
+        </ol>
+      </div>
+    </section>
+
+    <section class="section shell professional-callout">
+      <div class="callout-icon"><Icon name="book-open" /></div>
+      <div>
+        <p class="eyebrow">For professional work</p>
+        <h2>Decision-ready, sourced school comparisons</h2>
+        <p>Commission a defined comparison dossier or discuss recurring access for research, journalism, consultancy and school leadership.</p>
+      </div>
+      <div class="button-row">
+        <a class="button button-primary" href="/sample-dossier/">View a sample dossier</a>
+        <a class="button button-secondary" href="/professional/">Professional access</a>
+      </div>
+    </section>
+
+    <section class="search-ribbon">
+      <div class="shell">
+        <Icon name="search" />
+        <p><strong>Looking for a particular school?</strong> Start with the searchable school index.</p>
+        <a class="text-link" href="/schools/">Explore schools <Icon name="arrow-right" /></a>
+      </div>
+    </section>
+  </main>
+</Base>

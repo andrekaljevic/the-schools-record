@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Notice from '../components/Notice.astro';
+import { dossier as loadDossier } from '../lib/data';
+import { titled } from '../lib/meta';
+const dossier = loadDossier();
+---
+<Base meta={{ title: titled('Sample dossier'), description: 'An illustrative sourced examination comparison: Eton College and Westminster School, A-level grades at A*, 2015–2019.', dataset: true }} crumbs={[{ label: 'Professional', href: '/professional/' }, { label: 'Sample dossier', href: null }]} bodyClass="dossier-page">
+  <main id="main-content">
+    <header class="dossier-cover">
+      <div class="shell dossier-cover-grid">
+        <div>
+          <p class="dossier-series">The Schools Record · Professional series</p>
+          <p class="eyebrow">Illustrative sample</p>
+          <h1>A sourced examination comparison</h1>
+          <p class="dossier-subtitle">Eton College and Westminster School · A-level grades at A* · 2015–2019</p>
+          <p class="dossier-disclaimer">This sample demonstrates structure and editorial method using the frozen public dataset. It is not a recommendation or a claim that either school is better.</p>
+        </div>
+        <div class="dossier-stamp"><span>Sample</span><strong>01</strong><p>Prepared<br />{dossier.prepared}</p></div>
+      </div>
+    </header>
+    <nav class="dossier-actions shell" aria-label="Dossier actions">
+      <a class="button button-primary" href="/the-schools-record-sample-dossier.pdf" download><Icon name="arrow-down-to-line" /> Download sample PDF</a>
+      <button class="button button-secondary" type="button" data-print><Icon name="printer" /> Print this page</button>
+      <a class="button button-secondary" href="/professional/#enquire">Request a sourced comparison</a>
+    </nav>
+    <section class="dossier-section shell">
+      <div class="dossier-number">01</div>
+      <article>
+        <p class="eyebrow">Executive reading</p>
+        <h2>What is being compared</h2>
+        <p class="dossier-lead">The share of published A-level subject entries awarded A* in each named examination year. The denominator is entries, not pupils or candidates.</p>
+        <div class="dossier-callouts">
+          <div><strong>Qualification</strong><span>A level only</span></div>
+          <div><strong>Grading system</strong><span>A*–E</span></div>
+          <div><strong>Population</strong><span>Published subject entries</span></div>
+          <div><strong>Outcome type</strong><span>Exam grade, not destination</span></div>
+        </div>
+        <Notice title="Interpretive limit"><p>The series does not control for subject mix, prior attainment, cohort characteristics or admissions selection. The figures describe published outcomes; they do not identify causes.</p></Notice>
+      </article>
+    </section>
+    <section class="dossier-section shell">
+      <div class="dossier-number">02</div>
+      <article>
+        <p class="eyebrow">Exact-value exhibit</p>
+        <h2>Five-year published record</h2>
+        <div class="series-legend"><span><i class="series-colour colour-1"></i>Eton College</span><span><i class="series-colour colour-2"></i>Westminster School</span></div>
+        <Fragment set:html={dossier.svg} />
+        <div class="table-scroll" tabindex="0">
+          <table class="data-table dossier-table">
+            <caption>A-level entries awarded A*, 2015–2019</caption>
+            <thead><tr><th scope="col">Year</th><th scope="col">Eton College</th><th scope="col">Evidence</th><th scope="col">Westminster School</th><th scope="col">Evidence</th></tr></thead>
+            <tbody>{dossier.rows.map((row) => <tr><th scope="row">{row.year}</th><td>{row.eton?.value ?? '—'}</td><td class="text">{row.eton?.status ?? '—'}</td><td>{row.westminster?.value ?? '—'}</td><td class="text">{row.westminster?.status ?? '—'}</td></tr>)}</tbody>
+          </table>
+        </div>
+        <p class="table-note">Values are rendered directly from the immutable production snapshot. No missing year is estimated and no competing value is averaged.</p>
+      </article>
+    </section>
+    <section class="dossier-section shell">
+      <div class="dossier-number">03</div>
+      <article>
+        <p class="eyebrow">Method note</p>
+        <h2>Why the boundary matters</h2>
+        <div class="dossier-columns">
+          <p>This exhibit deliberately uses an A-level-only ruler. Cambridge Pre-U, IB Higher Level and school-defined mixed-qualification measures are not folded into it, even where a source supplies an equivalence.</p>
+          <p>Centre-assessed 2020 and teacher-assessed 2021 values are omitted from the default like-for-like series. Their absence is not treated as zero and the surrounding years are not joined through an inferred value.</p>
+        </div>
+        <blockquote>Good comparison is often the discipline of refusing a convenient but false equivalence.</blockquote>
+      </article>
+    </section>
+    <section class="dossier-cta">
+      <div class="shell">
+        <div><p class="eyebrow">Commission a defined dossier</p><h2>Start with the decision you need to make</h2></div>
+        <a class="button button-primary" href="/professional/#enquire">Request a sourced comparison</a>
+      </div>
+    </section>
+  </main>
+  <script>
+    document.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+  </script>
+</Base>

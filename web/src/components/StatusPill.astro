@@ -1,0 +1,5 @@
+---
+interface Props { text: string; tone?: 'ink' | 'teal' | 'brass' }
+const { text, tone = 'ink' } = Astro.props;
+---
+<span class={`status-pill${tone === 'ink' ? '' : ` status-pill-${tone}`}`}>{text}</span>

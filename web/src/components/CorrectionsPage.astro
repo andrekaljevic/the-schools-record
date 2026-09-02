@@ -1,0 +1,97 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from './Icon.astro';
+import PageHero from './PageHero.astro';
+import SourceList from './SourceList.astro';
+import StatusPill from './StatusPill.astro';
+import { corrections as loadCorrections, site } from '../lib/data';
+import { titled } from '../lib/meta';
+import { schoolPath } from '../lib/routes';
+import { plural } from '../lib/html';
+interface Props { schoolId: string | null }
+const { schoolId } = Astro.props;
+const data = loadCorrections();
+const schools = site().schools;
+const school = schoolId ? schools.find((entry) => entry.id === schoolId) ?? null : null;
+const corrections = data.corrections.filter((item) => !schoolId || item.schoolId === schoolId);
+const conflicts = data.conflicts.filter((item) => !schoolId || item.schoolId === schoolId);
+const nameOf = (id: string | null, fallback: string) => schools.find((entry) => entry.id === id)?.name ?? fallback;
+const crumbs = school ? [{ label: 'Corrections', href: '/corrections/' }, { label: school.name, href: null }] : [{ label: 'Corrections', href: null }];
+const meta = school
+  ? { title: titled(`Corrections · ${school.name}`), description: `Corrections and published differences recorded for ${school.name}, with the value the record uses and why.` }
+  : { title: titled('Corrections and published differences'), description: 'Every recorded correction and every case where credible publications disagree, in plain English, with the value the record uses.' };
+---
+<Base meta={meta} crumbs={crumbs} bodyClass="page-corrections">
+  <main id="main-content">
+    <PageHero eyebrow="Editorial accountability" title="Corrections and published differences" intro="When a figure is corrected, the record uses the new value and keeps the earlier value and the reason here. When credible publications disagree, both values are noted with the one the record uses and why." note={`${data.corrections.length} corrections and ${data.conflicts.length} published differences are recorded in the frozen edition. None is applied silently, and this page creates none.`} />
+    <section class="shell">
+      <form class="index-controls" data-island="corrections-filter" method="get" action="/corrections/" aria-label="Choose a school">
+        <div class="field">
+          <label for="corrections-school">Show</label>
+          <select id="corrections-school" name="school">
+            <option value="" selected={!schoolId}>All schools</option>
+            {schools.map((entry) => <option value={entry.id} selected={entry.id === schoolId}>{entry.name}</option>)}
+          </select>
+        </div>
+        <ul class="series-links" aria-label="Corrections by school">
+          <li><a href="/corrections/" aria-current={schoolId ? undefined : 'page'}>All schools</a></li>
+          {schools.map((entry) => <li><a href={`/corrections/schools/${entry.id}/`} aria-current={entry.id === schoolId ? 'page' : undefined}>{entry.short}</a></li>)}
+        </ul>
+      </form>
+    </section>
+    <section class="section shell section-flush-top">
+      <div class="section-heading"><div><p class="eyebrow">Corrections</p><h2 id="corrections">What changed, and why</h2></div><p>{corrections.length} {plural(corrections.length, 'correction')}. The value now used replaces the earlier value in every ledger and chart; the change and its reason stay here.</p></div>
+      <div class="ledger-list">
+        {corrections.length === 0 && <div class="empty-state"><h2>No corrections recorded</h2><p>No figure for this school has been corrected in the frozen edition.</p></div>}
+        {corrections.map((item) => (
+          <article class="ledger-entry" id={item.id}>
+            <div class="ledger-id"><span>{item.id}</span><StatusPill text={item.status} /></div>
+            <div>
+              <h3>{item.schoolId ? <a href={schoolPath(item.schoolId)}>{nameOf(item.schoolId, item.school)}</a> : item.school} · {item.period}</h3>
+              <p class="ledger-metric">{item.metric}</p>
+              <p class="ledger-change"><span class="ledger-old">Earlier value {item.old}</span> <span class="ledger-arrow">now</span> <strong>{item.new}</strong></p>
+              <p class="ledger-reason">{item.reason}</p>
+              <details class="dataset-sources"><summary>Sources</summary><SourceList sources={item.sources} /></details>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section class="section shell section-flush-top">
+      <div class="section-heading"><div><p class="eyebrow">Published differences</p><h2 id="differences">When published figures do not agree</h2></div><p>{conflicts.length} {plural(conflicts.length, 'case')}. Both values are kept; the treatment says which one the record relies on.</p></div>
+      <div class="ledger-list">
+        {conflicts.length === 0 && <div class="empty-state"><h2>No published differences recorded</h2><p>No competing publication is recorded for this school.</p></div>}
+        {conflicts.map((item) => (
+          <article class="ledger-entry" id={item.id}>
+            <div class="ledger-id"><span>{item.id}</span></div>
+            <div>
+              <h3>{item.schoolId ? <a href={schoolPath(item.schoolId)}>{nameOf(item.schoolId, item.school)}</a> : item.school} · {item.period}</h3>
+              <p class="ledger-metric">{item.metric}</p>
+              <ul class="ledger-values">{item.values.map((candidate) => <li><strong>{candidate.value}</strong>{candidate.basis && <span class="ledger-basis">{candidate.basis}</span>}{candidate.source && <code class="source-key">{candidate.source}</code>}</li>)}</ul>
+              <p class="ledger-reason"><strong>Treatment.</strong> {item.treatment}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+    <section class="section shell section-flush-top content-grid">
+      <article class="prose">
+        <h2>Which publication controls</h2>
+        <p>The source compilations are layered rather than replaced; a later companion does not overwrite a detailed annual table it merely leaves out.</p>
+        <ol>{data.versionAuthority.map((item) => <li><strong>{item.version}</strong> controls {item.controls}.</li>)}</ol>
+        <p><a class="text-link" href="/evidence/method/">How the figures are checked <Icon name="arrow-right" /></a></p>
+      </article>
+      <aside class="side-index">
+        <h2>Seen something wrong?</h2>
+        <p class="side-note">Specific, source-backed reports are reviewed against the record's definitions. The frozen edition is not changed until a versioned editorial review.</p>
+        <nav aria-label="Related pages"><a href="/corrections/report/">Report a correction</a><a href="/evidence/">Evidence centre</a></nav>
+      </aside>
+    </section>
+  </main>
+  <script>
+    const select = document.querySelector<HTMLSelectElement>('#corrections-school');
+    select?.addEventListener('change', () => {
+      window.location.assign(select.value ? `/corrections/schools/${encodeURIComponent(select.value)}/` : '/corrections/');
+    });
+  </script>
+</Base>

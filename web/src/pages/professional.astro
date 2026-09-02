@@ -1,0 +1,81 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import FormShell from '../components/FormShell.astro';
+import { titled } from '../lib/meta';
+const offerOne = ['Examination and university-outcome charts', 'Definitions, evidence statuses and limitations', 'Public source references', 'PDF and structured-data deliverables', 'Editorial interpretation without causal overclaiming'];
+const offerTwo = ['Richer, sanitised exports', 'Bespoke school sets and defined monitoring', 'Methodological support', 'Research licensing', 'Separately commissioned future reconstruction work'];
+const process = [
+  ['01', 'Define the decision', 'Tell us which schools, years and outcome questions matter.'],
+  ['02', 'Confirm the evidence boundary', 'We identify what can and cannot be compared before work begins.'],
+  ['03', 'Agree the deliverable', 'Scope, timing, format and a human-reviewed proposal are confirmed.'],
+  ['04', 'Deliver with provenance', 'Figures arrive with their definitions, evidence status and caveats.'],
+];
+const roles = ['Parent or prospective parent', 'Education consultant', 'Researcher', 'Journalist', 'School leadership', 'Communications team', 'Other professional'];
+const deliverables = ['Sourced comparison dossier', 'Structured data', 'Professional access', 'Methodological support', 'Not sure yet'];
+const budgets = ['Prefer not to say', 'Under £1,000', '£1,000–£2,499', '£2,500–£4,999', '£5,000+', 'Need scoping first'];
+---
+<Base meta={{ title: titled('Professional access'), description: 'Sourced comparison dossiers and professional research access built on the frozen record.' }} crumbs={[{ label: 'Professional', href: null }]} bodyClass="page-professional">
+  <main id="main-content">
+    <header class="professional-hero">
+      <div class="shell">
+        <p class="eyebrow">Professional research</p>
+        <h1>Evidence made decision-ready</h1>
+        <p class="page-intro">For consultants, researchers, journalists, school leaders, communications teams and highly engaged parents who need a defensible comparison rather than a generic ranking.</p>
+        <div class="button-row">
+          <a class="button button-primary" href="#enquire">Request a sourced comparison</a>
+          <a class="button button-secondary" href="/sample-dossier/">View a sample dossier</a>
+        </div>
+      </div>
+    </header>
+    <section class="section shell">
+      <div class="offer-grid">
+        <article class="offer-card">
+          <Icon name="file-text" />
+          <p class="eyebrow">Offer 01</p>
+          <h2>Sourced school comparison dossier</h2>
+          <p>A defined, decision-ready report comparing selected schools and periods using the frozen record.</p>
+          <ul>{offerOne.map((item) => <li>{item}</li>)}</ul>
+          <a class="text-link" href="/sample-dossier/">Inspect the sample <Icon name="arrow-right" /></a>
+        </article>
+        <article class="offer-card">
+          <Icon name="layers" />
+          <p class="eyebrow">Offer 02</p>
+          <h2>Professional data and research access</h2>
+          <p>Scoped access for recurring professional use, built around the same methodological boundaries as the public record.</p>
+          <ul>{offerTwo.map((item) => <li>{item}</li>)}</ul>
+          <a class="text-link" href="#enquire">Discuss professional access <Icon name="arrow-right" /></a>
+        </article>
+      </div>
+      <div class="pricing-note">
+        <p class="eyebrow">Scope before price</p>
+        <p>Prices are not published in this preview. A proposal depends on the school set, period, intended use, evidence depth, format and deadline. No payment is taken through this site.</p>
+      </div>
+    </section>
+    <section class="professional-process">
+      <div class="shell">
+        <p class="eyebrow">A restrained process</p>
+        <ol class="process-list">{process.map(([number, title, body]) => <li><span>{number}</span><h3>{title}</h3><p>{body}</p></li>)}</ol>
+      </div>
+    </section>
+    <section class="section narrow-shell" id="enquire">
+      <div class="form-intro">
+        <p class="eyebrow">Start an enquiry</p>
+        <h2>Request a sourced comparison</h2>
+        <p>Only useful scoping details are requested. Submission creates an internal review item; it does not trigger payment or automated external email.</p>
+      </div>
+      <FormShell kind="professional-enquiry" action="/api/enquiry" submitLabel="Request a sourced comparison" id="enquiry-form">
+        <div class="field"><label for="en-name">Name <span aria-hidden="true">*</span></label><input id="en-name" name="name" type="text" required maxlength="120" autocomplete="name" /></div>
+        <div class="field"><label for="en-email">Email <span aria-hidden="true">*</span></label><input id="en-email" name="email" type="email" required maxlength="254" autocomplete="email" /></div>
+        <div class="field"><label for="en-role">Role <span aria-hidden="true">*</span></label><select id="en-role" name="role" required><option value="">Select one</option>{roles.map((role) => <option value={role}>{role}</option>)}</select></div>
+        <div class="field"><label for="en-org">Organisation</label><input id="en-org" name="organisation" type="text" maxlength="160" autocomplete="organization" /></div>
+        <div class="field span-2"><label for="en-schools">Schools of interest <span aria-hidden="true">*</span></label><input id="en-schools" name="schools" type="text" required maxlength="500" placeholder="For example, Eton and Westminster" /></div>
+        <div class="field"><label for="en-deliverable">Preferred deliverable <span aria-hidden="true">*</span></label><select id="en-deliverable" name="deliverable" required><option value="">Select one</option>{deliverables.map((item) => <option value={item}>{item}</option>)}</select></div>
+        <div class="field"><label for="en-deadline">Deadline</label><input id="en-deadline" name="deadline" type="text" maxlength="80" placeholder="A date or timeframe" /></div>
+        <div class="field"><label for="en-budget">Approximate budget band</label><select id="en-budget" name="budgetBand">{budgets.map((item) => <option value={item}>{item}</option>)}</select></div>
+        <div class="field span-2"><label for="en-use">Intended use <span aria-hidden="true">*</span></label><textarea id="en-use" name="intendedUse" rows="5" required maxlength="2000" placeholder="What decision, article or research question should the work support?"></textarea></div>
+        <label class="form-consent span-2"><input type="checkbox" name="consent" required /><span>I have read the <a href="/privacy/">privacy notice</a> and agree that these details may be stored and used to respond to this enquiry. <span aria-hidden="true">*</span></span></label>
+      </FormShell>
+    </section>
+  </main>
+</Base>

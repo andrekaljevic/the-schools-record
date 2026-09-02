@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import { titled } from '../lib/meta';
+import { site } from '../lib/data';
+const data = site();
+---
+<Base meta={{ title: titled('Terms'), description: 'How the record may be used.' }} crumbs={[{ label: 'Terms', href: null }]} bodyClass="page-static">
+  <main id="main-content">
+    <header class="page-hero"><div class="narrow-shell"><p class="eyebrow">Terms and limitations</p><h1>Use the record with its definitions</h1></div></header>
+    <article class="section narrow-shell prose">
+      <p><em>Last reviewed: {data.lastReviewed}. These terms describe the product and are not bespoke legal advice.</em></p>
+      <h2>Informational purpose</h2>
+      <p>The Schools Record is an editorial research product. It is not admissions advice, financial advice or a recommendation to choose a particular school. Decisions should draw on current first-party information and the needs of the individual pupil.</p>
+      <h2>No ranking claim</h2>
+      <p>A higher published result does not establish that one school is better. The product does not control for selection, cohort composition, prior attainment, subject mix or educational aims.</p>
+      <h2>Definitions and gaps</h2>
+      <p>Use figures only with the year, population, denominator, qualification, outcome type, evidence status and caveat displayed with them. Missing values must not be read as zero. Offers must not be described as destinations.</p>
+      <h2>Permitted use</h2>
+      <p>You may use and cite the public interface for reasonable personal, educational and journalistic reference with attribution. Bulk republication, resale, systematic extraction or creation of a competing dataset requires written permission.</p>
+      <h2>Corrections</h2>
+      <p>We welcome specific, evidenced correction reports. A report does not change the frozen edition automatically; it enters an editorial review process and any approved future revision is recorded in the changelog.</p>
+      <h2>Availability</h2>
+      <p>The service may change or be withdrawn. We seek to preserve URLs and provide a rollback path, but do not promise uninterrupted availability.</p>
+    </article>
+  </main>
+</Base>

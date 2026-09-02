@@ -1,0 +1,8 @@
+---
+import CorrectionsPage from '../../../components/CorrectionsPage.astro';
+import { site } from '../../../lib/data';
+export function getStaticPaths() {
+  return site().schools.map((entry) => ({ params: { school: entry.id } }));
+}
+---
+<CorrectionsPage schoolId={Astro.params.school} />

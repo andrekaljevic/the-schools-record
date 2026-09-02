@@ -1,0 +1,44 @@
+---
+import SourceList from './SourceList.astro';
+import Icon from './Icon.astro';
+import type { GranularLedger } from '../lib/types';
+import { recordPath } from '../lib/routes';
+import { plural } from '../lib/html';
+interface Props { ledger: GranularLedger; schoolName: string }
+const { ledger, schoolName } = Astro.props;
+const textKey = (key: string) => /^(subject|destination|institution|university|course|note|notes|category|board|level|scale|qualification)$/.test(key);
+---
+<article class="ledger" id={ledger.id} aria-labelledby={`${ledger.id}-title`}>
+  <header class="ledger-head">
+    <div>
+      <p class="eyebrow">Itemised · {ledger.period}</p>
+      <h2 id={`${ledger.id}-title`}>{ledger.label}</h2>
+      <p class="ledger-meta"><span>{ledger.rowCount} {plural(ledger.rowCount, 'row')} as printed</span>{ledger.asAt && <span>as at {ledger.asAt}</span>}<code>{ledger.id}</code></p>
+    </div>
+  </header>
+  {ledger.basis && <div class="ledger-basis"><p><strong>Basis.</strong> {ledger.basis}</p></div>}
+  <div class="table-scroll sticky-first" tabindex="0" aria-label={`Scrollable table: ${ledger.label}`}>
+    <table class="data-table">
+      <caption>{schoolName} · {ledger.label}. Counts as printed in the school's own booklet; rows are not re-summed.</caption>
+      <thead><tr>{ledger.fields.map((field) => <th scope="col">{field.label}</th>)}<th scope="col">Record</th></tr></thead>
+      <tbody>
+        {ledger.rows.map((row) => (
+          <tr class={row.total ? 'row-total' : undefined} id={`${ledger.id}-${row.index}`}>
+            {ledger.fields.map((field, index) => {
+              const blank = row.blank.includes(field.key);
+              const classes = [blank ? 'blank-value' : '', textKey(field.key) ? 'text' : ''].filter(Boolean).join(' ') || undefined;
+              const value = blank ? '—' : row.cells[field.key];
+              return index === 0 ? <th scope="row" class={classes}>{value}</th> : <td class={classes}>{value}</td>;
+            })}
+            <td class="text"><a class="text-link" href={recordPath(row.recordId)}>Record <Icon name="arrow-right" /></a></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <details class="dataset-sources">
+    <summary>Source · {ledger.sourceTitle ?? 'reference only'}</summary>
+    {ledger.sourceNote && <p class="dataset-note">{ledger.sourceNote}</p>}
+    <SourceList sources={ledger.sources} />
+  </details>
+</article>

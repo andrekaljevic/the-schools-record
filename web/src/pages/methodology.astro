@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/PageHero.astro';
+import { method as loadMethod } from '../lib/data';
+import { titled } from '../lib/meta';
+const method = loadMethod();
+const sections = [['principles', 'Core principles'], ['populations', 'Populations'], ['grading', 'Grading systems'], ['exceptional', 'Exceptional periods'], ['outcomes', 'Outcome types'], ['derived', 'Derived presentation'], ['limits', 'Limitations']];
+const terms = [
+  ['Candidates or pupils', 'People in the reported cohort, where the publication supplies that count.'],
+  ['Exam entries', 'Individual subject-grade entries. One pupil commonly contributes several.'],
+  ['Applications', 'Applications attributed to a named entry cycle and apply centre.'],
+  ['Offers or admissions', 'Positive admissions decisions; not proof of a destination.'],
+  ['Final destinations', 'Places reported as taken up by a leaver or entry-year population.'],
+];
+---
+<Base meta={{ title: titled('Methodology'), description: 'Definitions before comparisons: populations, grading systems, exceptional years, outcome types and derived presentation.' }} crumbs={[{ label: 'Methodology', href: null }]} bodyClass="page-method">
+  <main id="main-content">
+    <PageHero eyebrow="Editorial method" title="Definitions before comparisons" intro="The Schools Record reconstructs published history without pretending that every figure measures the same thing." note="We do not treat offers as destinations, pupils as exam entries, or incompatible grading systems as one continuous league table." quote />
+    <section class="section shell content-grid">
+      <article class="prose">
+        <h2 id="principles" class="anchor-target">Core principles</h2>
+        <p>Each record retains the year or period, qualification, grading system, population, denominator, outcome type and evidence status that are present in the frozen source record. Missing information stays missing. A blank is not zero, and no absent value is interpolated.</p>
+        <h3>Source-led</h3>
+        <p>Figures are tied to stable public evidence references. Direct document locations and internal research notes are held privately; removing those locations from public output does not change the figure or its evidence classification.</p>
+        <h3>Lossless</h3>
+        <p>Exact values remain exact, ranges keep both bounds, lower bounds remain lower bounds, and estimates retain their classification. Display precision is preserved.</p>
+        <h3>Diagnostic validation only</h3>
+        <p>Automated checks may flag an unusual value, duplicate or denominator. They never edit the frozen production record. Production parity outranks a validator's opinion.</p>
+        <h2 id="populations" class="anchor-target">Populations and denominators</h2>
+        <p>A pupil can sit several qualifications and generate several subject entries. Candidate counts therefore cannot be substituted for entry counts. Likewise, the cohort used for a destination percentage may not be the cohort used for an application-cycle rate.</p>
+        <table><thead><tr><th scope="col">Term</th><th scope="col">Meaning in this record</th></tr></thead><tbody>{terms.map(([term, meaning]) => <tr><th scope="row">{term}</th><td>{meaning}</td></tr>)}</tbody></table>
+        <h2 id="grading" class="anchor-target">Grading systems</h2>
+        <p>Structural breaks are a feature of the evidence, not an inconvenience to hide. The comparison tool includes a series only when its ruler matches the metric definition.</p>
+        <div class="method-grid">{method.gradingScales.map((scale) => <section class="method-card"><p class="eyebrow">{scale.qualification}</p><h3>{scale.label}</h3><p><strong>Denominator:</strong> {scale.denominator}</p><p>{scale.note}</p></section>)}</div>
+        <h2 id="exceptional" class="anchor-target">Exceptional periods</h2>
+        <p>Centre-assessed grades in 2020 and teacher-assessed grades in 2021 did not arise from ordinary external examinations. Where the frozen record identifies those periods, the distinction remains visible and they are excluded by default from like-for-like examination comparisons.</p>
+        <h2 id="outcomes" class="anchor-target">University outcome types</h2>
+        <p>Oxford and Cambridge application-cycle evidence can include applications, offers and accepted or admitted outcomes. School publications may instead report a leaver destination. These may concern different populations and time points. The product does not convert between them.</p>
+        <h2 id="derived" class="anchor-target">Derived presentation</h2>
+        <p>Charts, sorting and display-only rates are deterministic calculations from frozen values. They never estimate a missing value and never overwrite source-published figures. A calculated display is labelled as such.</p>
+        <h2 id="limits" class="anchor-target">Limitations</h2>
+        <p>This is a record of published outcomes, not a causal measure of teaching quality. It does not control for prior attainment, admissions selectivity, subject choices, cohort composition or school aims. No "winner" is declared.</p>
+      </article>
+      <aside class="side-index">
+        <h2>On this page</h2>
+        <nav aria-label="On this page">{sections.map(([anchor, label]) => <a href={`#${anchor}`}>{label}</a>)}</nav>
+        <h2 style="margin-top:1.5rem">Related</h2>
+        <nav aria-label="Related pages"><a href="/evidence/method/">How the figures are checked</a><a href="/corrections/">Corrections</a></nav>
+      </aside>
+    </section>
+  </main>
+</Base>

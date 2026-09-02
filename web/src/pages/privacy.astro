@@ -1,0 +1,26 @@
+---
+import Base from '../layouts/Base.astro';
+import { titled } from '../lib/meta';
+import { site } from '../lib/data';
+const data = site();
+---
+<Base meta={{ title: titled('Privacy'), description: 'What the record collects and how private source locations are protected.' }} crumbs={[{ label: 'Privacy', href: null }]} bodyClass="page-static">
+  <main id="main-content">
+    <header class="page-hero"><div class="narrow-shell"><p class="eyebrow">Privacy</p><h1>A restrained data practice</h1><p class="page-intro">We collect only what is needed to operate the public record and respond to enquiries or corrections.</p></div></header>
+    <article class="section narrow-shell prose">
+      <p><em>Last reviewed: {data.lastReviewed}. This page describes the product's implemented behaviour and is not bespoke legal advice.</em></p>
+      <h2>Ordinary browsing</h2>
+      <p>The public site does not require an account. It sets no cookies, uses no advertising trackers and does not set a profiling cookie. Essential infrastructure may process an IP address and request metadata transiently for security and delivery. The site's own pages load no third-party scripts, fonts or images.</p>
+      <h2>Measurement</h2>
+      <p>This edition ships no analytics. If aggregate, privacy-respecting measurement is added later it will record a short allow-list of product events, the page path and a timestamp only, never names, email addresses, school selections entered into an enquiry or free-text form content, and this page will be updated first.</p>
+      <h2>Enquiries and corrections</h2>
+      <p>If you submit a form, the fields you provide are sent to the review endpoint configured for this deployment so the request can be reviewed and answered. If no review endpoint has confirmed receipt, the page tells you so and shows you a copy to keep; nothing is stored silently. These records are restricted to the fulfilment workflow. The anti-spam field and rate limit are used only to protect the service.</p>
+      <h2>Retention</h2>
+      <p>Unsuccessful spam submissions are not deliberately retained. Genuine enquiries and corrections are reviewed at least annually and deleted when no longer needed for the request, contractual record, editorial audit or a legal obligation. The operational target is 24 months for an inactive commercial enquiry and seven years for an accepted correction decision.</p>
+      <h2>Source privacy</h2>
+      <p>Private document locations, direct source URLs, archived URLs, Drive identifiers, unpublished source files and internal research notes are excluded from browser-accessible output, and an automated check of every published page enforces that. Stable public source references are shown instead, linked only where the source is itself public.</p>
+      <h2>Your choices</h2>
+      <p>You may ask for access to, correction of or deletion of personal information submitted through a form, subject to legitimate editorial and legal record-keeping needs. Use the relevant form and state "privacy request" in the intended-use field.</p>
+    </article>
+  </main>
+</Base>

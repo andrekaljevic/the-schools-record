@@ -1,0 +1,10 @@
+---
+interface Props { schoolId: string; alt: string; decorative?: boolean; eager?: boolean }
+const { schoolId, alt, decorative = false, eager = false } = Astro.props;
+const base = '/schools';
+---
+<picture class={`school-artwork artwork-${schoolId}`}>
+  <source media="(max-width: 520px)" srcset={`${base}/${schoolId}-480.webp`} />
+  <source media="(max-width: 960px)" srcset={`${base}/${schoolId}-800.webp`} />
+  <img src={`${base}/${schoolId}-1200.webp`} width="1200" height="900" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} decoding="async" alt={decorative ? '' : alt} />
+</picture>

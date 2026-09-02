@@ -1,0 +1,43 @@
+---
+import Base from '../../../layouts/Base.astro';
+import PageHero from '../../../components/PageHero.astro';
+import Notice from '../../../components/Notice.astro';
+import SourceList from '../../../components/SourceList.astro';
+import OxbridgeFamily from '../../../components/OxbridgeFamily.astro';
+import { oxbridge as loadOxbridge, schoolSummary, site } from '../../../lib/data';
+import { schoolMeta } from '../../../lib/meta';
+import { schoolPath } from '../../../lib/routes';
+import { plural } from '../../../lib/html';
+export function getStaticPaths() {
+  return site().schools.map((entry) => ({ params: { school: entry.id } }));
+}
+const slug = Astro.params.school;
+const school = schoolSummary(slug)!;
+const data = loadOxbridge();
+const entry = data.schools[slug]!;
+const families = data.familyOrder.filter((family) => entry.families.includes(family));
+const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, href: schoolPath(slug) }, { label: 'Oxford and Cambridge records', href: null }];
+---
+<Base meta={schoolMeta(school, 'oxbridge')} crumbs={crumbs} bodyClass="page-corpus">
+  <main id="main-content">
+    <PageHero eyebrow={school.name} title="Oxford and Cambridge records" intro="Apply-centre applications, offers and accepted or admitted outcomes by university and entry cycle, with the rounded subject and college releases, the school's own offer claims and the historical secondary table kept apart." note={`${data.definitions.cycle_year ?? ''} This is university apply-centre evidence: it is not a school-entry acceptance rate and not a leaver-destination measure.`} />
+    <section class="shell">
+      <form class="corpus-filters" data-island="corpus-filter" data-total={entry.count} aria-label="Filter the records" method="get" action={schoolPath(slug, 'oxbridge')}>
+        <div class="field"><label for="ox-university">University</label><select id="ox-university" name="university" data-filter="university"><option value="">All universities</option>{entry.universities.map((name) => <option value={name}>{name}</option>)}</select></div>
+        <div class="field"><label for="ox-family">Record family</label><select id="ox-family" name="family" data-filter="family"><option value="">All families</option>{families.map((family) => <option value={family}>{data.families[family]!.label}</option>)}</select></div>
+        <div class="field"><label for="ox-from">From cycle</label><input id="ox-from" name="from" type="number" inputmode="numeric" min={entry.cycleFrom} max={entry.cycleTo} placeholder={String(entry.cycleFrom)} data-filter="year-from" /></div>
+        <div class="field"><label for="ox-to">To cycle</label><input id="ox-to" name="to" type="number" inputmode="numeric" min={entry.cycleFrom} max={entry.cycleTo} placeholder={String(entry.cycleTo)} data-filter="year-to" /></div>
+      </form>
+      <p class="result-count" aria-live="polite"><span data-shown>{entry.count}</span> of {entry.count} records · <a href={schoolPath(slug, 'university-destinations')}>the school's university ledgers</a> keep the figures-corpus cycle tables and destinations separately</p>
+      <div data-filter-scope>
+        {families.map((family) => <OxbridgeFamily family={family} label={data.families[family]!.label} summary={data.families[family]!.summary} rows={entry.rows.filter((row) => row.family === family)} schoolScope />)}
+        <div class="empty-state" data-empty hidden><h2>No records match</h2><p>Widen the cycle range or choose another family. A missing cycle is never interpolated.</p></div>
+      </div>
+      <details class="dataset-sources"><summary>Sources behind this school's records · {entry.sources.length} {plural(entry.sources.length, 'reference')}</summary><SourceList sources={entry.sources} /></details>
+      <Notice title="Suppression and rounding"><p>{data.definitions.suppression}</p></Notice>
+    </section>
+  </main>
+  <script>
+    import '../../../islands/corpus-filter.ts';
+  </script>
+</Base>

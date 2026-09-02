@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import { titled } from '../lib/meta';
+import { manifest, site } from '../lib/data';
+const data = site();
+const pin = manifest();
+const short = pin.baselineCommit.slice(0, 12);
+const entries = [
+  { date: '2026-09-02', label: '2 September 2026', eyebrow: 'Flagship frontend', title: 'A dedicated static frontend', body: `Replaced the Streamlit runtime with a static, server-rendered site: every page is plain HTML, every one of the ${data.counts.total.toLocaleString('en-GB')} records has a permanent address, the comparison instrument and evidence search run as small scripts, forms report honestly where a submission went, and print, metadata and accessibility are built in. The Python data layer remains the single interpretation of the frozen dataset and writes the public projection the site is built from.`, dataNote: `Data baseline: ${short} · dataset SHA-256 ${pin.datasetSha256} · no statistical change.` },
+  { date: '2026-09-02', label: '2 September 2026', eyebrow: 'Native parity restoration', title: 'The complete record, natively', body: 'Restored everything the final public product could do that the native rebuild had lost: an evidence centre that searches all 2,277 records and traces any displayed figure to its public sources; Oxford and Cambridge and US-university records for every school and corpus-wide; school-entry evidence; the corrections and published-differences ledgers; ledgers that show every published denominator; approved public source links; honest form receipts; page titles and shareable metadata.', dataNote: `Data baseline: ${short} · no statistical change.` },
+  { date: '2026-09-02', label: '2 September 2026', eyebrow: 'Charts', title: 'Results by year', body: 'Added a like-for-like series panel to every row of the school index on one shared ruler, a results-by-year section to each school record with one panel per grading ruler, and the comparison chart to the sample dossier. Lines join consecutive published years only; 2020–21 and the 2010 introduction of A* stay marked.', dataNote: `Data baseline: ${short} · no statistical change.` },
+  { date: '2026-09-02', label: '2 September 2026', eyebrow: 'Data-frozen rebuild preview', title: 'Canonical public application', body: 'Introduced permanent server-rendered routes, responsive assets, typed schemas, privacy separation, parity gates, comparison URLs, professional offer and expanded quality assurance.', dataNote: `Data baseline: ${short} · no statistical change.` },
+  { date: '2026-09-02', label: '2 September 2026', eyebrow: 'Reviewed public experience', title: 'Language and presentation pass', body: 'Improved homepage, navigation, comparison terminology, evidence language and responsive presentation in the reference implementation.', dataNote: null },
+];
+---
+<Base meta={{ title: titled('Changelog'), description: 'Material releases and any versioned statistical revision.' }} crumbs={[{ label: 'Changelog', href: null }]} bodyClass="page-static">
+  <main id="main-content">
+    <header class="page-hero"><div class="shell page-hero-grid"><div><p class="eyebrow">Version record</p><h1>Changelog</h1><p class="page-intro">Material public-product releases and any future separately approved statistical revisions are recorded here.</p></div><p class="page-note"><strong>Snapshot {data.snapshot}</strong>A statistical change is never bundled silently into an interface release.</p></div></header>
+    <section class="section narrow-shell">
+      <ol class="timeline">
+        {entries.map((entry) => <li><time datetime={entry.date}>{entry.label}</time><div><p class="eyebrow">{entry.eyebrow}</p><h2>{entry.title}</h2><p>{entry.body}</p>{entry.dataNote && <p class="change-data">{entry.dataNote}</p>}</div></li>)}
+      </ol>
+    </section>
+  </main>
+</Base>

@@ -1,0 +1,39 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import EvidenceRecord from '../../../../components/EvidenceRecord.astro';
+import Icon from '../../../../components/Icon.astro';
+import { evidenceRecords, recordsForClaim } from '../../../../lib/data';
+import { titled } from '../../../../lib/meta';
+import { recordPath } from '../../../../lib/routes';
+import type { EvidenceRecord as RecordType } from '../../../../lib/types';
+
+const CORPUS_KEY: Record<RecordType['corpus'], string> = { figures: 'fig', granular: 'gran', oxbridge: 'ox', us: 'us' };
+
+export function getStaticPaths() {
+  return evidenceRecords().map((record) => {
+    const [corpus, ...rest] = record.id.split(':');
+    return { params: { corpus, rest: rest.join('/') }, props: { record } };
+  });
+}
+const { record } = Astro.props as { record: RecordType };
+const siblings = record.datasetId && record.corpus === 'figures' ? recordsForClaim(record.datasetId, record.period).filter((item) => item.id !== record.id) : [];
+const description = `${record.title}. ${record.school}, ${record.period}. Evidence status: ${record.status}. ${record.summary.slice(0, 3).map((pair) => `${pair.label}: ${pair.value}`).join('; ')}.`;
+const crumbs = [{ label: 'Evidence', href: '/evidence/' }, { label: record.corpusLabel, href: `/evidence/browse/${record.corpus}/` }, { label: record.title, href: null }];
+---
+<Base meta={{ title: titled(`${record.title} · ${record.school} · ${record.period}`), description, dataset: true }} crumbs={crumbs} bodyClass="page-record">
+  <main id="main-content">
+    <section class="shell section-tight">
+      <div class="record-focus">
+        <p class="eyebrow">Record <code class="source-key">{record.id}</code> · {CORPUS_KEY[record.corpus]} corpus</p>
+        <EvidenceRecord record={record} open heading="h1" />
+      </div>
+      {siblings.length > 0 && (
+        <aside class="section-tight">
+          <h2 class="small eyebrow-ink" style="font-family:var(--sans);letter-spacing:.12em;text-transform:uppercase;font-size:var(--step--2)">Other records carrying the same displayed figure</h2>
+          <ul class="series-links">{siblings.map((item) => <li><a href={recordPath(item.id)}>{item.title}</a></li>)}</ul>
+        </aside>
+      )}
+      <p class="action-row"><a class="text-link" href={`/evidence/?q=${encodeURIComponent(record.school)}`}>Search the evidence centre <Icon name="arrow-right" /></a><a class="text-link" href="/methodology/">How the figures are checked</a></p>
+    </section>
+  </main>
+</Base>

@@ -1,0 +1,127 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Icon from '../../../components/Icon.astro';
+import Artwork from '../../../components/Artwork.astro';
+import LatestRecord from '../../../components/LatestRecord.astro';
+import Trajectory from '../../../components/Trajectory.astro';
+import { school as loadSchool, site } from '../../../lib/data';
+import { schoolMeta } from '../../../lib/meta';
+import { formatCount, plural } from '../../../lib/html';
+import { schoolPath } from '../../../lib/routes';
+
+export function getStaticPaths() {
+  return site().schools.map((entry) => ({ params: { school: entry.id } }));
+}
+const { school: slug } = Astro.params;
+const school = loadSchool(slug);
+const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, href: null }];
+---
+<Base meta={schoolMeta(school)} crumbs={crumbs} bodyClass="page-school">
+  <main id="main-content">
+    <header class="school-hero shell">
+      <div>
+        <p class="eyebrow">School record · {school.spanFrom}–{school.spanTo}</p>
+        <h1>{school.name}</h1>
+        <p class="page-intro">{school.oneLine}</p>
+        <div class="button-row">
+          <a class="button button-primary" href={schoolPath(slug, 'exam-results')}>Examination results</a>
+          <a class="button button-secondary" href={schoolPath(slug, 'university-destinations')}>University outcomes</a>
+        </div>
+      </div>
+      <Artwork schoolId={slug} alt={school.artworkAlt} eager />
+    </header>
+
+    <section class="section shell school-summary-grid">
+      <LatestRecord latest={school.latestExam} href={schoolPath(slug, 'exam-results')} />
+      <aside class="record-caution">
+        <p class="eyebrow">Read with care</p>
+        <h2>Record boundary</h2>
+        <p>{school.caution}</p>
+        <a class="text-link" href="/methodology/">Review the methodology <Icon name="arrow-right" /></a>
+      </aside>
+    </section>
+
+    <section class="section shell section-flush-top" aria-labelledby="trajectory-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">Published trajectory</p><h2 id="trajectory-title">Results by year</h2></div>
+        <p>The school's like-for-like examination series, one panel per grading ruler, drawn from the same frozen values the comparison tool uses.</p>
+      </div>
+      <Trajectory trajectory={school.trajectory} schoolName={school.name} />
+    </section>
+
+    <section class="route-band">
+      <div class="shell route-card-grid">
+        <article class="route-card">
+          <Icon name="graduation-cap" />
+          <p class="eyebrow">{school.examLedgers} {plural(school.examLedgers, 'ledger')} · {school.examRows} rows</p>
+          <h2>Examination results</h2>
+          <p>{school.examFamilies.join(' · ')}. Each ledger stays on the scale and denominator its source published.</p>
+          <a class="text-link" href={schoolPath(slug, 'exam-results')}>Open examination record <Icon name="arrow-right" /></a>
+        </article>
+        <article class="route-card">
+          <Icon name="library-big" />
+          <p class="eyebrow">{school.universityLedgers} {plural(school.universityLedgers, 'ledger')} · {school.universityRows} rows</p>
+          <h2>University outcomes</h2>
+          <p>{school.universityFamilies.join(' · ')}. Applications, offers, acceptances and destinations are labelled precisely and kept apart.</p>
+          <a class="text-link" href={schoolPath(slug, 'university-destinations')}>Open university record <Icon name="arrow-right" /></a>
+        </article>
+        <article class="route-card">
+          <Icon name="scale" />
+          <p class="eyebrow">{school.counts.oxbridge} records · cycles {school.oxbridgeSpan ?? 'none'}</p>
+          <h2>Oxford and Cambridge</h2>
+          <p>Apply-centre applications, offers and admissions by university and entry cycle, with rounded subject and college releases.</p>
+          <a class="text-link" href={schoolPath(slug, 'oxbridge')}>Open the Oxbridge records <Icon name="arrow-right" /></a>
+        </article>
+        <article class="route-card">
+          <Icon name="book-open" />
+          <p class="eyebrow">{school.counts.us} records · {school.usSpan ?? 'none'}</p>
+          <h2>US and overseas universities</h2>
+          <p>Named institutions, counts and outcome types by year; aggregates and alternative published versions stay flagged.</p>
+          <a class="text-link" href={schoolPath(slug, 'us-universities')}>Open the US records <Icon name="arrow-right" /></a>
+        </article>
+        <article class="route-card">
+          <Icon name="file-text" />
+          <p class="eyebrow">School entry · {school.entryStatus ?? 'not reviewed'}</p>
+          <h2>School entry</h2>
+          <p>Published admissions-process evidence and known gaps. School entry is kept apart from university admissions.</p>
+          <a class="text-link" href={schoolPath(slug, 'school-entry')}>Open the school entry evidence <Icon name="arrow-right" /></a>
+        </article>
+        <article class="route-card">
+          <Icon name="search" />
+          <p class="eyebrow">{school.corrections} {plural(school.corrections, 'correction')} · {school.conflicts} published {plural(school.conflicts, 'difference')}</p>
+          <h2>Corrections and evidence</h2>
+          <p>Every corrected figure and every case of disagreeing publications for this school, with the value the record uses; every record traceable to public references.</p>
+          <a class="text-link" href={`/corrections/schools/${slug}/`}>Corrections for this school <Icon name="arrow-right" /></a>
+          <a class="text-link" href={`/evidence/?school=${slug}`}>Search this school's records <Icon name="arrow-right" /></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" aria-labelledby="inventory-heading">
+      <div class="section-heading">
+        <div><p class="eyebrow">What this record holds</p><h2 id="inventory-heading">Evidence by qualification and outcome</h2></div>
+        <p>Every ledger, the years it covers and the published scales it carries. Rows are frozen values; a scale change is a break, not a conversion.</p>
+      </div>
+      <div class="table-scroll" tabindex="0" aria-label="Scrollable table: what this record holds">
+        <table class="data-table inventory-table">
+          <caption>Every ledger and record set for this school, with the years and published scales it carries.</caption>
+          <thead><tr><th scope="col">Section</th><th scope="col">Family</th><th scope="col">Ledger</th><th scope="col">Years</th><th scope="col">Published scales and bases</th><th scope="col">Rows</th></tr></thead>
+          <tbody>
+            {school.inventory.map((row) => (
+              <tr><td>{row.section}</td><td>{row.family}</td><th scope="row"><a href={row.href}>{row.label}</a></th><td>{row.span}</td><td class="cell-note">{row.scales}</td><td>{row.rows}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div class="record-inventory">
+        <p class="eyebrow">At a glance</p>
+        <dl class="facts">
+          <div><dt>Reviewed period</dt><dd>{school.evidenceWindow}</dd></div>
+          <div><dt>Records naming this school</dt><dd>{formatCount(school.counts.total)}</dd></div>
+          <div><dt>Examination ledgers</dt><dd>{school.examLedgers}</dd></div>
+          <div><dt>University ledgers</dt><dd>{school.universityLedgers}</dd></div>
+        </dl>
+      </div>
+    </section>
+  </main>
+</Base>

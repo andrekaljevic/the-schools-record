@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import PageHero from '../../components/PageHero.astro';
+import OxbridgeFamily from '../../components/OxbridgeFamily.astro';
+import { oxbridge as loadOxbridge, site } from '../../lib/data';
+import { titled } from '../../lib/meta';
+import { schoolPath } from '../../lib/routes';
+import { plural } from '../../lib/html';
+const data = loadOxbridge();
+const schools = site().schools;
+const schoolRecords = Object.values(data.schools).reduce((sum, entry) => sum + entry.count, 0);
+const universityFamilies = data.familyOrder.filter((family) => data.universityWide.some((row) => row.family === family));
+---
+<Base meta={{ title: titled('Oxford and Cambridge admissions records'), description: 'Apply-centre applications, offers and admissions by school and cycle, with university-wide context and historical tables.', dataset: true }} crumbs={[{ label: 'Oxford and Cambridge records', href: null }]} bodyClass="page-corpus">
+  <main id="main-content">
+    <PageHero eyebrow={`Second corpus · ${data.total} records`} title="Oxford and Cambridge admissions records" intro="Apply-centre applications, offers and accepted or admitted outcomes by university and entry cycle, with the rounded subject and college releases, the school's own offer claims and the historical secondary table kept apart." note={`${data.definitions.cycle_year ?? ''} This is university apply-centre evidence: it is not a school-entry acceptance rate and not a leaver-destination measure.`} />
+    <section class="section shell">
+      <div class="section-heading"><div><p class="eyebrow">By school</p><h2>Apply-centre records</h2></div><p>{schoolRecords} school records across the seven schools.</p></div>
+      <div class="corpus-grid">
+        {schools.map((school) => {
+          const entry = data.schools[school.id]!;
+          const top = Object.entries(entry.familyCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([label, count]) => `${label} (${count})`).join(' · ');
+          return (
+            <article class="corpus-card">
+              <p class="eyebrow">{school.short}</p>
+              <h3><a href={schoolPath(school.id, 'oxbridge')}>{school.name}</a></h3>
+              <p class="corpus-figure"><strong>{entry.count}</strong> records · cycles {entry.cycleFrom}–{entry.cycleTo}</p>
+              <p>{top}</p>
+              <a class="text-link" href={schoolPath(school.id, 'oxbridge')}>Open the school's records <Icon name="arrow-right" /></a>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+    <section class="section shell section-flush-top">
+      <div class="section-heading"><div><p class="eyebrow">Context</p><h2>University-wide records</h2></div><p>Whole-university and subject figures that sit behind the apply-centre counts.</p></div>
+      {universityFamilies.map((family) => <OxbridgeFamily family={family} label={data.families[family]!.label} summary={data.families[family]!.summary} rows={data.universityWide.filter((row) => row.family === family)} schoolScope={false} />)}
+    </section>
+    <section class="section shell section-flush-top">
+      <div class="section-heading"><div><p class="eyebrow">Historical</p><h2>2007 five-year table</h2></div><p>{data.historical.length} {plural(data.historical.length, 'row')} as published; secondary evidence with an unstated period.</p></div>
+      <OxbridgeFamily family="historical_five_year_oxbridge_hit_rate" label={data.families.historical_five_year_oxbridge_hit_rate!.label} summary={data.families.historical_five_year_oxbridge_hit_rate!.summary} rows={data.historical} schoolScope={false} />
+    </section>
+  </main>
+</Base>

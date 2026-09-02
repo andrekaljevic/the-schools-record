@@ -1,0 +1,59 @@
+---
+/** Examination results or university outcomes for one school: every ledger, every row. */
+import Base from '../layouts/Base.astro';
+import Ledger from './Ledger.astro';
+import GranularLedger from './GranularLedger.astro';
+import LatestRecord from './LatestRecord.astro';
+import SeriesIndex from './SeriesIndex.astro';
+import Notice from './Notice.astro';
+import { school as loadSchool } from '../lib/data';
+import { schoolMeta } from '../lib/meta';
+import { schoolPath } from '../lib/routes';
+interface Props { slug: string; kind: 'exam' | 'university' }
+const { slug, kind } = Astro.props;
+const school = loadSchool(slug);
+const isExam = kind === 'exam';
+const section = isExam ? 'exam-results' : 'university-destinations';
+const ledgers = isExam ? school.exam : school.university;
+const granular = isExam ? school.granularExam : school.granularUniversity;
+const latest = isExam ? school.latestExam : school.latestUniversity;
+const title = isExam ? 'Examination results' : 'University outcomes';
+const intro = isExam
+  ? 'Published grade-entry results are presented on their original qualification and grading scales. Structural breaks remain visible.'
+  : 'Applications, offers, acceptances and final destinations remain distinct. Read each dataset’s basis before comparing years.';
+const noticeTitle = isExam ? 'Check the grading system' : 'Check the outcome type';
+const noticeBody = isExam
+  ? 'A-level, Cambridge Pre-U, IB and old- and new-scale GCSE results are not one continuous measure. The ledgers below retain those boundaries.'
+  : 'An offer is not an acceptance; an application-cycle acceptance is not automatically a leaver destination. The record does not convert one into another.';
+const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, href: schoolPath(slug) }, { label: title, href: null }];
+---
+<Base meta={schoolMeta(school, section)} crumbs={crumbs} bodyClass="page-ledgers">
+  <main id="main-content">
+    <header class="page-hero">
+      <div class="shell page-hero-grid">
+        <div>
+          <p class="eyebrow">{school.name}</p>
+          <h1>{title}</h1>
+          <p class="page-intro">{intro}</p>
+        </div>
+        <p class="page-note"><strong>{ledgers.length} public datasets</strong>{school.caution}</p>
+      </div>
+    </header>
+    <section class="section shell school-summary-grid">
+      <LatestRecord latest={latest} href={schoolPath(slug, section)} label="Jump to this row" />
+      <Notice title={noticeTitle}><p>{noticeBody}</p><a class="text-link" href="/methodology/">How comparability works</a></Notice>
+    </section>
+    <section class="shell">
+      <SeriesIndex ledgers={ledgers} granular={granular} />
+    </section>
+    <section class="shell ledger-section" aria-label={`${title} datasets`}>
+      {ledgers.map((ledger) => <Ledger ledger={ledger} schoolName={school.name} />)}
+      {granular.length > 0 && (
+        <>
+          <div class="section-heading" style="margin-top:3rem"><div><p class="eyebrow">Subject and destination detail</p><h2>Itemised tables from the school's own booklet</h2></div><p>Counts as printed, subject by subject or university by university. These rows are the granular corpus; they are not re-summed into the ledgers above.</p></div>
+          {granular.map((ledger) => <GranularLedger ledger={ledger} schoolName={school.name} />)}
+        </>
+      )}
+    </section>
+  </main>
+</Base>

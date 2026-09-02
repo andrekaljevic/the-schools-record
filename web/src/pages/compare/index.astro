@@ -1,0 +1,72 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import PageHero from '../../components/PageHero.astro';
+import Notice from '../../components/Notice.astro';
+import { compare as loadCompare, site } from '../../lib/data';
+import { titled } from '../../lib/meta';
+import { compareCsvPath } from '../../lib/routes';
+import { formatPoint } from '../../lib/format';
+
+const data = loadCompare();
+const schools = site().schools.map((school) => ({ id: school.id, name: school.name }));
+const metric = data.metrics.find((item) => item.id === data.defaultMetric) ?? data.metrics[0]!;
+const [first, second] = data.defaultSchools as [string, string];
+const nameOf = (id: string) => schools.find((school) => school.id === id)?.name ?? id;
+const points = metric.points.filter((point) => point.schoolId === first || point.schoolId === second);
+const derived = points.some((point) => point.derived);
+// The island needs the metric definitions and points; the school names are read from the DOM.
+const payload = JSON.stringify({ yearMin: data.yearMin, yearMax: data.yearMax, schools, metrics: data.metrics }).replace(/<\//g, '<\\/');
+---
+<Base meta={{ title: titled('Compare like with like'), description: 'Compare two schools on one precisely defined measure with an exact-value table and visible comparability limits.', dataset: true }} crumbs={[{ label: 'Compare', href: null }]} bodyClass="page-compare">
+  <main id="main-content">
+    <PageHero eyebrow="Comparison" title="Compare like with like" intro="Choose two schools and one precisely defined metric. Shareable URL state, exact-value tables and visible limitations keep the comparison inspectable." note="A higher result is not a declaration that one school is better. These records do not control for intake, subject mix, cohort size or educational aims." />
+    <section class="shell">
+      <form class="compare-controls" data-island="compare" method="get" action="/compare/" aria-label="Comparison controls">
+        <div class="field"><label for="compare-first">First school</label><select id="compare-first" name="first">{schools.map((school) => <option value={school.id} selected={school.id === first}>{school.name}</option>)}</select></div>
+        <div class="field"><label for="compare-second">Second school</label><select id="compare-second" name="second">{schools.map((school) => <option value={school.id} selected={school.id === second}>{school.name}</option>)}</select></div>
+        <div class="field"><label for="compare-metric">Metric</label><select id="compare-metric" name="metric">{data.metrics.map((item) => <option value={item.id} selected={item.id === metric.id}>{item.label}</option>)}</select></div>
+        <div class="field"><label for="compare-from">From</label><input id="compare-from" name="from" type="number" inputmode="numeric" min={data.yearMin} max={data.yearMax} value={data.yearMin} /></div>
+        <div class="field"><label for="compare-to">To</label><input id="compare-to" name="to" type="number" inputmode="numeric" min={data.yearMin} max={data.yearMax} value={data.yearMax} /></div>
+        <noscript><div class="field"><button class="button button-primary" type="submit">Apply</button></div></noscript>
+      </form>
+      <div class="view-toggle">
+        <div class="segmented" role="group" aria-label="View">
+          <input type="radio" name="view" id="view-chart" value="chart" checked /><label for="view-chart">Chart</label>
+          <input type="radio" name="view" id="view-table" value="table" /><label for="view-table">Table</label>
+        </div>
+        <div class="action-row">
+          <a class="text-link" data-csv href={compareCsvPath(metric.id)} download>Download CSV <Icon name="download" /></a>
+          <button class="text-link is-pending" type="button" data-copy-link>Copy shareable link</button>
+        </div>
+      </div>
+      <section class="compare-result comparison-result" aria-live="polite" data-result>
+        <header class="comparison-heading">
+          <p class="eyebrow">Like-for-like view</p>
+          <h2 data-metric-label>{metric.label}</h2>
+          <p data-metric-definition>{metric.definition}</p>
+        </header>
+        <div class="series-legend" data-legend><span><i class="series-colour colour-1"></i>{nameOf(first)}</span><span><i class="series-colour colour-2"></i>{nameOf(second)}</span></div>
+        <div class="not-comparable" data-not-comparable hidden><strong>Not directly comparable</strong><p>The selected schools do not have overlapping, like-for-like published values for this metric and period.</p></div>
+        <div data-chart><Fragment set:html={data.defaultSvg} /></div>
+        <div class="comparison-table-accessible" data-table-wrap>
+          <div class="table-scroll" tabindex="0">
+            <table class="data-table">
+              <caption data-table-caption>Exact values for {metric.label}</caption>
+              <thead><tr><th scope="col">School</th><th scope="col">Year</th><th scope="col">Value</th><th scope="col">Evidence status</th></tr></thead>
+              <tbody data-table-body>
+                {points.map((point) => <tr><th scope="row">{nameOf(point.schoolId)}</th><td>{point.year}</td><td>{formatPoint(point.value, metric.unit)}</td><td class="text">{point.status}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <Notice title="Comparison limit"><p data-metric-note>{metric.note}</p><p data-derived-note hidden={!derived}>Calculated rates are generated at display time from frozen source values and are not stored as new public claims.</p></Notice>
+        <p class="compare-share">Shareable state: <span data-share-url>/compare/</span></p>
+      </section>
+    </section>
+  </main>
+  <script is:inline type="application/json" id="compare-data" set:html={payload} />
+  <script>
+    import '../../islands/compare.ts';
+  </script>
+</Base>
