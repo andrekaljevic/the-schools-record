@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 import streamlit as st
 
 from kcs_entry_updates import apply_kcs_entry_updates
+from premium_presentation import apply_premium_presentation
 from site_patches import apply_st_pauls_history, apply_winchester_history
 from winchester_entry_updates import apply_winchester_gcse_entry_updates
 
@@ -16,7 +17,7 @@ from winchester_entry_updates import apply_winchester_gcse_entry_updates
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
-DEPLOYMENT_REVISION = "2026-09-02-kcs-exam-entry-denominators"
+DEPLOYMENT_REVISION = "2026-09-02-premium-presentation"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {
@@ -147,6 +148,7 @@ def serialise_query() -> str:
 
 
 frontend_css, frontend_js = extend_frontend_for_school_sketches(*load_frontend())
+frontend_css = apply_premium_presentation(frontend_css)
 frontend_js = apply_st_pauls_history(frontend_js)
 frontend_js = apply_winchester_history(frontend_js)
 frontend_js = apply_winchester_gcse_entry_updates(frontend_js)
@@ -164,7 +166,7 @@ document = f"""<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#f3f1eb" />
+  <meta name="theme-color" content="#f4f1ea" />
   <meta name="description" content="A sourced statistical yearbook of examination results, university pathways and school-admissions evidence across leading UK independent schools." />
   <title>The Schools Record — Longitudinal Evidence</title>
   <style>{safe_css}</style>
@@ -184,7 +186,7 @@ st.markdown(
     """
     <style>
       html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-        background: #f3f1eb;
+        background: #f4f1ea;
       }
       [data-testid="stHeader"], [data-testid="stToolbar"],
       [data-testid="stDecoration"], #MainMenu, footer {
