@@ -28,6 +28,12 @@ not masquerade as a single series; published destination rounding is retained
 without renormalisation. Current evidence includes the controlling 2024/25
 offer totals and the separately labelled initial 2026 Oxbridge total.
 
+The 2010 Pre-U row now carries an explicitly modelled reconstruction: 339
+entries, 18.9% D1, 52.2% D1–D2, 79.1% D1–D3, 90.0% D1–M1 and 95.0% D1–M2.
+The interface identifies these as estimates rather than school-published exact
+figures, retains Winchester’s original narrative bands, and displays the
+defensible ranges and denominator alternatives in the evidence detail.
+
 ## St Paul’s historical extension
 
 The deployment applies a fail-closed, source-catalogued patch to both supported

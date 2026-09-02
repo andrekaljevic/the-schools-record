@@ -135,6 +135,24 @@ WINCHESTER_SOURCES = {
         "url": "https://web.archive.org/web/20120507094642id_/http://www.winchestercollege.org/cambridge-pre-u-results-",
         "role": "first-party narrative only: nearly one-fifth D1, about one-third D2 itself and over three-quarters D1–D3; no exact table survives",
     },
+    "WIN_DFE_KS5_2010": {
+        "id": "winchester-dfe-ks5-2010-school-record",
+        "title": "DfE · Winchester College KS5 performance record 2010",
+        "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20130118071731id_/http://www.education.gov.uk/cgi-bin/schools/performance/archive/school_10.pl?Mode=Z&No=8506037&Type=LA&Begin=b&Num=850&Phase=2&Year=10&Base=a",
+        "role": "official denominator anchor: 131 end-of-study students, 1,051.7 points per student and 265.4 points per entry; the implied 519.1 entries are approximate because the averages are rounded",
+    },
+    "WIN_DFE_KS5_2011": {
+        "id": "winchester-dfe-ks5-2011-national-data",
+        "title": "DfE · KS5 school and college performance data 2011",
+        "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20130103214236id_/http://www.education.gov.uk/schools/performance/2011/download/csv/england_ks5.csv",
+        "role": "official comparison denominator: Winchester has 132 end-of-study students, 1,019.6 points per student and 269.5 points per entry; the implied 499.4 entries are approximate because the averages are rounded",
+    },
+    "WIN_DFE_KS5_2011_SUBJECT": {
+        "id": "winchester-dfe-ks5-2011-subject-workbook",
+        "title": "DfE · 2011 KS5 qualification and subject data",
+        "url": "https://webarchive.nationalarchives.gov.uk/ukgwa/20130103214800id_/http://www.education.gov.uk/schools/performance/2011/download/2011_KS5_Underlying_Data_School_Level-FINAL.zip",
+        "role": "official subject-level cross-check: 348 Winchester Pre-U principal-subject entries including a 22-entry Mathematics row omitted from the school's 326-entry headline table",
+    },
     "WIN_PREU_2011_PDF": {
         "id": "winchester-pre-u-2011-pdf",
         "title": "Winchester College · Pre-U results 2011",
@@ -471,20 +489,32 @@ WINCHESTER_GCSE_HISTORY = [
 WINCHESTER_PRE_U_HISTORY = [
     {
         "year": 2010,
-        "entries": None,
-        "d1": None,
-        "d1_d2": None,
-        "d1_d3_honest_astar_a": None,
-        "d1_m1_published": None,
-        "d1_m2": None,
+        "entries": 339,
+        "d1": 18.9,
+        "d1_d2": 52.2,
+        "d1_d3_honest_astar_a": 79.1,
+        "d1_m1_published": 90.0,
+        "d1_m2": 95.0,
         "d1_m3": None,
-        "confidence": "P/NARRATIVE",
-        "publication_status": "Official narrative survives; exact grade counts and percentages do not",
+        "confidence": "P/D/MODELLED",
+        "publication_status": "Modelled reconstruction shown; Winchester published narrative bands, not an exact 2010 table",
+        "estimate_status": "Modelled point estimates — not official exact figures",
+        "estimate_basis": "The preferred 339-entry headline denominator scales Winchester's official 2011 headline count of 326 by the DfE-implied entry totals for 2010 and 2011. Grade bands combine the direct 2010 wording with the adjacent official distributions.",
+        "estimate_range_summary": "Entries 325–375; D1 18–20%; D1–D2 50–54%; D1–D3 76–81%; D1–M1 88.5–92%; D1–M2 93.5–96.5%.",
         "narrative_d1": "nearly one-fifth",
         "narrative_d2_grade_itself": "about one-third",
         "narrative_d1_d3": "over three-quarters",
-        "note": "The source wording is retained verbatim in substance and is not converted into point estimates.",
-        "source_ids": ["WIN_PREU_2010_PAGE"],
+        "note": "Modelled reconstruction, not a recovered mark sheet. The integer-consistent illustration is 64 D1, 113 D2 and 91 D3 grades out of 339, producing 18.9%, 52.2% and 79.1% cumulatively. The alternative all-principal-subject denominator definition gives about 362; D1–M1 and D1–M2 are weaker adjacent-year extrapolations.",
+        "source_ids": [
+            "WIN_PREU_2010_PAGE",
+            "WIN_DFE_KS5_2010",
+            "WIN_DFE_KS5_2011",
+            "WIN_DFE_KS5_2011_SUBJECT",
+            "WIN_PREU_2011_PDF",
+            "WIN_PREU_2012_PDF",
+            "WIN_PREU_2013_PDF",
+            "WIN_PREU_2014_PDF",
+        ],
     },
     {
         "year": 2011,
@@ -3048,8 +3078,11 @@ def apply_winchester_history(javascript: str) -> str:
         "narrative_d1:{label:`Official D1 wording`,kind:`text`},"
         "narrative_d2_grade_itself:{label:`Official D2-grade wording`,kind:`text`},"
         "narrative_d1_d3:{label:`Official D1–D3 wording`,kind:`text`},"
+        "estimate_status:{label:`Estimate status`,kind:`text`},"
+        "estimate_basis:{label:`Estimate basis`,kind:`text`},"
+        "estimate_range_summary:{label:`Defensible ranges`,kind:`text`},"
         "destination_total:",
-        "Winchester basis and narrative field catalogue",
+        "Winchester basis, narrative and estimate field catalogue",
     )
 
     pre_u_datasets = [
@@ -3057,9 +3090,12 @@ def apply_winchester_history(javascript: str) -> str:
             "dataset_id": "winchester_pre_u_two_ruler_2011_2019",
             "school": "Winchester College",
             "domain": "exam_results",
-            "basis": "pure Cambridge Pre-U principal-grade entry distributions; exact annual tables, signed-account headlines and a narrative-only 2010 row kept distinct",
+            "basis": "pure Cambridge Pre-U principal-grade entry distributions; exact annual tables and signed-account headlines, plus an explicitly modelled 2010 reconstruction anchored to the surviving official narrative and DfE denominators",
             "source_refs": [
                 "WIN_PREU_2010_PAGE",
+                "WIN_DFE_KS5_2010",
+                "WIN_DFE_KS5_2011",
+                "WIN_DFE_KS5_2011_SUBJECT",
                 "WIN_PREU_2011_PDF",
                 "WIN_PREU_2012_PDF",
                 "WIN_PREU_2013_PDF",
@@ -3072,7 +3108,7 @@ def apply_winchester_history(javascript: str) -> str:
                 "WIN_PREU_2019_PDF",
                 "WIN_ACCOUNTS_2020",
             ],
-            "notes": "D1–D3 and D1–M1 remain distinct rulers. The 2020 CAG row is quarantined. Competing 2015, 2017 and 2019 source variants remain in the conflict register and are never averaged.",
+            "notes": "The 2010 values are modelled point estimates with displayed uncertainty ranges, not school-published exact figures. D1–D3 and D1–M1 remain distinct rulers. The 2020 CAG row is quarantined. Competing 2015, 2017 and 2019 source variants remain in the conflict register and are never averaged.",
             "rows": WINCHESTER_PRE_U_HISTORY,
         },
         {

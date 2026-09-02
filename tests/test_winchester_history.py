@@ -205,6 +205,34 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
                 values,
             )
 
+    def test_2010_pre_u_reconstruction_is_explicitly_modelled(self) -> None:
+        row = next(row for row in WINCHESTER_PRE_U_HISTORY if row["year"] == 2010)
+        self.assertEqual(
+            (
+                row["entries"],
+                row["d1"],
+                row["d1_d2"],
+                row["d1_d3_honest_astar_a"],
+                row["d1_m1_published"],
+                row["d1_m2"],
+            ),
+            (339, 18.9, 52.2, 79.1, 90.0, 95.0),
+        )
+        self.assertEqual(row["confidence"], "P/D/MODELLED")
+        self.assertIn("not official exact figures", row["estimate_status"])
+        self.assertIn("325–375", row["estimate_range_summary"])
+        self.assertIn("64 D1, 113 D2 and 91 D3", row["note"])
+        self.assertTrue(
+            {
+                "WIN_PREU_2010_PAGE",
+                "WIN_DFE_KS5_2010",
+                "WIN_DFE_KS5_2011",
+                "WIN_DFE_KS5_2011_SUBJECT",
+            }.issubset(row["source_ids"])
+        )
+        self.assertIn('"year":2010,"entries":339,"d1":18.9,"d1_d2":52.2', self.javascript)
+        self.assertIn("Modelled point estimates — not official exact figures", self.javascript)
+
     def test_pre_u_cumulative_bands_are_monotonic(self) -> None:
         keys = (
             "d1",
