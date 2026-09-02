@@ -25,7 +25,11 @@ A-level evidence spanning 1992–2009, while keeping legacy points, ranks, pupil
 thresholds, and grade-entry percentages as distinct measures. It also enriches
 the first-party leaver-destination rows and replaces the secondary 2015 Oxbridge
 figure of 49 with the school prospectus total of 41 (Oxford 20 plus Cambridge
-21).
+21). The university section now keeps UCAS-cycle applications, offers and
+accepted outcomes separate from final leaver destinations and calendar-entry
+year tables. Complete institution ledgers are included wherever recovered,
+with strict-USA and Oxbridge counts, denominators and source conflicts exposed
+rather than silently reconciled.
 
 ## Run locally
 

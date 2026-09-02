@@ -117,7 +117,7 @@ class WinchesterHistoryPatchTests(unittest.TestCase):
 
     def test_scope_count_includes_both_historical_extensions(self) -> None:
         self.assertIn(
-            f"datasets:45,rows:{580 + len(WINCHESTER_GCSE_HISTORY)}",
+            f"datasets:60,rows:{1192 + len(WINCHESTER_GCSE_HISTORY)}",
             self.javascript,
         )
 
