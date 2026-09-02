@@ -14,6 +14,7 @@ from site_patches import apply_st_pauls_history, apply_winchester_history
 APP_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = APP_DIR / "bundle"
 SKETCH_DIR = APP_DIR / "assets" / "school-sketches"
+DEPLOYMENT_REVISION = "2026-09-02-winchester-upper-bounds"
 
 SCHOOL_SKETCH_SPECS = {
     "eton": {
@@ -169,6 +170,7 @@ document = f"""<!doctype html>
   <script>
     window.__SCHOOLS_RECORD_QUERY__ = {json.dumps(initial_query)};
     window.__SCHOOL_SKETCHES__ = {json.dumps(school_sketches, ensure_ascii=False)};
+    window.__SCHOOLS_RECORD_DEPLOYMENT__ = {json.dumps(DEPLOYMENT_REVISION)};
   </script>
   <script type="module">{safe_js}</script>
 </body>
