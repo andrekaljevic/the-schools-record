@@ -129,6 +129,9 @@ APP_CSS = """
   --tsr-serif: Georgia, "Times New Roman", Times, serif;
   --tsr-shell: min(100% - 3rem, 1240px);
 }
+/* The published stylesheet narrows the shell gutter on phones; keep the
+   widget containers on the same edge. */
+@media (width<=720px) { :root { --tsr-shell: min(100% - 2rem, 1240px); } }
 html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
 [data-testid="stBottomBlockContainer"], .stApp {
   background: var(--tsr-paper) !important;
@@ -188,7 +191,14 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
   margin-inline: auto !important;
   font-family: var(--tsr-serif);
 }
-.st-key-tsr-search { max-width: 670px; margin-inline: 0 !important; padding-left: max(1.5rem, calc((100vw - 1240px) / 2)); }
+/* The index controls sit on the shell's left edge, up to 670px wide.  The
+   offset is a margin computed from the shell's own centring, never padding:
+   padding counted inside the capped width and squeezed the controls to
+   nothing on wide screens. */
+.st-key-tsr-search, .st-key-tsr-index-series {
+  width: min(670px, var(--tsr-shell)) !important;
+  margin-inline: calc((100% - var(--tsr-shell)) / 2) 0 !important;
+}
 .st-key-tsr-search [data-testid="stTextInputRootElement"],
 .st-key-tsr-search .react-aria-TextField > div,
 .st-key-tsr-search div[data-baseweb="input"] {
@@ -346,7 +356,7 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
 .tsr .index-series-note p { margin: 0 0 0.35rem; font-size: 0.8rem; color: var(--tsr-ink-soft); }
 .tsr .index-series-note p:first-child { font-size: 0.92rem; color: var(--tsr-ink); }
 .tsr .index-series-note .text-link { font-size: 0.8rem; }
-.st-key-tsr-index-series { max-width: 670px; margin-inline: 0 !important; padding-left: max(1.5rem, calc((100vw - 1240px) / 2)); margin-top: 1.4rem !important; }
+.st-key-tsr-index-series { margin-top: 1.4rem !important; }
 .st-key-tsr-index-series .stSelectbox [data-testid="stWidgetLabel"] p {
   color: var(--tsr-teal) !important; letter-spacing: 0.18em !important; text-transform: uppercase !important;
   font-size: 0.71rem !important; font-weight: 800 !important; font-family: var(--tsr-serif) !important;
@@ -370,7 +380,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
   .tsr .index-row-charted { grid-template-columns: 44px minmax(0, 1fr) 44px; }
   .tsr .index-row-charted > .index-panel { grid-area: 2 / 2 / 3 / 4; }
   .tsr .index-row-charted > dl { grid-area: 3 / 2 / 4 / 4; }
-  .st-key-tsr-index-series { padding-left: 1rem; padding-right: 1rem; }
 }
 
 /* School record: results by year, one panel per ruler, shared year axis. */
