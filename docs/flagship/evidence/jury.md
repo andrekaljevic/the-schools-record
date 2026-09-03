@@ -1,7 +1,8 @@
 # Independent jury
 
-Four reviewers with fresh context assessed the served production build on 2–3 September 2026, each with a
-different remit and no access to the author's notes. They were instructed to change nothing and to score from
+Four reviewers assessed the production build on 2–3 September 2026. Each was an automated agent session started
+with fresh context, a different remit and no access to the author's notes or reasoning; they are not people, and
+their scores are recorded as a structured, independent reading of the product rather than as human judgement. They were instructed to change nothing and to score from
 1 to 10 with justification, then list defects most severe first. Their scores are recorded here as given, before
 remediation; the remediation column records what was done in the loop that followed and what was not, with the
 reason. A second, shorter loop confirmed the fixes with the automated gates (see `test-results.md`).

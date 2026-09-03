@@ -15,4 +15,5 @@ listed here. Paths are relative to the repository root unless stated.
 | Bundle and page-weight budgets | `test-results.md` (section “Budgets”) |
 | Security and privacy checks | `test-results.md` (section “Security and privacy”) |
 | Jury scores and remediation | `jury.md` |
+| Readiness review before hand-off | `advisor.md` |
 | Dependency list | `dependencies.md` |

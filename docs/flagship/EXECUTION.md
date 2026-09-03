@@ -44,12 +44,12 @@ Next.js was rejected for this product because its static export cannot host the 
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| A. Data: SHA, snapshot, counts, existing tests, projection determinism, chart/table/download parity | passed | `evidence/test-results.md` (Data contract; Python 188 tests; chart parity 2,730 cases) |
+| A. Data: SHA, snapshot, counts, existing tests, projection determinism, chart/table/download parity | passed | `evidence/test-results.md` (Data contract; Python 192 tests; chart parity 5,460 cases) |
 | B. Feature parity: every route, dataset, row, record, source path, download | passed | `evidence/route-matrix.md`; `tests/test_projection.py` (every row has an anchor and a record; every record has one address); 62 ledger CSVs, 11 comparison CSVs |
 | C. Visual regression at nine viewports | passed | `web/tests/e2e/responsive.spec.ts` (overflow and legibility at 9 widths × 12 routes); `evidence/before/`, `evidence/after/` |
 | D. Cross-browser | Chromium only | Firefox and WebKit binaries cannot be downloaded in this environment (see §7); no browser-specific API is used beyond `:has()` for the column toggle, which has a print fallback |
-| E. Accessibility: axe, keyboard, zoom, reduced motion | passed | axe 0 violations on 25 routes; Lighthouse accessibility 100; keyboard, 200 % zoom and reduced-motion tests |
-| F. Performance: production build Lighthouse, budgets | passed | `evidence/lighthouse/README.md` (mobile 95–99, desktop 100); `npm run budgets` |
+| E. Accessibility: axe, keyboard, zoom, reduced motion | passed | axe 0 violations on 25 routes; Lighthouse accessibility 100; keyboard, 200 % zoom, reduced-motion, focus and select-key tests |
+| F. Performance: production build Lighthouse, budgets | passed | `evidence/lighthouse/README.md` (mobile 94–99, desktop 100); `npm run budgets` |
 | G. SEO: canonical paths, metadata, sitemap, structured data | passed | Lighthouse SEO 100; `journeys.spec.ts` (canonical, Open Graph, JSON-LD Dataset/BreadcrumbList/WebSite, sitemap, robots) |
 | H. Security and privacy: audit, bundle scan, headers, forms | passed | `npm run privacy`, `npm run security`, `web/public/_headers`, `functions/lib/handler.ts` tests |
 | I. Forms and failure states | passed | `handler.test.ts` (8 cases) and the browser journey: no receiver → "not recorded" with a copy to keep |
@@ -63,15 +63,17 @@ Next.js was rejected for this product because its static export cannot host the 
 * **Stage 3 — vertical slice.** `tsr/projection.py` + `tools/build_public_projection.py` (19 documents, 9.2 MB, deterministic, private-pattern scanned); Astro 7 scaffold; design system (`web/src/styles/global.css`); home, index, school record, ledgers, comparison, record permalink, correction form, 404; reviewed at 390 and 1440 px; fixes applied (chart label clipping, ledger page weight 1.8 MB → 0.8 MB by compacting per-row evidence panels, latin-only fonts).
 * **Stage 4 — full product.** Every route in the brief built statically: 2,538 pages including 2,277 record permalinks, per-corpus paginated listings, series pages for the index, per-school corrections, CSV endpoints for every ledger and comparison metric, sitemap, robots, security headers, icons and social card. Islands: comparison instrument (TypeScript port of the Python chart, byte-identical on 2,730 fixture cases), evidence search, school-index filter, corpus filters, forms, legacy-link redirect. Forms post to a platform-neutral handler with honeypot, timing check, rate limit and honest receipts.
 * **Stage 5 — audits.** Production build audited: privacy scan and security scan of every built file, budgets, axe on 25 routes, Lighthouse mobile and desktop, `npm audit`. Findings fixed before the jury (contrast tokens, landmark names, heading order, overflow at 320 px, `.invalid` origin handling).
-* **Stage 6 — independent jury and two remediation loops.** Four fresh-context reviewers (design director; product and content; data and methodology; engineering, accessibility and security) scored the served build and listed defects; scores and every finding are in `evidence/jury.md`. Loop 1 fixed the high and major findings (unique row anchors with exact record links; gap-aware comparison panels on the shared grammar with a mobile geometry; origin-aware metadata; ledger legibility, status glossary links, stated gaps, correction ↔ row links; keyboard and focus fixes; handler hardening; publisher and contact). Loop 2 re-ran every gate: Python, unit, type check, build, scans, budgets, 53 browser tests, Lighthouse.
+* **Stage 6 — independent jury and two remediation loops.** Four fresh-context reviewers, each an automated agent session with no access to the author's context (design director; product and content; data and methodology; engineering, accessibility and security), scored the served build and listed defects; scores and every finding are in `evidence/jury.md`. Loop 1 fixed the high and major findings (unique row anchors with exact record links; gap-aware comparison panels on the shared grammar with a mobile geometry; origin-aware metadata; ledger legibility, status glossary links, stated gaps, correction ↔ row links; keyboard and focus fixes; handler hardening; publisher and contact). Loop 2 re-ran every gate: Python, unit, type check, build, scans, budgets, 53 browser tests, Lighthouse.
 * **Stage 7 — delivery.** Cutover, redirect, monitoring and rollback plan in `CUTOVER.md`; evidence pack complete; CI workflow builds with a preview origin and uploads the site as an artifact; no production deployment and no merge to `main`.
 
 ## 6. Verified test results
 
-Recorded in `evidence/test-results.md` with the commands that produced them. Headline: Python 188/188; unit 28/28;
-type check 0 errors; build 2,538 pages; end-to-end 49/49 including 25 axe audits with 0 violations; Lighthouse
-mobile 95–99 / desktop 100 with accessibility, best-practice and SEO at 100; privacy and security scans clean;
-all budgets met; `data/dataset.json` SHA-256 unchanged.
+Recorded in `evidence/test-results.md` with the commands that produced them. Headline at commit `7797bb6` and after:
+Python 192/192 (178 inherited tests unchanged); unit 30/30; type check 0 errors; build 2,538 pages; end-to-end
+53/53 including 25 axe audits with 0 violations; Lighthouse mobile 94–99 / desktop 100 with accessibility,
+best-practice and SEO at 100; privacy and security scans clean; all budgets met; `data/dataset.json` SHA-256
+unchanged. An independent readiness review (`evidence/advisor.md`) re-ran the cheap gates and spot-checked the
+remediation before hand-off.
 
 ## 7. Remaining genuine blockers and open items
 
@@ -87,8 +89,14 @@ all budgets met; `data/dataset.json` SHA-256 unchanged.
 * **Withheld source titles.** The Oxford, Cambridge, US and subject corpora cite references whose titles the reviewed
   edition withheld and for which no public link was approved. The record pages say so and give the route to ask;
   approving further public links is an editorial step outside this brief.
-* **Largest ledger page.** St Paul's university outcomes (20 ledgers, about 1,000 rows) is under 900 KB of HTML and
-  about 53 KB compressed. Splitting it into family sub-pages would cut the DOM further; it is proposed, not done.
+* **Largest ledger page.** St Paul's university outcomes (20 ledgers, about 1,000 rows) is 853 KB of HTML against a
+  900 KB budget and about 53 KB compressed; any addition to that page will trip the budget. Splitting it into family
+  sub-pages would cut the DOM further; it is proposed, not done.
+* **Hosting shape.** `web/public/_headers` and `web/functions/` follow the Cloudflare Pages and Netlify conventions;
+  on another host the security headers and the two form endpoints must be translated (see `CUTOVER.md` §1).
+* **Forms without JavaScript on a plain static host.** With scripts on, the page always renders an honest receipt.
+  With scripts off, the form posts directly to `/api/...`; where no function runtime exists the browser shows the
+  host's error page and nothing is stored. The forms now say so in a `<noscript>` note.
 * **Form receiver.** The handler forwards to `REVIEW_WEBHOOK_URL` when configured; until a durable receiver is
   provisioned, every submission is truthfully reported as not recorded. This is by design, not a defect.
 * **Production origin.** `SITE_URL` must be set at build time for canonical URLs, Open Graph and the sitemap to carry

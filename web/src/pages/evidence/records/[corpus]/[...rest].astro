@@ -20,7 +20,7 @@ const siblings = record.datasetId && record.corpus === 'figures' ? recordsForCla
 const description = `${record.title}. ${record.school}, ${record.period}. Evidence status: ${record.status}. ${record.summary.slice(0, 3).map((pair) => `${pair.label}: ${pair.value}`).join('; ')}.`;
 const crumbs = [{ label: 'Evidence', href: '/evidence/' }, { label: record.corpusLabel, href: `/evidence/browse/${record.corpus}/` }, { label: record.title, href: null }];
 ---
-<Base meta={{ title: titled(`${record.title} · ${record.school} · ${record.period}`), description, dataset: true }} crumbs={crumbs} bodyClass="page-record">
+<Base meta={{ title: titled([record.title, ...[record.school, record.period].filter((part) => part && !record.title.includes(part))].join(' · ')), description, dataset: true }} crumbs={crumbs} bodyClass="page-record">
   <main id="main-content">
     <section class="shell section-tight">
       <div class="record-focus">

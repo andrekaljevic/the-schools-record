@@ -8,6 +8,7 @@
 interface Props { kind: 'professional-enquiry' | 'correction-report'; action: string; submitLabel: string; id: string }
 const { kind, action, submitLabel, id } = Astro.props;
 ---
+<noscript><p class="notice notice-teal"><strong>Without JavaScript</strong>This form posts straight to the review endpoint. Where the deployment provides one you will see a plain receipt; on a preview host without it the browser shows an error and nothing is stored. Nothing is ever kept silently.</p></noscript>
 <form class="record-form" id={id} method="post" action={action} data-island="form" data-kind={kind} novalidate>
   <div class="form-grid">
     <slot />

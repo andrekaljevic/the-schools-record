@@ -55,7 +55,7 @@ const isHome = Astro.url.pathname === '/';
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="sitemap" href="/sitemap-index.xml" />
+    {originKnown && <link rel="sitemap" href="/sitemap-index.xml" />}
     {isHome && originKnown && <JsonLd data={websiteJsonLd(origin)} />}
     {meta.dataset && <JsonLd data={datasetJsonLd()} />}
     {crumbs.length > 0 && originKnown && <JsonLd data={breadcrumbJsonLd(origin, crumbs)} />}
