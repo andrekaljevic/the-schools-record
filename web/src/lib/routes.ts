@@ -29,6 +29,9 @@ export const FOOTER_NAV = [
   ['Changelog', '/changelog/'],
 ] as const;
 
+/** Readable addresses for charted series; the metric id remains the state key everywhere else. */
+export const seriesSlug = (metricId: string): string => (metricId === 'public-source-b6f5e1ed22afa0a6' ? 'oxbridge-destinations' : metricId.replace(/_/g, '-'));
+
 export const schoolPath = (id: string, section?: SchoolSection): string =>
   section ? `/schools/${id}/${section}/` : `/schools/${id}/`;
 
@@ -69,7 +72,7 @@ export function legacyTarget(search: string): string | null {
   if (path === '/schools/' && params.get('series')) {
     const series = params.get('series') ?? '';
     params.delete('series');
-    path = `/schools/series/${series}/`;
+    path = series === 'a_level_astar' ? '/schools/' : `/schools/series/${seriesSlug(series)}/`;
   }
   if (path === '/corrections/' && params.get('school')) {
     const school = params.get('school') ?? '';

@@ -93,7 +93,7 @@ test('the school index filters by name and switches series', async ({ page }) =>
   await page.fill('#school-search', 'zzz');
   await expect(page.locator('[data-empty]')).toBeVisible();
   await page.selectOption('#index-series', 'gcse_grade_9');
-  await expect(page).toHaveURL(/\/schools\/series\/gcse_grade_9\/$/);
+  await expect(page).toHaveURL(/\/schools\/series\/gcse-grade-9\/$/);
   await expect(page.locator('.index-panel-empty').first()).toBeVisible();
 });
 

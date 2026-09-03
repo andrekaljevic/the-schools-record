@@ -20,8 +20,9 @@ if (form) {
   input?.addEventListener('input', apply);
   form.addEventListener('submit', (event) => { event.preventDefault(); apply(); });
   select?.addEventListener('change', () => {
-    const id = select.value;
-    const target = id === 'a_level_astar' ? '/schools/' : `/schools/series/${encodeURIComponent(id)}/`;
+    const option = select.selectedOptions[0];
+    const slug = option?.dataset.slug ?? select.value;
+    const target = select.value === 'a_level_astar' ? '/schools/' : `/schools/series/${encodeURIComponent(slug)}/`;
     window.location.assign(target);
   });
   const initial = new URLSearchParams(window.location.search).get('q');

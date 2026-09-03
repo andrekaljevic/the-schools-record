@@ -33,7 +33,7 @@ const meta = {
         <div class="field">
           <label for="index-series">Charted series</label>
           <select id="index-series" name="series" data-series-select>
-            {Object.values(panels).map((option) => <option value={option.id} selected={option.id === metricId}>{option.label}</option>)}
+            {Object.values(panels).map((option) => <option value={option.id} data-slug={option.slug} selected={option.id === metricId}>{option.label}</option>)}
           </select>
         </div>
       </form>
@@ -44,7 +44,7 @@ const meta = {
         <p>{gapRule} Rows stay in alphabetical order: a higher line is not a claim that one school is better.</p>
         <a class="text-link" href={`/compare/?metric=${metricId}`}>Compare two schools on this series <Icon name="arrow-right" /></a>
         <ul class="series-links" aria-label="Other charted series">
-          {Object.values(panels).map((option) => <li><a href={option.id === 'a_level_astar' ? '/schools/' : `/schools/series/${option.id}/`} aria-current={option.id === metricId ? 'page' : undefined}>{option.shortLabel}</a></li>)}
+          {Object.values(panels).map((option) => <li><a href={option.id === 'a_level_astar' ? '/schools/' : `/schools/series/${option.slug}/`} aria-current={option.id === metricId ? 'page' : undefined}>{option.shortLabel}</a></li>)}
         </ul>
       </div>
       <p class="result-count" aria-live="polite" data-result-count>{data.schools.length} schools</p>

@@ -198,6 +198,7 @@ export interface IndexPanel {
 
 export interface IndexMetric {
   id: string;
+  slug: string;
   label: string;
   shortLabel: string;
   definition: string;

@@ -7,7 +7,6 @@ import { recordPath, schoolPath } from '../lib/routes';
 interface Props { record: EvidenceRecord; open?: boolean; heading?: 'h1' | 'h2' | 'h3' }
 const { record, open = false, heading = 'h3' } = Astro.props;
 const Heading = heading;
-const ledgerHref = record.route.startsWith('/') ? record.route.replace(/^(\/schools\/[^/#]+\/[^/#]+)(#|$)/, '$1/$2').replace(/^(\/schools\/[^/#]+)(#|$)/, '$1/$2').replace(/^\/(oxbridge|us-universities|evidence)(#|$)/, '/$1/$2') : record.route;
 ---
 <article class="evidence-record" id={record.id}>
   <header>
@@ -27,7 +26,7 @@ const ledgerHref = record.route.startsWith('/') ? record.route.replace(/^(\/scho
     <dl class="definition-list">{record.detail.map((pair) => <div><dt>{pair.label}</dt><dd>{pair.value}</dd></div>)}</dl>
     <div class="record-sources"><p class="eyebrow">Public sources</p><SourceList sources={record.sources} /></div>
     <div class="record-actions">
-      <a class="text-link" href={ledgerHref}>Open where this figure is displayed <Icon name="arrow-right" /></a>
+      <a class="text-link" href={record.route}>Open where this figure is displayed <Icon name="arrow-right" /></a>
       <a class="text-link" href={recordPath(record.id)}>Permanent link to this record</a>
     </div>
   </details>

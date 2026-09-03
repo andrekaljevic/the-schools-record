@@ -2,8 +2,10 @@
 import SchoolIndex from '../../../components/SchoolIndex.astro';
 import { indexPanels } from '../../../lib/data';
 export function getStaticPaths() {
-  return Object.keys(indexPanels()).filter((id) => id !== 'a_level_astar').map((metric) => ({ params: { metric } }));
+  return Object.values(indexPanels())
+    .filter((metric) => metric.id !== 'a_level_astar')
+    .map((metric) => ({ params: { metric: metric.slug }, props: { metricId: metric.id } }));
 }
-const { metric } = Astro.params;
+const { metricId } = Astro.props as { metricId: string };
 ---
-<SchoolIndex metricId={metric} />
+<SchoolIndex metricId={metricId} />

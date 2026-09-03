@@ -71,6 +71,22 @@ def record_slug(record_id: str) -> str:
     return record_id.replace(":", "/")
 
 
+SERIES_SLUGS = {"public-source-b6f5e1ed22afa0a6": "oxbridge-destinations"}
+
+
+def series_slug(metric_id: str) -> str:
+    """A readable address for a charted series (the metric id stays the state key)."""
+    return SERIES_SLUGS.get(metric_id, metric_id.replace("_", "-"))
+
+
+def canonical_route(route: str) -> str:
+    """``/schools/eton/exam-results#ledger`` → ``/schools/eton/exam-results/#ledger``."""
+    path, _, fragment = route.partition("#")
+    if not path.endswith("/"):
+        path += "/"
+    return path + ("#" + fragment if fragment else "")
+
+
 def _source(ref: str) -> dict[str, Any]:
     described = sources.describe(ref)
     return {
@@ -316,6 +332,7 @@ def _index_panels(metrics: list[dict[str, Any]]) -> dict[str, Any]:
             }
         out[metric["id"]] = {
             "id": metric["id"],
+            "slug": series_slug(metric["id"]),
             "label": metric["label"],
             "shortLabel": metric["shortLabel"],
             "definition": metric["definition"],
@@ -499,7 +516,7 @@ def _evidence_records() -> list[dict[str, Any]]:
             "summary": [{"label": label, "value": value} for label, value in item.summary],
             "detail": [{"label": label, "value": value} for label, value in evidence.detail_fields(item)],
             "sources": _sources(item.refs),
-            "route": item.route,
+            "route": canonical_route(item.route),
             "datasetId": item.dataset_id,
             "derived": item.corpus == "oxbridge" and "derived" in str(item.raw.get("metric_family", "")),
             "conflictGroup": item.raw.get("conflict_group") if item.corpus == "us" else None,
