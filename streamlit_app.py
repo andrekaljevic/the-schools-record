@@ -9,6 +9,7 @@ chrome; no compiled front-end bundle is loaded or embedded.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import streamlit as st
 
@@ -23,6 +24,8 @@ from tsr import (
 )
 
 DEPLOYMENT_REVISION = "2026-09-02-native-parity-restoration"
+
+FAVICON = Path(__file__).resolve().parent / "assets" / "logo-mark.svg"
 
 
 def current_route() -> str:
@@ -39,7 +42,7 @@ ROUTE = current_route()
 
 st.set_page_config(
     page_title=meta.for_route(ROUTE)["title"],
-    page_icon="📗",
+    page_icon=str(FAVICON),
     layout="wide",
     initial_sidebar_state="collapsed",
 )

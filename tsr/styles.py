@@ -153,6 +153,10 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
 .tsr h1, .tsr h2, .tsr h3, .tsr h4 { scroll-margin-top: 1.5rem; }
 .tsr .tsr-anchor { display: block; height: 0; scroll-margin-top: 1.5rem; }
 
+/* The wordmark's mark is now a drawn brand SVG, not a bordered initials box. */
+.tsr .wordmark-mark { border: none !important; width: 34px !important; }
+.tsr .wordmark-mark svg { width: 100%; height: 100%; display: block; }
+
 /* Links inside the record follow the record's stylesheet, not Streamlit's. */
 .tsr a { text-decoration: inherit !important; }
 .tsr .evidence-button, .tsr .index-row h2 a:hover,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import html
 import re
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 import streamlit as st
@@ -14,6 +15,8 @@ from .icons import icon
 
 LAST_REVIEWED = "2 September 2026"
 LAST_REVIEWED_SHORT = "2 Sep 2026"
+
+BRAND_MARK = (Path(__file__).resolve().parents[1] / "assets" / "logo-mark.svg").read_text(encoding="utf-8")
 
 NAV_ITEMS = (
     ("Schools", "/schools"),
@@ -77,7 +80,7 @@ def header() -> str:
 <header class="site-header">
   <a class="skip-link" href="#main-content">Skip to content</a>
   <div class="masthead shell">
-    {link("/", '<span class="wordmark-mark" aria-hidden="true">SR</span><span>The Schools Record</span>', "wordmark", ' aria-label="The Schools Record, home"')}
+    {link("/", f'<span class="wordmark-mark" aria-hidden="true">{BRAND_MARK}</span><span>The Schools Record</span>', "wordmark", ' aria-label="The Schools Record, home"')}
     <nav class="desktop-nav" aria-label="Primary navigation">{nav}</nav>
     <details class="mobile-menu"><summary>Menu</summary>
       <nav aria-label="Mobile navigation">{nav}</nav>
