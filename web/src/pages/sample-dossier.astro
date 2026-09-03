@@ -46,7 +46,7 @@ const dossier = loadDossier();
         <p class="eyebrow">Exact-value exhibit</p>
         <h2>Five-year published record</h2>
         <div class="series-legend"><span><i class="series-colour colour-1"></i>Eton College</span><span><i class="series-colour colour-2"></i>Westminster School</span></div>
-        <Fragment set:html={dossier.svg} />
+        <Fragment set:html={dossier.svgDesktop} /><Fragment set:html={dossier.svgMobile} />
         <div class="table-scroll" tabindex="0">
           <table class="data-table dossier-table">
             <caption>A-level entries awarded A*, 2015–2019</caption>

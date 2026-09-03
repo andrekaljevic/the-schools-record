@@ -1,9 +1,9 @@
 {
   "requestedUrl": "http://127.0.0.1:4321/schools/",
-  "fetchTime": "2026-09-02T23:09:52.196Z",
+  "fetchTime": "2026-09-03T11:08:03.675Z",
   "lighthouseVersion": "13.4.1",
   "categories": {
-    "performance": 0.99,
+    "performance": 0.98,
     "accessibility": 1,
     "best-practices": 1,
     "seo": 1
@@ -11,7 +11,7 @@
   "audits": {
     "largest-contentful-paint": {
       "score": 0.96,
-      "numericValue": 2116.9776568043194,
+      "numericValue": 2105.63025,
       "displayValue": "2.1 s"
     },
     "cumulative-layout-shift": {
@@ -25,19 +25,19 @@
       "displayValue": "0 ms"
     },
     "first-contentful-paint": {
-      "score": 0.95,
-      "numericValue": 1516.9776568043192,
-      "displayValue": "1.5 s"
+      "score": 0.89,
+      "numericValue": 1805.6302500000002,
+      "displayValue": "1.8 s"
     },
     "total-byte-weight": {
       "score": 1,
-      "numericValue": 231555,
-      "displayValue": "Total size was 226 KiB"
+      "numericValue": 234613,
+      "displayValue": "Total size was 229 KiB"
     },
     "speed-index": {
       "score": 1,
-      "numericValue": 1516.9776568043192,
-      "displayValue": "1.5 s"
+      "numericValue": 1805.6302500000002,
+      "displayValue": "1.8 s"
     }
   }
 }

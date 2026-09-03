@@ -4,7 +4,7 @@ import { toFixed, formatPoint, clampInt } from '../../src/lib/format';
 
 describe('helpers', () => {
   it('escapes HTML', () => {
-    expect(esc('<a href="x">&\'')).toBe('&lt;a href=&quot;x&quot;&gt;&amp;&#39;');
+    expect(esc('<a href="x">&\'')).toBe('&lt;a href=&quot;x&quot;&gt;&amp;&#x27;');
   });
   it('slugifies periods the way the Python layer does', () => {
     expect(slugify('2016')).toBe('2016');

@@ -303,3 +303,70 @@ def panel_svg(
         + "".join(parts)
         + "</svg>"
     )
+
+
+# --- The comparison instrument on the panel grammar --------------------------
+#
+# The published comparison chart above is kept byte for byte for the reference
+# build.  The comparison page itself draws with the same small-multiple grammar
+# as the index and the school records, so a gap in a line is a gap in the record
+# there too, the 2020–21 band is marked, and a phone gets its own panel geometry.
+
+COMPARISON_DESKTOP = TRAJECTORY_DESKTOP
+COMPARISON_MOBILE = TRAJECTORY_MOBILE
+
+
+def comparison_series(
+    metric: dict[str, Any], first: str, second: str, year_from: int, year_to: int
+) -> tuple[Series, ...]:
+    """Two school series from a comparison metric, in the order chosen."""
+    out = []
+    for index, school_id in enumerate((first, second)):
+        points = sorted(
+            (
+                point
+                for point in metric["points"]
+                if point["schoolId"] == school_id and year_from <= point["year"] <= year_to
+            ),
+            key=lambda point: point["year"],
+        )
+        label = points[0]["schoolName"] if points else school_id
+        out.append(Series(label, tuple(points), SERIES_COLOURS[index]))
+    return tuple(out)
+
+
+def comparison_panel(
+    metric: dict[str, Any],
+    first: str,
+    second: str,
+    year_from: int,
+    year_to: int,
+    layout: Layout,
+    *,
+    names: dict[str, str] | None = None,
+    markers: Sequence[Marker] = (),
+) -> str:
+    series = comparison_series(metric, first, second, year_from, year_to)
+    if names:
+        series = tuple(Series(names.get(item.label, item.label), item.points, item.colour) for item in series)
+        series = tuple(
+            Series(names.get(school_id, item.label), item.points, item.colour)
+            for school_id, item in zip((first, second), series)
+        )
+    mobile = layout.width < 500
+    uid = f"comparison-{metric['id']}-{'mobile' if mobile else 'desktop'}"
+    return panel_svg(
+        series,
+        year_from,
+        year_to,
+        metric["unit"],
+        layout,
+        uid=uid,
+        title=metric["label"],
+        description=(
+            f"{series[0].label} and {series[1].label}, {year_from} to {year_to}. "
+            "Lines join consecutive published years only. Exact values follow in the table."
+        ),
+        markers=markers,
+        css_class=f"record-panel comparison-panel {'panel-mobile' if mobile else 'panel-desktop'}",
+    )

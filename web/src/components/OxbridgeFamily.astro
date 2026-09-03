@@ -29,7 +29,7 @@ const note = family === 'historical_five_year_oxbridge_hit_rate'
 <article class="ledger" id={`oxbridge-${family}`} data-family={family}>
   <header class="ledger-head"><div><p class="eyebrow">{summary}</p><h2>{label} · <span data-family-count>{rows.length}</span> {plural(rows.length, 'record')}</h2></div></header>
   {note && <p class="dataset-note">{note}</p>}
-  <div class="table-scroll" tabindex="0" aria-label={`Scrollable table: ${label}`}>
+  <div class="table-scroll" tabindex="0" role="region" aria-label={`${label} table`}>
     <table class="data-table corpus-table">
       <caption>{label}</caption>
       <thead>
@@ -40,7 +40,7 @@ const note = family === 'historical_five_year_oxbridge_hit_rate'
         ) : family === 'school_published_oxbridge_offers' ? (
           <tr><th scope="col">Cycle</th><th scope="col">Oxford offers</th><th scope="col">Cambridge offers</th><th scope="col">Total</th><th scope="col">Cohort scope</th><th scope="col">Note</th><th scope="col">Record</th></tr>
         ) : family === 'historical_five_year_oxbridge_hit_rate' ? (
-          <tr><th scope="col">Rank</th><th scope="col">School as printed</th><th scope="col">Five-year admissions</th><th scope="col">Five-year hit rate</th><th scope="col">Published</th><th scope="col">Record</th></tr>
+          <tr><th scope="col">Rank as printed (2007 source)</th><th scope="col">School as printed</th><th scope="col">Five-year admissions</th><th scope="col">Five-year hit rate</th><th scope="col">Published</th><th scope="col">Record</th></tr>
         ) : family === 'course_competition' ? (
           <tr><th scope="col">Period</th><th scope="col">University</th><th scope="col">Subject</th><th scope="col">Applicants per place</th><th scope="col">Note</th><th scope="col">Record</th></tr>
         ) : (

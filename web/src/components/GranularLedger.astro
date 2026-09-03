@@ -17,7 +17,7 @@ const textKey = (key: string) => /^(subject|destination|institution|university|c
     </div>
   </header>
   {ledger.basis && <div class="ledger-basis"><p><strong>Basis.</strong> {ledger.basis}</p></div>}
-  <div class="table-scroll sticky-first" tabindex="0" aria-label={`Scrollable table: ${ledger.label}`}>
+  <div class="table-scroll sticky-first" tabindex="0" role="region" aria-label={`${ledger.label} table`}>
     <table class="data-table">
       <caption>{schoolName} · {ledger.label}. Counts as printed in the school's own booklet; rows are not re-summed.</caption>
       <thead><tr>{ledger.fields.map((field) => <th scope="col">{field.label}</th>)}<th scope="col">Record</th></tr></thead>

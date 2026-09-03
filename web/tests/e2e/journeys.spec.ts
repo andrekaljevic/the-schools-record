@@ -28,6 +28,19 @@ test('a parent follows a claim from a ledger row to its permanent record', async
   await expect(page.locator('.record-sources')).toBeVisible();
 });
 
+test('a ledger states its missing years and links a corrected row to its correction', async ({ page }) => {
+  await page.goto('/schools/westminster/exam-results/');
+  await expect(page.locator('.ledger-basis', { hasText: 'No row for' }).first()).toBeVisible();
+  await page.goto('/schools/winchester/exam-results/#winchester_gcse-2016');
+  await page.locator('#winchester_gcse-2016 summary').click();
+  const correction = page.locator('#winchester_gcse-2016 .evidence-correction a').first();
+  await expect(correction).toBeVisible();
+  const id = await correction.textContent();
+  await correction.click();
+  await expect(page.locator(`#${id}`)).toBeVisible();
+  await expect(page.locator(`#${id} .ledger-rows a`).first()).toBeVisible();
+});
+
 test('the ledger column toggle reveals every published column without JavaScript', async ({ page }) => {
   await page.goto('/schools/winchester/exam-results/');
   const ledger = page.locator('#winchester_pre_u_two_ruler_2011_2019');
@@ -52,9 +65,17 @@ test('the comparison instrument keeps state in the URL and redraws', async ({ pa
   await page.dispatchEvent('#compare-to', 'change');
   await expect(page).toHaveURL(/first=westminster&second=kcs&metric=gcse_grade_9&from=2018&to=2019/);
   await expect(page.locator('[data-metric-label]')).toContainText('grade 9');
-  await expect(page.locator('[data-chart] svg.comparison-chart')).toBeVisible();
-  const circles = await page.locator('[data-chart] circle').count();
+  await expect(page.locator('[data-chart] svg.comparison-panel.panel-desktop')).toBeVisible();
+  const circles = await page.locator('[data-chart] svg.panel-desktop circle').count();
   expect(circles).toBeGreaterThan(0);
+  // A gap in publication is a gap in the line: no path joins non-consecutive years.
+  await page.selectOption('#compare-metric', 'a_level_astar');
+  await page.fill('#compare-from', '2015');
+  await page.fill('#compare-to', '2024');
+  await page.dispatchEvent('#compare-to', 'change');
+  const joins = await page.locator('[data-chart] svg.panel-desktop path').evaluateAll((paths) => paths.map((path) => (path.getAttribute('d') ?? '').split(' L ').length));
+  expect(Math.max(...joins)).toBeLessThanOrEqual(5);
+  await expect(page.locator('[data-chart] svg.panel-desktop .panel-band')).toHaveCount(1);
   await page.click('label[for="view-table"]');
   await expect(page.locator('[data-table-wrap]')).toHaveClass(/comparison-table-visible/);
   await expect(page.locator('[data-table-body] tr').first()).toBeVisible();
@@ -65,6 +86,24 @@ test('the comparison instrument keeps state in the URL and redraws', async ({ pa
   const csv = await page.request.get('/downloads/compare/gcse_grade_9.csv');
   expect(csv.status()).toBe(200);
   expect(await csv.text()).toContain('Westminster School');
+});
+
+test('the evidence centre says so when its index cannot be loaded', async ({ page }) => {
+  await page.route('**/data/evidence-search.json', (route) => route.fulfill({ status: 503, body: 'unavailable' }));
+  await page.goto('/evidence/');
+  await page.fill('#ev-q', 'eton');
+  await expect(page.locator('[data-result-count]')).toContainText('could not be loaded');
+  await expect(page.locator('[data-results] a[href="/evidence/browse/all/"]')).toBeVisible();
+});
+
+test('paging the evidence results keeps keyboard focus in the page', async ({ page }) => {
+  await page.goto('/evidence/?corpus=oxbridge');
+  await expect(page.locator('[data-result-count]')).toContainText('571');
+  const next = page.locator('[data-pager] button', { hasText: 'Next' });
+  await next.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('[data-result-count]')).toContainText('26–50');
+  await expect(page.locator('[data-result-count]')).toBeFocused();
 });
 
 test('the evidence centre searches, filters and traces a displayed figure', async ({ page }) => {
@@ -92,8 +131,13 @@ test('the school index filters by name and switches series', async ({ page }) =>
   await expect(page.locator('.index-row:visible')).toHaveCount(1);
   await page.fill('#school-search', 'zzz');
   await expect(page.locator('[data-empty]')).toBeVisible();
+  // Changing the series never navigates by itself; the visitor confirms with Apply.
   await page.selectOption('#index-series', 'gcse_grade_9');
-  await expect(page).toHaveURL(/\/schools\/series\/gcse-grade-9\/$/);
+  await expect(page).toHaveURL(/\/schools\/$/);
+  await page.click('.index-controls button[type="submit"]');
+  await expect(page).toHaveURL(/\/schools\/series\/gcse-grade-9\/\?q=zzz$/);
+  await expect(page.locator('[data-empty]')).toBeVisible();
+  await page.fill('#school-search', '');
   await expect(page.locator('.index-panel-empty').first()).toBeVisible();
 });
 
@@ -125,6 +169,7 @@ test('the correction form validates inline and never claims a submission was kep
   await page.click('button[type="submit"]');
   const receipt = page.locator('[data-receipt]');
   await expect(receipt).toBeVisible();
+  await expect(receipt).toContainText('Report not recorded');
   await expect(receipt).toContainText('could not be stored');
   await expect(receipt).toContainText('Winchester College');
   await expect(receipt).not.toContainText('received for review');
@@ -133,7 +178,10 @@ test('the correction form validates inline and never claims a submission was kep
 test('metadata, canonical links, structured data and sitemap are present', async ({ page, request }) => {
   await page.goto('/schools/eton/');
   await expect(page).toHaveTitle('Eton College | The Schools Record');
-  expect(await page.locator('link[rel="canonical"]').getAttribute('href')).toMatch(/\/schools\/eton\/$/);
+  // The build under test is made with SITE_URL set to the served origin; a placeholder host must never appear.
+  const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+  expect(canonical).toBe('http://127.0.0.1:4321/schools/eton/');
+  expect(await page.content()).not.toContain('.invalid');
   expect(await page.locator('meta[property="og:title"]').getAttribute('content')).toContain('Eton College');
   const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
   expect(ld.some((text) => text.includes('"Dataset"'))).toBe(true);
@@ -144,8 +192,12 @@ test('metadata, canonical links, structured data and sitemap are present', async
   expect(xml).toContain('/schools/eton/');
   expect(xml).toContain('/evidence/records/ox/');
   expect(xml).not.toContain('/downloads/');
+  expect(xml).not.toContain('/evidence/browse/all/2/');
+  expect(xml).not.toContain('/schools/series/');
   const robots = await request.get('/robots.txt');
-  expect(await robots.text()).toContain('Sitemap:');
+  expect(await robots.text()).toContain('Sitemap: http://127.0.0.1:4321/sitemap-index.xml');
+  await page.goto('/404.html');
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
 });
 
 test('print styles hide navigation and expand the ledgers', async ({ page }) => {

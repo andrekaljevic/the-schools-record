@@ -19,8 +19,27 @@ def slugify(value: Any) -> str:
     return re.sub(r"[^a-z0-9]+", "-", str(value).lower()).strip("-") or "row"
 
 
-def row_anchor(dataset_id: str, row: dict[str, Any]) -> str:
-    return f"{dataset_id}-{slugify(records.period_label(row))}"
+def row_anchor(dataset_id: str, row: dict[str, Any], index: int | None = None) -> str:
+    """The stable address of one ledger row.
+
+    ``{dataset_id}-{period}`` for the first row with a period; when later rows
+    share that period (an undated destination list, a year published on two
+    scales) each carries its index in the frozen dataset, which is also the
+    index in its evidence record id.
+    """
+    anchor = f"{dataset_id}-{slugify(records.period_label(row))}"
+    return anchor if index is None else f"{anchor}-r{index}"
+
+
+def row_anchors(entry: dict[str, Any]) -> dict[int, str]:
+    """Row index → unique anchor for every row of a dataset."""
+    seen: set[str] = set()
+    anchors: dict[int, str] = {}
+    for index, row in enumerate(entry["rows"]):
+        slug = slugify(records.period_label(row))
+        anchors[index] = row_anchor(entry["dataset_id"], row, index if slug in seen else None)
+        seen.add(slug)
+    return anchors
 
 
 def _row_source_refs(entry: dict[str, Any], row: dict[str, Any]) -> list[str]:
@@ -105,6 +124,8 @@ def data_table(
     label = records.dataset_label(entry)
     head = "".join(f'<th scope="col">{esc(fmt.field_label(field))}</th>' for field in fields)
     body: list[str] = []
+    anchors = row_anchors(entry)
+    index_of = {id(row): index for index, row in enumerate(entry["rows"])}
     for row in records.sorted_rows(entry):
         period = records.period_label(row)
         cells = []
@@ -132,7 +153,7 @@ def data_table(
                 )
                 + "</td>"
             )
-        anchor = row_anchor(entry["dataset_id"], row) if suffix == "ordinary" else ""
+        anchor = anchors[index_of[id(row)]] if suffix == "ordinary" else ""
         attrs = f' id="{esc(anchor)}"' if anchor else ""
         body.append(f"<tr{attrs}>{''.join(cells)}</tr>")
     source_head = '<th scope="col">Source</th>' if suffix == "ordinary" else ""
@@ -155,10 +176,17 @@ def dataset_csv(entry: dict[str, Any]) -> str:
     writer = csv.writer(buffer, lineterminator="\n")
     writer.writerow(fields)
     for row in records.sorted_rows(entry):
-        writer.writerow(
-            ["" if fmt.cell_value(row, field) is None else fmt.cell_value(row, field) for field in fields]
-        )
+        writer.writerow([_csv_value(fmt.cell_value(row, field)) for field in fields])
     return buffer.getvalue()
+
+
+def _csv_value(value: Any) -> Any:
+    """A stored value as a CSV cell: blanks stay blank and lists are joined, never printed as Python literals."""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return "; ".join(str(item) for item in value)
+    return value
 
 
 def _csv_download(entry: dict[str, Any]) -> str:

@@ -20,6 +20,7 @@ jobs:
           python-version: '3.11'
           cache: pip
       - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
       - name: Verify the frozen dataset hash
         run: |
           echo "245f2d8176f8fca0d53f41689f096734dd13e9023af9a67931314334251b9f6f  data/dataset.json" | sha256sum -c -
@@ -61,7 +62,8 @@ jobs:
       - run: npm audit --audit-level=high
       - run: npm run check
       - run: npm run test:unit
-      - run: npm run build
+      - name: Production build (preview origin; a release build sets SITE_URL to the live domain)
+        run: npm run build:preview
       - name: Privacy scan of the built site
         run: npm run privacy
       - name: Security scan of the built site (CSP conformance)

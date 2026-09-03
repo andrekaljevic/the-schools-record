@@ -8,7 +8,8 @@ for (const form of document.querySelectorAll<HTMLFormElement>('form[data-island=
   if (started) started.value = String(Date.now());
   const status = form.querySelector<HTMLElement>('[data-status]')!;
   const receiptNode = form.querySelector<HTMLElement>('[data-receipt]')!;
-  const kindLabel = form.dataset.kind === 'correction-report' ? 'Report' : 'Enquiry';
+  // getAttribute, not dataset: a field named "dataset" would shadow the form's dataset property.
+  const kindLabel = form.getAttribute('data-kind') === 'correction-report' ? 'Report' : 'Enquiry';
 
   const fields = () => [...form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('[name]')].filter((el) => el.name !== 'website' && el.name !== 'started');
 
@@ -35,7 +36,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>('form[data-island=
     for (const el of fields()) {
       let message: string | null = null;
       const value = el instanceof HTMLInputElement && el.type === 'checkbox' ? (el.checked ? 'on' : '') : el.value.trim();
-      if (el.required && (value === '' || value === 'Select one')) message = el.type === 'checkbox' ? 'Please confirm the privacy notice.' : 'This field is required.';
+      if (el.required && value === '') message = el.type === 'checkbox' ? 'Please confirm the privacy notice.' : 'This field is required.';
       else if (el instanceof HTMLInputElement && el.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) message = 'Please give a valid email address.';
       else if (!(el instanceof HTMLSelectElement) && el.maxLength > 0 && value.length > el.maxLength) message = `Please keep this under ${el.maxLength} characters.`;
       setError(el, message);
@@ -56,7 +57,7 @@ for (const form of document.querySelectorAll<HTMLFormElement>('form[data-island=
     receiptNode.innerHTML =
       `<p class="eyebrow">${ok ? `${kindLabel} received` : `${kindLabel} not recorded`}</p>` +
       `<h2>${ok ? 'Thank you. Your submission has been received for review.' : 'Your submission could not be stored.'}</h2>` +
-      `<p>${esc(receipt.detail)} Reference <code>${esc(receipt.reference)}</code>.</p>` +
+      `<p>${esc(receipt.detail)}${receipt.reference && receipt.reference !== '—' ? ` Reference <code>${esc(receipt.reference)}</code>.` : ''}</p>` +
       `<p>No payment has been taken and no automated email has been sent. A human review is the next step.</p>` +
       (receipt.durable ? '' : '<p><strong>Please keep a copy.</strong> The entry below is your record of what was written.</p>') +
       `<details class="submission-copy" open><summary>Copy of your submission</summary><pre>${esc(transcript(values))}</pre></details>`;

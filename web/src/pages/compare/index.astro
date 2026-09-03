@@ -15,6 +15,8 @@ const [first, second] = data.defaultSchools as [string, string];
 const nameOf = (id: string) => schools.find((school) => school.id === id)?.name ?? id;
 const points = metric.points.filter((point) => point.schoolId === first || point.schoolId === second);
 const derived = points.some((point) => point.derived);
+const years = [...new Set(points.map((point) => point.year))].sort((a, b) => a - b);
+const at = (schoolId: string, year: number) => points.find((point) => point.schoolId === schoolId && point.year === year) ?? null;
 // The island needs the metric definitions and points; the school names are read from the DOM.
 const payload = JSON.stringify({ yearMin: data.yearMin, yearMax: data.yearMax, schools, metrics: data.metrics }).replace(/<\//g, '<\\/');
 ---
@@ -28,8 +30,8 @@ const payload = JSON.stringify({ yearMin: data.yearMin, yearMax: data.yearMax, s
         <div class="field"><label for="compare-metric">Metric</label><select id="compare-metric" name="metric">{data.metrics.map((item) => <option value={item.id} selected={item.id === metric.id}>{item.label}</option>)}</select></div>
         <div class="field"><label for="compare-from">From</label><input id="compare-from" name="from" type="number" inputmode="numeric" min={data.yearMin} max={data.yearMax} value={data.yearMin} /></div>
         <div class="field"><label for="compare-to">To</label><input id="compare-to" name="to" type="number" inputmode="numeric" min={data.yearMin} max={data.yearMax} value={data.yearMax} /></div>
-        <noscript><div class="field"><button class="button button-primary" type="submit">Apply</button></div></noscript>
       </form>
+      <noscript><p class="notice notice-teal"><strong>Choosing schools needs JavaScript</strong>The default comparison and its exact-value table are shown below. Every metric's full series, for every school, can be downloaded as CSV.</p></noscript>
       <div class="view-toggle">
         <div class="segmented" role="group" aria-label="View">
           <input type="radio" name="view" id="view-chart" value="chart" checked /><label for="view-chart">Chart</label>
@@ -40,7 +42,8 @@ const payload = JSON.stringify({ yearMin: data.yearMin, yearMax: data.yearMax, s
           <button class="text-link is-pending" type="button" data-copy-link>Copy shareable link</button>
         </div>
       </div>
-      <section class="compare-result comparison-result" aria-live="polite" data-result>
+      <p class="visually-hidden" role="status" aria-live="polite" data-announce></p>
+      <section class="compare-result comparison-result" data-result>
         <header class="comparison-heading">
           <p class="eyebrow">Like-for-like view</p>
           <h2 data-metric-label>{metric.label}</h2>
@@ -48,19 +51,19 @@ const payload = JSON.stringify({ yearMin: data.yearMin, yearMax: data.yearMax, s
         </header>
         <div class="series-legend" data-legend><span><i class="series-colour colour-1"></i>{nameOf(first)}</span><span><i class="series-colour colour-2"></i>{nameOf(second)}</span></div>
         <div class="not-comparable" data-not-comparable hidden><strong>Not directly comparable</strong><p>The selected schools do not have overlapping, like-for-like published values for this metric and period.</p></div>
-        <div data-chart><Fragment set:html={data.defaultSvg} /></div>
+        <div data-chart><Fragment set:html={data.defaultSvgDesktop} /><Fragment set:html={data.defaultSvgMobile} /></div>
         <div class="comparison-table-accessible" data-table-wrap>
           <div class="table-scroll" tabindex="0">
             <table class="data-table">
               <caption data-table-caption>Exact values for {metric.label}</caption>
-              <thead><tr><th scope="col">School</th><th scope="col">Year</th><th scope="col">Value</th><th scope="col">Evidence status</th></tr></thead>
+              <thead data-table-head><tr><th scope="col">Year</th><th scope="col">{nameOf(first)}</th><th scope="col">Status</th><th scope="col">{nameOf(second)}</th><th scope="col">Status</th></tr></thead>
               <tbody data-table-body>
-                {points.map((point) => <tr><th scope="row">{nameOf(point.schoolId)}</th><td>{point.year}</td><td>{formatPoint(point.value, metric.unit)}</td><td class="text">{point.status}</td></tr>)}
+                {years.map((year) => { const a = at(first, year); const b = at(second, year); return <tr><th scope="row">{year}</th><td class={a ? undefined : 'blank-value'}>{a ? formatPoint(a.value, metric.unit) : '—'}</td><td class="text">{a?.status ?? '—'}</td><td class={b ? undefined : 'blank-value'}>{b ? formatPoint(b.value, metric.unit) : '—'}</td><td class="text">{b?.status ?? '—'}</td></tr>; })}
               </tbody>
             </table>
           </div>
         </div>
-        <Notice title="Comparison limit"><p data-metric-note>{metric.note}</p><p data-derived-note hidden={!derived}>Calculated rates are generated at display time from frozen source values and are not stored as new public claims.</p></Notice>
+        <Notice title="Comparison limit"><p data-metric-note>{metric.note}</p><p data-derived-note hidden={!derived}>Calculated rates are generated at display time from frozen source values and are not stored as new public claims.</p><p>In this edition "excluded by default" means always excluded: there is no control that adds the 2020–21 centre- and teacher-assessed years. {data.gapRule} Where a note says a value is "retained in the Yearbook", the Yearbook is the source compilation, not a page of this site; competing published values are listed under <a href="/corrections/#differences">published differences</a>.</p></Notice>
         <p class="compare-share">Shareable state: <span data-share-url>/compare/</span></p>
       </section>
     </section>

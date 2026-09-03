@@ -6,14 +6,17 @@
  */
 import { esc } from '../lib/html';
 
-interface Entry { id: string; s: string; c: string; sc: string | null; y: number | null; p: string; d: string; o: string; t: string; st: string; f: string; v: string[]; q: string; ds: string | null }
+interface Entry { id: string; c: string; sc: string | null; y: number | null; p: string; d: string; o: string; t: string; st: string; f: string; v: [string, string][]; q: string; ds: string | null }
+
+const slugOf = (id: string) => id.split(':').map(encodeURIComponent).join('/');
 
 const CORPUS: Record<string, string> = { figures: 'School results and destinations', granular: 'Subject and destination detail', oxbridge: 'Oxford and Cambridge admissions', us: 'US and overseas universities' };
 const PAGE_SIZE = 25;
 
 const form = document.querySelector<HTMLFormElement>('[data-island="evidence-search"]');
 if (form) {
-  const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
+  const $ = <T extends HTMLElement>(selector: string) => document.querySelector<T>(selector) ?? missing(selector);
+  const missing = (selector: string): never => { throw new Error(`evidence search: ${selector} is not on the page`); };
   const q = $<HTMLInputElement>('#ev-q');
   const corpus = $<HTMLSelectElement>('#ev-corpus');
   const school = $<HTMLSelectElement>('#ev-school');
@@ -41,7 +44,12 @@ if (form) {
       loading = fetch('/data/evidence-search.json').then((response) => {
         if (!response.ok) throw new Error(String(response.status));
         return response.json() as Promise<Entry[]>;
-      }).then((data) => { entries = data; return data; });
+      }).then((data) => { entries = data; return data; }).catch((error: unknown) => {
+        loading = null;
+        count.textContent = 'The record index could not be loaded, so search is unavailable right now.';
+        results.innerHTML = '<div class="empty-state"><h2>Search is unavailable</h2><p>Every record can still be read page by page: <a href="/evidence/browse/all/">browse all records</a>.</p></div>';
+        throw error;
+      });
     }
     return loading;
   }
@@ -62,6 +70,8 @@ if (form) {
     if (claimState && !school.value && params.get('school')) school.value = params.get('school') ?? '';
     return Boolean(q.value || corpus.value || school.value || domain.value || status.value || from.value || to.value || claimState || page > 1);
   }
+
+  const escapeAttr = esc;
 
   function writeUrl(): void {
     const params = new URLSearchParams();
@@ -97,16 +107,17 @@ if (form) {
   }
 
   function card(entry: Entry): string {
-    const schoolLink = entry.sc ? `<a href="/schools/${esc(entry.sc)}/">${esc(schoolNames.get(entry.sc) ?? entry.sc)}</a>` : '';
-    const values = entry.v.map((pair) => { const [label, ...rest] = pair.split(': '); return `<div><dt>${esc(label)}</dt><dd>${esc(rest.join(': '))}</dd></div>`; }).join('');
-    return `<article class="evidence-record" id="${esc(entry.id)}">
+    const schoolLink = entry.sc ? `<a href="/schools/${escapeAttr(entry.sc)}/">${esc(schoolNames.get(entry.sc) ?? entry.sc)}</a>` : '';
+    const values = entry.v.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('');
+    const href = `/evidence/records/${slugOf(entry.id)}/`;
+    return `<article class="evidence-record" id="${escapeAttr(entry.id)}">
       <header>
         <div class="record-kicker"><span class="status-pill status-pill-teal">${esc(CORPUS[entry.c] ?? entry.c)}</span><span>${esc(entry.o)}</span></div>
-        <h2><a href="/evidence/records/${esc(entry.s)}/">${esc(entry.t)}</a></h2>
-        <p class="record-line">${schoolLink}${schoolLink ? ' · ' : ''}<span>${esc(entry.p)}</span> · <span class="record-status">Evidence status: ${esc(entry.st)}</span></p>
+        <h2><a href="${escapeAttr(href)}">${esc(entry.t)}</a></h2>
+        <p class="record-line">${schoolLink}${schoolLink ? ' · ' : ''}<span>${esc(entry.p)}</span> · <span class="record-status">Status: <a class="status-code" href="/evidence/method/#status-codes">${esc(entry.st)}</a></span></p>
       </header>
       <dl class="summary-list">${values}</dl>
-      <p class="record-actions"><a class="text-link" href="/evidence/records/${esc(entry.s)}/">Published fields, sources and where it is displayed</a></p>
+      <p class="record-actions"><a class="text-link" href="${escapeAttr(href)}">Published fields, sources and where it is displayed</a></p>
     </article>`;
   }
 
@@ -121,7 +132,7 @@ if (form) {
     count.textContent = `${matched.length.toLocaleString('en-GB')} ${matched.length === 1 ? 'record' : 'records'}${matched.length > PAGE_SIZE ? ` · showing ${start + 1}–${start + shown.length}` : ''}`;
     results.innerHTML = shown.length > 0 ? shown.map(card).join('') : '<div class="empty-state"><h2>No matching records</h2><p>Try a school name, a different year or a broader search. A missing record is never manufactured.</p></div>';
     pager.hidden = pages <= 1;
-    pager.innerHTML = `${page > 1 ? `<a href="#" data-page="${page - 1}" rel="prev">Previous</a>` : '<span></span>'}<span>Page ${page} of ${pages}</span>${page < pages ? `<a href="#" data-page="${page + 1}" rel="next">Next</a>` : '<span></span>'}`;
+    pager.innerHTML = `${page > 1 ? `<button type="button" class="text-link" data-page="${page - 1}">Previous</button>` : '<span></span>'}<span>Page ${page} of ${pages}</span>${page < pages ? `<button type="button" class="text-link" data-page="${page + 1}">Next</button>` : '<span></span>'}`;
     if (claimState) {
       claim.hidden = false;
       $<HTMLElement>('[data-claim-title]').textContent = `${claimState.dataset} · ${claimState.period}`;
@@ -133,20 +144,20 @@ if (form) {
   }
 
   let timer = 0;
-  const schedule = (): void => { window.clearTimeout(timer); timer = window.setTimeout(() => { page = 1; void render(); }, 150); };
+  const run = (): void => { page = 1; void render().catch(() => undefined); };
+  const schedule = (): void => { window.clearTimeout(timer); timer = window.setTimeout(run, 150); };
   q.addEventListener('input', schedule);
-  for (const control of [corpus, school, domain, status, from, to]) control.addEventListener('change', () => { page = 1; void render(); });
-  form.addEventListener('submit', (event) => { event.preventDefault(); page = 1; void render(); });
+  for (const control of [corpus, school, domain, status, from, to]) control.addEventListener('change', run);
+  form.addEventListener('submit', (event) => { event.preventDefault(); run(); });
   pager.addEventListener('click', (event) => {
-    const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[data-page]');
-    if (!link) return;
-    event.preventDefault();
-    page = Number(link.dataset.page);
-    void render().then(() => results.scrollIntoView({ block: 'start' }));
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-page]');
+    if (!button) return;
+    page = Number(button.dataset.page);
+    void render().then(() => { count.setAttribute('tabindex', '-1'); count.focus(); count.scrollIntoView({ block: 'start' }); }).catch(() => undefined);
   });
-  claim.querySelector('a')?.addEventListener('click', (event) => { event.preventDefault(); claimState = null; page = 1; void render(); });
+  claim.querySelector('a')?.addEventListener('click', (event) => { event.preventDefault(); claimState = null; page = 1; void render().then(() => { count.setAttribute('tabindex', '-1'); count.focus(); }).catch(() => undefined); });
   from.min = String(low); to.max = String(high);
-  if (readUrl()) void render();
+  if (readUrl()) void render().catch(() => undefined);
 }
 
 export {};

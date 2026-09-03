@@ -28,7 +28,7 @@ const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, h
           <a class="button button-secondary" href={schoolPath(slug, 'university-destinations')}>University outcomes</a>
         </div>
       </div>
-      <Artwork schoolId={slug} alt={school.artworkAlt} eager />
+      <Artwork schoolId={slug} alt={school.artworkAlt} eager sizes="(min-width: 60rem) 45vw, 100vw" />
     </header>
 
     <section class="section shell school-summary-grid">
@@ -102,7 +102,7 @@ const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, h
         <div><p class="eyebrow">What this record holds</p><h2 id="inventory-heading">Evidence by qualification and outcome</h2></div>
         <p>Every ledger, the years it covers and the published scales it carries. Rows are frozen values; a scale change is a break, not a conversion.</p>
       </div>
-      <div class="table-scroll" tabindex="0" aria-label="Scrollable table: what this record holds">
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Table of every ledger and record set in this record">
         <table class="data-table inventory-table">
           <caption>Every ledger and record set for this school, with the years and published scales it carries.</caption>
           <thead><tr><th scope="col">Section</th><th scope="col">Family</th><th scope="col">Ledger</th><th scope="col">Years</th><th scope="col">Published scales and bases</th><th scope="col">Rows</th></tr></thead>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render comparison charts with the canonical Python renderer for the TypeScript parity test.
+"""Render comparison panels with the canonical Python renderer for the TypeScript parity test.
 
 Every metric, every ordered pair of schools and a sample of year windows: the
 frontend's port must reproduce each SVG byte for byte, which the test checks by
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tsr import chart, comparison, dataset  # noqa: E402
+from tsr import chart, comparison, dataset, trajectory  # noqa: E402
 
 OUTPUT = ROOT / "web" / "tests" / "fixtures" / "comparison-charts.json"
 
@@ -34,25 +34,28 @@ def main() -> int:
     for metric in metrics:
         years = sorted({point["year"] for point in metric["points"]})
         windows = {(year_min, year_max), (years[0], years[-1]), (2015, 2019), (2010, 2026), (years[0], years[0]), (2020, 2021)}
+        markers = (trajectory.EXCEPTIONAL_YEARS,) if metric["domain"] == "results" else ()
         for first, second in permutations(ids, 2):
             for year_from, year_to in sorted(windows):
-                svg = chart.comparison_chart(metric, first, second, year_from, year_to)
-                case = {
-                    "metric": metric["id"],
-                    "first": first,
-                    "second": second,
-                    "yearFrom": year_from,
-                    "yearTo": year_to,
-                    "sha256": hashlib.sha256(svg.encode("utf-8")).hexdigest(),
-                }
-                # A few full renderings make a mismatch diagnosable; the rest are pinned by hash.
-                if len(cases) % 250 == 0:
-                    case["svg"] = svg
-                cases.append(case)
+                for layout_name, layout in (("desktop", chart.COMPARISON_DESKTOP), ("mobile", chart.COMPARISON_MOBILE)):
+                    svg = chart.comparison_panel(metric, first, second, year_from, year_to, layout, names=names, markers=markers)
+                    case = {
+                        "metric": metric["id"],
+                        "first": first,
+                        "second": second,
+                        "yearFrom": year_from,
+                        "yearTo": year_to,
+                        "layout": layout_name,
+                        "sha256": hashlib.sha256(svg.encode("utf-8")).hexdigest(),
+                    }
+                    # A few full renderings make a mismatch diagnosable; the rest are pinned by hash.
+                    if len(cases) % 500 == 0:
+                        case["svg"] = svg
+                    cases.append(case)
     payload = {
         "schools": [{"id": sid, "name": names[sid]} for sid in ids],
         "metrics": [
-            {"id": m["id"], "label": m["label"], "unit": m["unit"], "points": [{"schoolId": p["schoolId"], "schoolName": p["schoolName"], "year": p["year"], "value": p["value"], "status": p["status"]} for p in m["points"]]}
+            {"id": m["id"], "label": m["label"], "unit": m["unit"], "domain": m["domain"], "points": [{"schoolId": p["schoolId"], "schoolName": p["schoolName"], "year": p["year"], "value": p["value"], "status": p["status"]} for p in m["points"]]}
             for m in metrics
         ],
         "cases": cases,

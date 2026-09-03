@@ -1,6 +1,6 @@
 {
   "requestedUrl": "http://127.0.0.1:4321/evidence/",
-  "fetchTime": "2026-09-02T23:11:21.450Z",
+  "fetchTime": "2026-09-03T11:09:22.788Z",
   "lighthouseVersion": "13.4.1",
   "categories": {
     "performance": 1,
@@ -11,7 +11,7 @@
   "audits": {
     "largest-contentful-paint": {
       "score": 1,
-      "numericValue": 523.48495,
+      "numericValue": 549.99585,
       "displayValue": "0.5 s"
     },
     "cumulative-layout-shift": {
@@ -26,18 +26,18 @@
     },
     "first-contentful-paint": {
       "score": 1,
-      "numericValue": 403.48495,
-      "displayValue": "0.4 s"
+      "numericValue": 489.99585,
+      "displayValue": "0.5 s"
     },
     "total-byte-weight": {
       "score": 1,
-      "numericValue": 253962,
-      "displayValue": "Total size was 248 KiB"
+      "numericValue": 258336,
+      "displayValue": "Total size was 252 KiB"
     },
     "speed-index": {
       "score": 1,
-      "numericValue": 403.48495,
-      "displayValue": "0.4 s"
+      "numericValue": 489.99585,
+      "displayValue": "0.5 s"
     }
   }
 }

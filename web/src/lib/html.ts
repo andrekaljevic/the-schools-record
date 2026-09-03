@@ -5,7 +5,7 @@ const ESCAPES: Record<string, string> = {
   '<': '&lt;',
   '>': '&gt;',
   '"': '&quot;',
-  "'": '&#39;',
+  "'": '&#x27;',
 };
 
 export function esc(value: unknown): string {

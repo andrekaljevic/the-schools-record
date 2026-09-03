@@ -29,6 +29,7 @@ export interface Site {
   redactions: number;
   lastReviewed: string;
   lastReviewedShort: string;
+  ledgersFrom: number;
   spanFrom: number;
   spanTo: number;
   counts: { figures: number; granular: number; oxbridge: number; us: number; total: number };
@@ -58,6 +59,7 @@ export interface Field {
 }
 
 export interface LedgerRow {
+  index: number;
   anchor: string;
   period: string;
   year: number | null;
@@ -68,7 +70,8 @@ export interface LedgerRow {
   blank: string[];
   sources: SourceRef[];
   datasetSourcesOmitted: number;
-  recordId: string | null;
+  corrections: string[];
+  recordId: string;
 }
 
 export interface Ledger {
@@ -78,6 +81,7 @@ export interface Ledger {
   domain: string;
   school: string;
   span: string;
+  missingYears: number[];
   rowCount: number;
   basis: string | null;
   notes: string | string[] | null;
@@ -220,6 +224,14 @@ export interface MetricPoint {
   derived: boolean;
 }
 
+export interface ChartMarker {
+  kind: 'band' | 'rule';
+  start: number;
+  end: number;
+  label: string;
+  shortLabel: string;
+}
+
 export interface Metric {
   id: string;
   label: string;
@@ -228,6 +240,7 @@ export interface Metric {
   note: string;
   domain: string;
   unit: 'percent' | 'count';
+  markers: ChartMarker[];
   points: MetricPoint[];
 }
 
@@ -237,13 +250,16 @@ export interface Compare {
   defaultMetric: string;
   defaultSchools: string[];
   metrics: Metric[];
-  defaultSvg: string;
+  gapRule: string;
+  defaultSvgDesktop: string;
+  defaultSvgMobile: string;
 }
 
 export interface Dossier {
   metric: { id: string; label: string; definition: string; note: string };
   rows: { year: number; eton: { value: string; status: string } | null; westminster: { value: string; status: string } | null }[];
-  svg: string;
+  svgDesktop: string;
+  svgMobile: string;
   prepared: string;
 }
 
@@ -359,6 +375,7 @@ export interface Us {
 
 export interface Correction {
   id: string;
+  rows: { label: string; href: string }[];
   schoolId: string | null;
   school: string;
   period: string;
@@ -425,7 +442,6 @@ export interface EvidenceRecord {
 
 export interface SearchEntry {
   id: string;
-  s: string;
   c: string;
   sc: string | null;
   y: number | null;

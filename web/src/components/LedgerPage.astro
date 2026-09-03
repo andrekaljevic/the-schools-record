@@ -50,7 +50,7 @@ const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, h
       {ledgers.map((ledger) => <Ledger ledger={ledger} schoolName={school.name} />)}
       {granular.length > 0 && (
         <>
-          <div class="section-heading" style="margin-top:3rem"><div><p class="eyebrow">Subject and destination detail</p><h2>Itemised tables from the school's own booklet</h2></div><p>Counts as printed, subject by subject or university by university. These rows are the granular corpus; they are not re-summed into the ledgers above.</p></div>
+          <div class="section-heading section-heading-gap"><div><p class="eyebrow">Subject and destination detail</p><h2>Itemised tables from the school's own booklet</h2></div><p>Counts as printed, subject by subject or university by university. These rows are the granular corpus; they are not re-summed into the ledgers above.</p></div>
           {granular.map((ledger) => <GranularLedger ledger={ledger} schoolName={school.name} />)}
         </>
       )}

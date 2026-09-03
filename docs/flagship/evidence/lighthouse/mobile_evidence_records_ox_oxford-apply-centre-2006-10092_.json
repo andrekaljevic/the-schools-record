@@ -1,6 +1,6 @@
 {
   "requestedUrl": "http://127.0.0.1:4321/evidence/records/ox/oxford-apply-centre-2006-10092/",
-  "fetchTime": "2026-09-02T23:10:30.083Z",
+  "fetchTime": "2026-09-03T11:08:37.078Z",
   "lighthouseVersion": "13.4.1",
   "categories": {
     "performance": 0.99,
@@ -10,13 +10,13 @@
   },
   "audits": {
     "largest-contentful-paint": {
-      "score": 0.96,
-      "numericValue": 2102.9275500000003,
-      "displayValue": "2.1 s"
+      "score": 0.97,
+      "numericValue": 1952.5566000000001,
+      "displayValue": "2.0 s"
     },
     "cumulative-layout-shift": {
       "score": 1,
-      "numericValue": 0,
+      "numericValue": 0.0001625459523785941,
       "displayValue": "0"
     },
     "total-blocking-time": {
@@ -26,17 +26,17 @@
     },
     "first-contentful-paint": {
       "score": 0.96,
-      "numericValue": 1502.92755,
+      "numericValue": 1502.5566000000001,
       "displayValue": "1.5 s"
     },
     "total-byte-weight": {
       "score": 1,
-      "numericValue": 197794,
-      "displayValue": "Total size was 193 KiB"
+      "numericValue": 200248,
+      "displayValue": "Total size was 196 KiB"
     },
     "speed-index": {
       "score": 1,
-      "numericValue": 1502.92755,
+      "numericValue": 1502.5566000000001,
       "displayValue": "1.5 s"
     }
   }

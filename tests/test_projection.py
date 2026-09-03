@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tsr import chart, comparison, corpora, dataset, evidence, projection  # noqa: E402
+from tsr import chart, comparison, components, corpora, dataset, evidence, projection, records  # noqa: E402
 
 DATASET_PATH = ROOT / "data" / "dataset.json"
 DATASET_SHA256 = "245f2d8176f8fca0d53f41689f096734dd13e9023af9a67931314334251b9f6f"
@@ -94,6 +94,57 @@ class ProjectionContractTests(unittest.TestCase):
         # Every figures row appears at least once (shared ledgers appear under every school they name).
         self.assertGreaterEqual(total_rows, 1274)
 
+    def test_row_anchors_are_unique_and_record_ids_are_the_rows_own(self) -> None:
+        for school in dataset.schools():
+            doc = json.loads(_documents()[f"schools/{school['id']}"])
+            anchors: list[str] = []
+            for ledger in [*doc["exam"], *doc["university"]]:
+                entry = next(item for item in dataset.figures()["datasets"] if item["dataset_id"] == ledger["id"])
+                for row in ledger["rows"]:
+                    anchors.append(row["anchor"])
+                    self.assertEqual(row["recordId"], f"fig:{ledger['id']}:{row['index']}")
+                    self.assertEqual(records.period_label(entry["rows"][row["index"]]), row["period"])
+                    self.assertTrue(row["anchor"].startswith(f"{ledger['id']}-"))
+            self.assertEqual(len(anchors), len(set(anchors)), school["id"])
+        eton = json.loads(_documents()["schools/eton"])
+        gcse = next(item for item in eton["exam"] if item["id"] == "eton_gcse_primary")
+        self.assertEqual(sorted(row["anchor"] for row in gcse["rows"] if row["period"] == "2018"), ["eton_gcse_primary-2018", "eton_gcse_primary-2018-r1"])
+        self.assertEqual(components.row_anchor("winchester_gcse", {"year": 2016}), "winchester_gcse-2016")
+
+    def test_gaps_and_corrections_are_stated_per_ledger_and_row(self) -> None:
+        westminster = json.loads(_documents()["schools/westminster"])
+        alevel = next(item for item in westminster["exam"] if item["family"].startswith("A level") or "alevel" in item["id"])
+        self.assertTrue(set(alevel["missingYears"]) >= {2020, 2021}, alevel["missingYears"])
+        for school in dataset.schools():
+            doc = json.loads(_documents()[f"schools/{school['id']}"])
+            for ledger in [*doc["exam"], *doc["university"]]:
+                years = {row["year"] for row in ledger["rows"] if row["year"] is not None}
+                self.assertFalse(set(ledger["missingYears"]) & years)
+                for row in ledger["rows"]:
+                    for correction_id in row["corrections"]:
+                        item = next(c for c in corpora.corrections() if c["id"] == correction_id)
+                        self.assertEqual(str(item["period"]), row["period"])
+        corrections = json.loads(_documents()["corrections"])["corrections"]
+        with_rows = [item for item in corrections if item["rows"]]
+        self.assertGreater(len(with_rows), 10)
+        for item in with_rows:
+            for row in item["rows"]:
+                self.assertRegex(row["href"], r"^/schools/[a-z-]+/(exam-results|university-destinations)/#")
+
+    def test_csv_downloads_join_lists_and_keep_blanks(self) -> None:
+        doc = json.loads(_documents()["schools/winchester"])
+        gcse = next(item for item in doc["exam"] if item["id"] == "winchester_gcse")
+        self.assertNotIn("['", gcse["csv"])
+        self.assertIn("2016", gcse["csv"])
+        header = gcse["csv"].splitlines()[0].split(",")
+        self.assertTrue({field["key"] for field in gcse["fields"]} <= set(header))
+        self.assertEqual(len(gcse["csv"].splitlines()), gcse["rowCount"] + 1)
+
+    def test_search_entries_are_compact_pairs(self) -> None:
+        entry = json.loads(_documents()["evidence-search"])[0]
+        self.assertNotIn("s", entry)
+        self.assertTrue(all(isinstance(pair, list) and len(pair) == 2 for pair in entry["v"]))
+
     def test_formatted_cells_match_the_application_formatting(self) -> None:
         doc = json.loads(_documents()["schools/winchester"])
         ledger = next(item for item in doc["exam"] if item["id"] == "winchester_pre_u_two_ruler_2011_2019")
@@ -132,8 +183,13 @@ class ProjectionContractTests(unittest.TestCase):
         fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
         metrics = {metric["id"]: metric for metric in comparison.metrics()}
         self.assertEqual(set(fixture["metrics"][i]["id"] for i in range(len(fixture["metrics"]))), set(metrics))
-        for case in fixture["cases"][::37]:
-            svg = chart.comparison_chart(metrics[case["metric"]], case["first"], case["second"], case["yearFrom"], case["yearTo"])
+        names = {school["id"]: school["name"] for school in dataset.schools()}
+        from tsr import trajectory
+        for case in fixture["cases"][::73]:
+            metric = metrics[case["metric"]]
+            layout = chart.COMPARISON_MOBILE if case["layout"] == "mobile" else chart.COMPARISON_DESKTOP
+            markers = (trajectory.EXCEPTIONAL_YEARS,) if metric["domain"] == "results" else ()
+            svg = chart.comparison_panel(metric, case["first"], case["second"], case["yearFrom"], case["yearTo"], layout, names=names, markers=markers)
             self.assertEqual(hashlib.sha256(svg.encode("utf-8")).hexdigest(), case["sha256"], case)
 
     def test_the_command_line_tool_checks_and_writes_outside_data(self) -> None:

@@ -14,7 +14,7 @@ const universityFamilies = data.familyOrder.filter((family) => data.universityWi
 ---
 <Base meta={{ title: titled('Oxford and Cambridge admissions records'), description: 'Apply-centre applications, offers and admissions by school and cycle, with university-wide context and historical tables.', dataset: true }} crumbs={[{ label: 'Oxford and Cambridge records', href: null }]} bodyClass="page-corpus">
   <main id="main-content">
-    <PageHero eyebrow={`Second corpus · ${data.total} records`} title="Oxford and Cambridge admissions records" intro="Apply-centre applications, offers and accepted or admitted outcomes by university and entry cycle, with the rounded subject and college releases, the school's own offer claims and the historical secondary table kept apart." note={`${data.definitions.cycle_year ?? ''} This is university apply-centre evidence: it is not a school-entry acceptance rate and not a leaver-destination measure.`} />
+    <PageHero eyebrow={`Second corpus · ${data.total} records`} title="Oxford and Cambridge admissions records" intro="Apply-centre applications, offers and accepted or admitted outcomes by university and entry cycle, with the rounded subject and college releases, the school's own offer claims and the historical secondary table kept apart." note={`${(data.definitions.cycle_year ?? '').replace(/\.?\s*$/, '.')} This is university apply-centre evidence: it is not a school-entry acceptance rate and not a leaver-destination measure.`} />
     <section class="section shell">
       <div class="section-heading"><div><p class="eyebrow">By school</p><h2>Apply-centre records</h2></div><p>{schoolRecords} school records across the seven schools.</p></div>
       <div class="corpus-grid">

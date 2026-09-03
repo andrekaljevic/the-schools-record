@@ -25,19 +25,14 @@ const meta = school
   <main id="main-content">
     <PageHero eyebrow="Editorial accountability" title="Corrections and published differences" intro="When a figure is corrected, the record uses the new value and keeps the earlier value and the reason here. When credible publications disagree, both values are noted with the one the record uses and why." note={`${data.corrections.length} corrections and ${data.conflicts.length} published differences are recorded in the frozen edition. None is applied silently, and this page creates none.`} />
     <section class="shell">
-      <form class="index-controls" data-island="corrections-filter" method="get" action="/corrections/" aria-label="Choose a school">
-        <div class="field">
-          <label for="corrections-school">Show</label>
-          <select id="corrections-school" name="school">
-            <option value="" selected={!schoolId}>All schools</option>
-            {schools.map((entry) => <option value={entry.id} selected={entry.id === schoolId}>{entry.name}</option>)}
-          </select>
-        </div>
-        <ul class="series-links" aria-label="Corrections by school">
+      <nav class="index-controls" aria-label="Corrections by school">
+        <p class="eyebrow">Show</p>
+        <ul class="series-links">
           <li><a href="/corrections/" aria-current={schoolId ? undefined : 'page'}>All schools</a></li>
           {schools.map((entry) => <li><a href={`/corrections/schools/${entry.id}/`} aria-current={entry.id === schoolId ? 'page' : undefined}>{entry.short}</a></li>)}
         </ul>
-      </form>
+        <p class="small mute">On this page: <a href="#corrections">corrections</a> · <a href="#differences">published differences</a> · <a href="#authority">which publication controls</a></p>
+      </nav>
     </section>
     <section class="section shell section-flush-top">
       <div class="section-heading"><div><p class="eyebrow">Corrections</p><h2 id="corrections">What changed, and why</h2></div><p>{corrections.length} {plural(corrections.length, 'correction')}. The value now used replaces the earlier value in every ledger and chart; the change and its reason stay here.</p></div>
@@ -51,6 +46,7 @@ const meta = school
               <p class="ledger-metric">{item.metric}</p>
               <p class="ledger-change"><span class="ledger-old">Earlier value {item.old}</span> <span class="ledger-arrow">now</span> <strong>{item.new}</strong></p>
               <p class="ledger-reason">{item.reason}</p>
+              {item.rows.length > 0 && <p class="ledger-rows">Rows for this school and period: {item.rows.map((row) => <a href={row.href}>{row.label}</a>)}</p>}
               <details class="dataset-sources"><summary>Sources</summary><SourceList sources={item.sources} /></details>
             </div>
           </article>
@@ -76,7 +72,7 @@ const meta = school
     </section>
     <section class="section shell section-flush-top content-grid">
       <article class="prose">
-        <h2>Which publication controls</h2>
+        <h2 id="authority">Which publication controls</h2>
         <p>The source compilations are layered rather than replaced; a later companion does not overwrite a detailed annual table it merely leaves out.</p>
         <ol>{data.versionAuthority.map((item) => <li><strong>{item.version}</strong> controls {item.controls}.</li>)}</ol>
         <p><a class="text-link" href="/evidence/method/">How the figures are checked <Icon name="arrow-right" /></a></p>
@@ -88,10 +84,4 @@ const meta = school
       </aside>
     </section>
   </main>
-  <script>
-    const select = document.querySelector<HTMLSelectElement>('#corrections-school');
-    select?.addEventListener('change', () => {
-      window.location.assign(select.value ? `/corrections/schools/${encodeURIComponent(select.value)}/` : '/corrections/');
-    });
-  </script>
 </Base>

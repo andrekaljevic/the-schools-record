@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
 
-/** robots.txt with an absolute sitemap address (the crawler specification requires one). */
+/** robots.txt; the sitemap line needs an absolute address, so it is written only when the origin is known. */
 export const GET: APIRoute = ({ site }) => {
-  const origin = site ? site.origin : '';
-  const body = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /data/', '', `Sitemap: ${origin}/sitemap-index.xml`, ''].join('\n');
-  return new Response(body, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  const lines = ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /data/'];
+  if (process.env.SITE_URL && site) lines.push('', `Sitemap: ${site.origin}/sitemap-index.xml`);
+  return new Response(`${lines.join('\n')}\n`, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 };

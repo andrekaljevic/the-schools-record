@@ -12,6 +12,8 @@ import type { Ledger } from '../lib/types';
 import { claimPath, ledgerCsvPath, recordPath } from '../lib/routes';
 import { plural } from '../lib/html';
 
+const STATUS_FIELDS = new Set(['confidence', 'publication_status', 'evidence_status']);
+
 interface Props { ledger: Ledger; schoolName: string }
 const { ledger, schoolName } = Astro.props;
 const hidden = new Set(ledger.hiddenFields);
@@ -25,7 +27,7 @@ const notes = Array.isArray(ledger.notes) ? ledger.notes : ledger.notes ? [ledge
     <div>
       <p class="eyebrow">{ledger.family} · {ledger.span}</p>
       <h2 id={`${ledger.id}-title`}>{ledger.label}</h2>
-      <p class="ledger-meta"><span>{ledger.rowCount} {plural(ledger.rowCount, 'row')}</span><span>{ledger.fields.length} published columns</span><code>{ledger.id}</code></p>
+      <p class="ledger-meta"><span>{ledger.rowCount} {plural(ledger.rowCount, 'row')}</span><span>{ledger.fields.length} published columns{ledger.hiddenFields.length > 0 && ' · scroll sideways or show all'}</span></p>
     </div>
     <div class="ledger-tools">
       {ledger.hiddenFields.length > 0 && (
@@ -34,21 +36,23 @@ const notes = Array.isArray(ledger.notes) ? ledger.notes : ledger.notes ? [ledge
       <a class="text-link" href={ledgerCsvPath(ledger.id)} download={`${ledger.id}.csv`}><Icon name="download" /> Download CSV</a>
     </div>
   </header>
-  {(ledger.basis || notes.length > 0) && (
+  {(ledger.basis || notes.length > 0 || ledger.missingYears.length > 0) && (
     <div class="ledger-basis">
       {ledger.basis && <p><strong>Basis.</strong> {ledger.basis}</p>}
       {notes.map((note) => <p>{note}</p>)}
+      {ledger.missingYears.length > 0 && <p><strong>No row for {ledger.missingYears.length === 1 ? '' : 'these years: '}{ledger.missingYears.join(', ')}.</strong> The frozen record has no published value for {ledger.missingYears.length === 1 ? 'that year' : 'them'}; nothing is estimated.</p>}
     </div>
   )}
-  <div class="table-scroll sticky-first" tabindex="0" aria-label={`Scrollable table: ${ledger.label}`}>
+  <p class="table-lead" id={`${ledger.id}-lead`}>Values as published; a blank is a blank, not zero. Each status links to the <a href="/evidence/method/#status-codes">status codes</a>.</p>
+  <div class="table-scroll sticky-first" tabindex="0" role="region" aria-label={`${ledger.label} table`} aria-describedby={`${ledger.id}-lead`}>
     <table class="data-table">
-      <caption>{schoolName} · {ledger.label}. Values as published; a blank is a blank, not zero.</caption>
+      <caption class="visually-hidden">{schoolName} · {ledger.label}</caption>
       <thead>
         <tr>
           {ledger.fields.map((field) => (
             <th scope="col" class={hidden.has(field.key) ? 'col-hidden' : undefined}>{field.label}</th>
           ))}
-          <th scope="col">Evidence</th>
+          <th scope="col">Record</th>
         </tr>
       </thead>
       <tbody>
@@ -58,16 +62,19 @@ const notes = Array.isArray(ledger.notes) ? ledger.notes : ledger.notes ? [ledge
               const blank = row.blank.includes(field.key);
               const classes = [hidden.has(field.key) ? 'col-hidden' : '', blank ? 'blank-value' : '', isText(field.key, field.kind) ? 'text' : ''].filter(Boolean).join(' ') || undefined;
               const value = blank ? '—' : row.cells[field.key];
-              return index === 0 ? <th scope="row" class={classes}>{value}</th> : <td class={classes}>{value}</td>;
+              const status = !blank && STATUS_FIELDS.has(field.key.split('.').pop() ?? field.key);
+              const cell = status ? <a class="status-code" href="/evidence/method/#status-codes">{value}</a> : value;
+              return index === 0 ? <th scope="row" class={classes}>{cell}</th> : <td class={classes}>{cell}</td>;
             })}
             <td class="text">
               <details class="row-evidence">
-                <summary>Evidence</summary>
+                <summary>Evidence<span class="visually-hidden"> for {row.period}</span></summary>
                 <div class="evidence-panel">
-                  <p class="eyebrow">{row.period} · {row.status || 'Not stated'}</p>
-                  <p class="evidence-refs">{row.sources.map((source) => <a class="source-key" href={`#${ledger.id}-sources`} title={source.title}>{source.ref}</a>)}{row.datasetSourcesOmitted > 0 && <span class="mute">+{row.datasetSourcesOmitted} under the ledger</span>}</p>
+                  <p class="eyebrow">{row.period} · <a class="status-code" href="/evidence/method/#status-codes">{row.status || 'Not stated'}</a></p>
+                  <p class="evidence-refs">{row.sources.map((source) => <a class="source-key" href={`#${ledger.id}-sources`}>{source.ref}</a>)}{row.datasetSourcesOmitted > 0 && <span class="mute">+{row.datasetSourcesOmitted} under the ledger</span>}</p>
+                  {row.corrections.length > 0 && <p class="evidence-correction">Correction recorded for {schoolName} {row.period}: {row.corrections.map((id) => <a href={`/corrections/#${id}`}>{id}</a>)}</p>}
                   {row.note && <p class="evidence-note">{row.note}</p>}
-                  <p class="evidence-actions">{row.recordId && <a href={recordPath(row.recordId)}>Permanent record</a>}<a href={claimPath(ledger.id, row.period)}>Trace in the evidence centre</a></p>
+                  <p class="evidence-actions"><a href={recordPath(row.recordId)}>Permanent record</a><a href={claimPath(ledger.id, row.period)}>Trace in the evidence centre</a></p>
                 </div>
               </details>
             </td>
@@ -79,6 +86,6 @@ const notes = Array.isArray(ledger.notes) ? ledger.notes : ledger.notes ? [ledge
   <details class="dataset-sources" id={`${ledger.id}-sources`}>
     <summary>Sources for this ledger · {ledger.sources.length} {plural(ledger.sources.length, 'reference')}</summary>
     <SourceList sources={ledger.sources} />
-    <p class="privacy-note">Private working documents are withheld. A public reference identifies the evidence; where the source is itself public, its link is given. Each row's Evidence panel lists the references cited for that row and links to its permanent record.</p>
+    <p class="privacy-note">Dataset ID <code>{ledger.id}</code>. Private working documents are withheld. A public reference identifies the evidence; where the source is itself public, its link is given. Each row's Evidence panel lists the references cited for that row and links to its permanent record.</p>
   </details>
 </article>

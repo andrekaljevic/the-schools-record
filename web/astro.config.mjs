@@ -19,7 +19,8 @@ export default defineConfig({
   prefetch: false,
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/404') && !page.includes('/downloads/'),
+      // Listing pages beyond the first and the index series pages are noindex, so they stay out of the sitemap.
+      filter: (page) => !page.includes('/404') && !page.includes('/downloads/') && !/\/evidence\/browse\/[^/]+\/\d+\/$/.test(page) && !page.includes('/schools/series/'),
       changefreq: 'monthly',
       priority: 0.6,
     }),

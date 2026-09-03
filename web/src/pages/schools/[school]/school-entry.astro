@@ -31,7 +31,7 @@ const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, h
             <h2>Entry points evidenced</h2>
             <ul>{(process.entryPoints ?? []).map((item) => <li>{item}</li>)}</ul>
             <h2>Process as published</h2>
-            <ol class="question-list entry-steps" style="color:inherit">{(process.steps ?? []).map((step, index) => <li><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{step.label}</h3><p style="color:var(--ink-soft)">{step.detail}</p></div></li>)}</ol>
+            <ol class="question-list entry-steps">{(process.steps ?? []).map((step, index) => <li><span>{String(index + 1).padStart(2, '0')}</span><div><h3>{step.label}</h3><p>{step.detail}</p></div></li>)}</ol>
             <h2>What is not known</h2>
             <Notice title="Evidence boundary"><p>{process.limit}</p></Notice>
           </>

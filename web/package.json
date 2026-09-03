@@ -20,7 +20,8 @@
     "icons": "node scripts/build-icons.mjs",
     "privacy": "node scripts/privacy-scan.mjs",
     "security": "node scripts/security-scan.mjs",
-    "verify": "npm run check && npm run test:unit && npm run build && npm run privacy && npm run security && npm run budgets && npm run test:e2e"
+    "verify": "npm run check && npm run test:unit && npm run build:preview && npm run privacy && npm run security && npm run budgets && npm run test:e2e",
+    "build:preview": "SITE_URL=http://127.0.0.1:4321 astro build"
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
@@ -34,6 +35,7 @@
     "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.62.1",
     "@types/node": "22.20.1",
+    "chrome-launcher": "1.2.1",
     "lighthouse": "13.4.1",
     "sharp": "0.35.4",
     "typescript": "5.9.3",

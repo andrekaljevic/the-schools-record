@@ -7,13 +7,18 @@ import { recordPath, schoolPath } from '../lib/routes';
 interface Props { record: EvidenceRecord; open?: boolean; heading?: 'h1' | 'h2' | 'h3' }
 const { record, open = false, heading = 'h3' } = Astro.props;
 const Heading = heading;
+const parts = record.title.split(' · ');
+const splitTitle = heading === 'h1' && parts.length >= 3;
+const mainTitle = splitTitle ? parts[0] : record.title;
+const subTitle = splitTitle ? parts.slice(1).join(' · ') : null;
 ---
 <article class="evidence-record" id={record.id}>
   <header>
     <div class="record-kicker"><StatusPill text={record.corpusLabel} tone="teal" /><span>{record.outcome}</span></div>
-    <Heading>{record.title}</Heading>
+    <Heading>{mainTitle}</Heading>
+    {subTitle && <p class="record-subtitle">{subTitle}</p>}
     <p class="record-line">
-      {record.schoolId ? <a href={schoolPath(record.schoolId)}>{record.school}</a> : <span>{record.school}</span>} · <span>{record.period}</span> · <span class="record-status">Evidence status: {record.status}</span>
+      {record.schoolId ? <a href={schoolPath(record.schoolId)}>{record.school}</a> : <span>{record.school}</span>} · <span>{record.period}</span> · <span class="record-status">Status: <a class="status-code" href="/evidence/method/#status-codes">{record.status}</a></span>
     </p>
   </header>
   <dl class="summary-list">{record.summary.map((pair) => <div><dt>{pair.label}</dt><dd>{pair.value}</dd></div>)}</dl>

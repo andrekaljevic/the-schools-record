@@ -74,7 +74,7 @@ const budgets = ['Prefer not to say', 'Under £1,000', '£1,000–£2,499', '£2
         <div class="field"><label for="en-deadline">Deadline</label><input id="en-deadline" name="deadline" type="text" maxlength="80" placeholder="A date or timeframe" /></div>
         <div class="field"><label for="en-budget">Approximate budget band</label><select id="en-budget" name="budgetBand">{budgets.map((item) => <option value={item}>{item}</option>)}</select></div>
         <div class="field span-2"><label for="en-use">Intended use <span aria-hidden="true">*</span></label><textarea id="en-use" name="intendedUse" rows="5" required maxlength="2000" placeholder="What decision, article or research question should the work support?"></textarea></div>
-        <label class="form-consent span-2"><input type="checkbox" name="consent" required /><span>I have read the <a href="/privacy/">privacy notice</a> and agree that these details may be stored and used to respond to this enquiry. <span aria-hidden="true">*</span></span></label>
+        <label class="form-consent span-2"><input type="checkbox" id="en-consent" name="consent" required /><span>I have read the <a href="/privacy/">privacy notice</a> and agree that these details may be stored and used to respond to this enquiry. <span aria-hidden="true">*</span></span></label>
       </FormShell>
     </section>
   </main>

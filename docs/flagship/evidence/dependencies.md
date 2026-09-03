@@ -13,6 +13,7 @@
 | `@axe-core/playwright` | 4.13.0 | accessibility audit in e2e tests (dev) | MPL-2.0 |
 | `@playwright/test` | 1.62.1 | end-to-end tests (dev) | Apache-2.0 |
 | `@types/node` | 22.20.1 | Node typings (dev) | MIT |
+| `chrome-launcher` | 1.2.1 | launches the local Chromium for Lighthouse (dev) | Apache-2.0 |
 | `lighthouse` | 13.4.1 | performance audit (dev) | Apache-2.0 |
 | `sharp` | 0.35.4 | icon and social-card generation (dev) | Apache-2.0 |
 | `typescript` | 5.9.3 | type checker (dev) | Apache-2.0 |
@@ -27,6 +28,7 @@ No runtime dependency ships to the browser: the client bundles are the site's ow
 | Package | Version | Role |
 | --- | --- | --- |
 | `streamlit` | 1.62.0 | the parity oracle and the existing application; not used by the static site at runtime |
+| `playwright` | 1.62.0 | the anchor's responsive tests in `tests/test_responsive.py` (previously skipped when absent) |
 
 ## External services
 

@@ -29,11 +29,12 @@ const crumbs = [{ label: 'Evidence', href: '/evidence/' }, { label: record.corpu
       </div>
       {siblings.length > 0 && (
         <aside class="section-tight">
-          <h2 class="small eyebrow-ink" style="font-family:var(--sans);letter-spacing:.12em;text-transform:uppercase;font-size:var(--step--2)">Other records carrying the same displayed figure</h2>
+          <h2 class="eyebrow eyebrow-ink">Other records carrying the same displayed figure</h2>
           <ul class="series-links">{siblings.map((item) => <li><a href={recordPath(item.id)}>{item.title}</a></li>)}</ul>
         </aside>
       )}
-      <p class="action-row"><a class="text-link" href={`/evidence/?q=${encodeURIComponent(record.school)}`}>Search the evidence centre <Icon name="arrow-right" /></a><a class="text-link" href="/methodology/">How the figures are checked</a></p>
+      {record.sources.some((source) => source.withheld) && <p class="mute small">A source title is withheld where the reviewed edition approved no public link for it; the reference stays stable. To ask about a withheld source, use the <a href="/professional/#enquire">enquiry form</a> and quote the reference.</p>}
+      <p class="action-row"><a class="text-link" href={`/evidence/?q=${encodeURIComponent(record.school)}`}>Search the evidence centre <Icon name="arrow-right" /></a><a class="text-link" href="/evidence/method/">How the figures are checked</a></p>
     </section>
   </main>
 </Base>

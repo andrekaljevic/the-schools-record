@@ -23,7 +23,7 @@ const terms = [
         <h3>Source-led</h3>
         <p>Figures are tied to stable public evidence references. Direct document locations and internal research notes are held privately; removing those locations from public output does not change the figure or its evidence classification.</p>
         <h3>Lossless</h3>
-        <p>Exact values remain exact, ranges keep both bounds, lower bounds remain lower bounds, and estimates retain their classification. Display precision is preserved.</p>
+        <p>Exact values remain exact, ranges keep both bounds, lower bounds remain lower bounds, and estimates retain their classification. Percentages are shown to one decimal place, as the published record presented them, so a stored whole number reads as 91.0%; the CSV downloads carry the stored value.</p>
         <h3>Diagnostic validation only</h3>
         <p>Automated checks may flag an unusual value, duplicate or denominator. They never edit the frozen production record. Production parity outranks a validator's opinion.</p>
         <h2 id="populations" class="anchor-target">Populations and denominators</h2>
@@ -44,7 +44,7 @@ const terms = [
       <aside class="side-index">
         <h2>On this page</h2>
         <nav aria-label="On this page">{sections.map(([anchor, label]) => <a href={`#${anchor}`}>{label}</a>)}</nav>
-        <h2 style="margin-top:1.5rem">Related</h2>
+        <h2 class="side-index-gap">Related</h2>
         <nav aria-label="Related pages"><a href="/evidence/method/">How the figures are checked</a><a href="/corrections/">Corrections</a></nav>
       </aside>
     </section>

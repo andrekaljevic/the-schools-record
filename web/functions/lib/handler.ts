@@ -50,16 +50,36 @@ export function reference(kind: Kind, now: Date): string {
   return `${kind.slice(0, 3).toUpperCase()}-${stamp}`;
 }
 
-function rateLimited(key: string, now: number): boolean {
-  const recent = (seen.get(key) ?? []).filter((time) => now - time < RATE_LIMIT.window);
+/**
+ * A per-client window kept in memory.  On a serverless host each isolate keeps its own
+ * map, so this is a first line only; a shared store (KV, Durable Object) or a challenge
+ * belongs in front of it for production traffic.  Stale keys are evicted on every call.
+ */
+function rateLimited(key: string | null, now: number): boolean {
+  for (const [other, times] of seen) {
+    const live = times.filter((time) => now - time < RATE_LIMIT.window);
+    if (live.length === 0) seen.delete(other);
+    else seen.set(other, live);
+  }
+  if (key === null) return false; // an unidentifiable client is never made to share a bucket
+  const recent = seen.get(key) ?? [];
   recent.push(now);
   seen.set(key, recent);
   return recent.length > RATE_LIMIT.max;
 }
 
-function clientKey(request: Request): string {
-  return request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anonymous';
+function clientKey(request: Request): string | null {
+  return request.headers.get('cf-connecting-ip') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null;
 }
+
+const SECURITY_HEADERS = {
+  'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+  'strict-transport-security': 'max-age=63072000; includeSubDomains; preload',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'cache-control': 'no-store',
+};
 
 async function readFields(request: Request): Promise<Record<string, string>> {
   const type = request.headers.get('content-type') ?? '';
@@ -81,7 +101,7 @@ export function validate(kind: Kind, raw: Record<string, string>): { fields: Rec
     const value = (raw[key] ?? '').toString().trim();
     const limit = spec.max[key];
     if (limit && value.length > limit) errors[key] = `Please keep this under ${limit} characters.`;
-    if (spec.required.includes(key) && (value === '' || value === 'Select one')) errors[key] = 'This field is required.';
+    if (spec.required.includes(key) && value === '') errors[key] = 'This field is required.';
     if (key === 'consent' && value !== 'on' && value !== 'true') errors[key] = 'Please confirm the privacy notice.';
     if (key !== 'consent') fields[key] = value;
   }
@@ -109,7 +129,7 @@ async function forward(env: Env, payload: Record<string, unknown>, fetcher: type
 }
 
 function json(body: unknown, status: number): Response {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } });
+  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...SECURITY_HEADERS } });
 }
 
 export async function handle(kind: Kind, request: Request, env: Env, options: { now?: () => Date; fetcher?: typeof fetch } = {}): Promise<Response> {
@@ -136,11 +156,11 @@ export async function handle(kind: Kind, request: Request, env: Env, options: { 
     ? { status: 'forwarded', reference: ref, detail: 'Forwarded to the configured review endpoint, which confirmed receipt.', durable: true, fields }
     : { status: 'failed', reference: ref, detail: 'No review endpoint confirmed receipt of this submission, so it has not been stored. Please keep the copy below and send it by another route.', durable: false, fields };
   if (wantsJson) return json(receipt, forwarded ? 200 : 503);
-  return new Response(receiptHtml(kind, receipt), { status: forwarded ? 200 : 503, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+  return new Response(receiptHtml(kind, receipt), { status: forwarded ? 200 : 503, headers: { 'content-type': 'text/html; charset=utf-8', ...SECURITY_HEADERS } });
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char);
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' })[char] ?? char);
 }
 
 /** Plain receipt for submissions made without JavaScript. */

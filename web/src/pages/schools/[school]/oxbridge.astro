@@ -20,7 +20,7 @@ const crumbs = [{ label: 'Schools', href: '/schools/' }, { label: school.name, h
 ---
 <Base meta={schoolMeta(school, 'oxbridge')} crumbs={crumbs} bodyClass="page-corpus">
   <main id="main-content">
-    <PageHero eyebrow={school.name} title="Oxford and Cambridge records" intro="Apply-centre applications, offers and accepted or admitted outcomes by university and entry cycle, with the rounded subject and college releases, the school's own offer claims and the historical secondary table kept apart." note={`${data.definitions.cycle_year ?? ''} This is university apply-centre evidence: it is not a school-entry acceptance rate and not a leaver-destination measure.`} />
+    <PageHero eyebrow={school.name} title="Oxford and Cambridge records" intro="Apply-centre applications, offers and accepted or admitted outcomes by university and entry cycle, with the rounded subject and college releases, the school's own offer claims and the historical secondary table kept apart." note={`${(data.definitions.cycle_year ?? '').replace(/\.?\s*$/, '.')} This is university apply-centre evidence: it is not a school-entry acceptance rate and not a leaver-destination measure.`} />
     <section class="shell">
       <form class="corpus-filters" data-island="corpus-filter" data-total={entry.count} aria-label="Filter the records" method="get" action={schoolPath(slug, 'oxbridge')}>
         <div class="field"><label for="ox-university">University</label><select id="ox-university" name="university" data-filter="university"><option value="">All universities</option>{entry.universities.map((name) => <option value={name}>{name}</option>)}</select></div>

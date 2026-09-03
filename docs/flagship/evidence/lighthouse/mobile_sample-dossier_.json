@@ -1,18 +1,18 @@
 {
   "requestedUrl": "http://127.0.0.1:4321/sample-dossier/",
-  "fetchTime": "2026-09-02T23:10:36.833Z",
+  "fetchTime": "2026-09-03T11:08:43.108Z",
   "lighthouseVersion": "13.4.1",
   "categories": {
-    "performance": 0.96,
+    "performance": 0.95,
     "accessibility": 1,
     "best-practices": 1,
     "seo": 1
   },
   "audits": {
     "largest-contentful-paint": {
-      "score": 0.91,
-      "numericValue": 2413.1459999999997,
-      "displayValue": "2.4 s"
+      "score": 0.88,
+      "numericValue": 2555.7156,
+      "displayValue": "2.6 s"
     },
     "cumulative-layout-shift": {
       "score": 1,
@@ -25,19 +25,19 @@
       "displayValue": "0 ms"
     },
     "first-contentful-paint": {
-      "score": 0.85,
-      "numericValue": 1963.146,
-      "displayValue": "2.0 s"
+      "score": 0.81,
+      "numericValue": 2105.7156,
+      "displayValue": "2.1 s"
     },
     "total-byte-weight": {
       "score": 1,
-      "numericValue": 266705,
-      "displayValue": "Total size was 260 KiB"
+      "numericValue": 271790,
+      "displayValue": "Total size was 265 KiB"
     },
     "speed-index": {
       "score": 0.99,
-      "numericValue": 1963.146,
-      "displayValue": "2.0 s"
+      "numericValue": 2105.7156,
+      "displayValue": "2.1 s"
     }
   }
 }

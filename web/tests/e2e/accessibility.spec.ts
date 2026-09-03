@@ -31,7 +31,7 @@ test('every page has one h1, a skip link that works and a main landmark', async 
   }
 });
 
-test('the mobile menu opens with the keyboard and lists the primary routes', async ({ page }) => {
+test('the mobile menu opens with the keyboard, lists the primary routes and closes on Escape', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
   const summary = page.locator('.mobile-menu summary');
@@ -40,6 +40,17 @@ test('the mobile menu opens with the keyboard and lists the primary routes', asy
   await page.keyboard.press('Enter');
   await expect(page.locator('.mobile-menu nav a')).toHaveCount(5);
   await expect(page.locator('.mobile-menu nav a').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.mobile-menu nav a').first()).toBeHidden();
+  await expect(summary).toBeFocused();
+});
+
+test('arrow keys on the series select do not navigate away', async ({ page }) => {
+  await page.goto('/schools/');
+  await page.locator('#index-series').focus();
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(300);
+  await expect(page).toHaveURL(/\/schools\/$/);
 });
 
 test('reduced motion removes transitions', async ({ page }) => {

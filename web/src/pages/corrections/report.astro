@@ -39,7 +39,7 @@ const crumbs = [{ label: 'Corrections', href: '/corrections/' }, { label: 'Repor
           <div class="field span-2"><label for="cr-dataset">Dataset or page</label><input id="cr-dataset" name="dataset" type="text" maxlength="160" /><span class="field-help">The ledger identifier shown under each table, or the page address.</span></div>
           <div class="field span-2"><label for="cr-issue">What appears to be wrong? <span aria-hidden="true">*</span></label><textarea id="cr-issue" name="issue" rows="6" required maxlength="4000"></textarea></div>
           <div class="field span-2"><label for="cr-evidence">Supporting evidence reference</label><textarea id="cr-evidence" name="evidenceReference" rows="3" maxlength="1000" placeholder="Describe the publication and where it can be found. This is stored privately."></textarea></div>
-          <label class="form-consent span-2"><input type="checkbox" name="consent" required /><span>I have read the <a href="/privacy/">privacy notice</a> and agree that these details may be stored to review this report. <span aria-hidden="true">*</span></span></label>
+          <label class="form-consent span-2"><input type="checkbox" id="cr-consent" name="consent" required /><span>I have read the <a href="/privacy/">privacy notice</a> and agree that these details may be stored to review this report. <span aria-hidden="true">*</span></span></label>
         </FormShell>
       </div>
     </section>

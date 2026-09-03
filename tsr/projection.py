@@ -141,8 +141,11 @@ def _ledger(entry: dict[str, Any], school: dict[str, Any]) -> dict[str, Any]:
     summary, hidden = _row_schema(entry["rows"])
     fields = summary + hidden
     dataset_refs = list(entry.get("source_refs") or [])
+    anchors = components.row_anchors(entry)
+    index_of = {id(row): index for index, row in enumerate(entry["rows"])}
     rows = []
     for row in records.sorted_rows(entry):
+        index = index_of[id(row)]
         cells = {}
         raw = {}
         for field in fields:
@@ -153,7 +156,8 @@ def _ledger(entry: dict[str, Any], school: dict[str, Any]) -> dict[str, Any]:
         row_refs = list(dict.fromkeys(row_ids or dataset_refs))
         year = records.row_year(row)
         rows.append({
-            "anchor": components.row_anchor(entry["dataset_id"], row),
+            "index": index,
+            "anchor": anchors[index],
             "period": records.period_label(row),
             "year": year,
             "status": _status_label(row),
@@ -163,8 +167,15 @@ def _ledger(entry: dict[str, Any], school: dict[str, Any]) -> dict[str, Any]:
             "blank": [field for field in fields if raw[field] in (None, "")],
             "sources": _sources(row_refs),
             "datasetSourcesOmitted": len([ref for ref in dataset_refs if ref not in row_refs]),
-            "recordId": None,  # filled in below once the evidence index is known
+            "recordId": f"fig:{entry['dataset_id']}:{index}",
         })
+    years = sorted({row["year"] for row in rows if row["year"] is not None})
+    missing = [year for year in range(years[0], years[-1] + 1) if year not in years] if years else []
+    corrections_by_period: dict[str, list[str]] = {}
+    for item in corpora.corrections(school["id"]):
+        corrections_by_period.setdefault(str(item["period"]), []).append(item["id"])
+    for row in rows:
+        row["corrections"] = corrections_by_period.get(row["period"], [])
     return {
         "id": entry["dataset_id"],
         "label": records.dataset_label(entry),
@@ -172,6 +183,7 @@ def _ledger(entry: dict[str, Any], school: dict[str, Any]) -> dict[str, Any]:
         "domain": entry["domain"],
         "school": school["id"],
         "span": _span(entry),
+        "missingYears": missing,
         "rowCount": len(entry["rows"]),
         "basis": entry.get("basis"),
         "notes": entry.get("notes"),
@@ -533,7 +545,6 @@ def _search_index(items: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
         tokens = sorted(set(re.findall(r"[a-z0-9][a-z0-9.,%/–-]*", item.search)))
         compact.append({
             "id": record["id"],
-            "s": record["slug"],
             "c": record["corpus"],
             "sc": record["schoolId"],
             "y": record["year"],
@@ -544,7 +555,7 @@ def _search_index(items: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
             "st": record["status"],
             "f": record["statusFamily"],
             "ds": record["datasetId"],
-            "v": [f"{pair['label']}: {pair['value']}" for pair in record["summary"][:3]],
+            "v": [[pair["label"], pair["value"]] for pair in record["summary"][:3]],
             "q": " ".join(tokens),
         })
     return compact
@@ -719,10 +730,25 @@ def _value_text(value: Any) -> str:
     return str(value)
 
 
+def _rows_for(school_id: str | None, period: str) -> list[dict[str, str]]:
+    """Ledger rows carrying the same school and period as a correction (the correction names a metric, not a row)."""
+    if not school_id:
+        return []
+    out = []
+    for entry in records.school_datasets(school_id):
+        anchors = components.row_anchors(entry)
+        page = "exam-results" if entry["domain"] == "exam_results" else "university-destinations"
+        for index, row in enumerate(entry["rows"]):
+            if records.period_label(row) == period:
+                out.append({"label": records.dataset_label(entry), "href": f"/schools/{school_id}/{page}/#{anchors[index]}"})
+    return out
+
+
 def _corrections() -> dict[str, Any]:
     corrections = []
     for item in corpora.corrections():
         corrections.append({
+            "rows": _rows_for(corpora.school_id_for(item["school"]), str(item["period"])),
             "id": item["id"],
             "schoolId": corpora.school_id_for(item["school"]),
             "school": item["school"],
@@ -777,10 +803,19 @@ def _method() -> dict[str, Any]:
     }
 
 
+def _marker(marker: chart.Marker) -> dict[str, Any]:
+    return {"kind": marker.kind, "start": marker.start, "end": marker.end, "label": marker.label, "shortLabel": marker.short_label}
+
+
+def _metric_markers(metric: dict[str, Any]) -> tuple[chart.Marker, ...]:
+    return (trajectory.EXCEPTIONAL_YEARS,) if metric["domain"] == "results" else ()
+
+
 def _compare(metrics: list[dict[str, Any]]) -> dict[str, Any]:
     all_years = [point["year"] for metric in metrics for point in metric["points"]]
     default = comparison.metric_by_id(metrics, "a_level_astar") or metrics[0]
     ids = [school["id"] for school in dataset.schools()]
+    names = {school["id"]: school["name"] for school in dataset.schools()}
     return {
         "yearMin": min(all_years),
         "yearMax": max(all_years),
@@ -795,6 +830,7 @@ def _compare(metrics: list[dict[str, Any]]) -> dict[str, Any]:
                 "note": metric["note"],
                 "domain": metric["domain"],
                 "unit": metric["unit"],
+                "markers": [_marker(marker) for marker in _metric_markers(metric)],
                 "points": [
                     {"schoolId": p["schoolId"], "year": p["year"], "value": p["value"], "status": p["status"], "datasetId": p["datasetId"], "derived": bool(p.get("annotation"))}
                     for p in metric["points"]
@@ -802,7 +838,9 @@ def _compare(metrics: list[dict[str, Any]]) -> dict[str, Any]:
             }
             for metric in metrics
         ],
-        "defaultSvg": chart.comparison_chart(default, ids[0], ids[1], min(all_years), max(all_years)),
+        "gapRule": chart.GAP_RULE,
+        "defaultSvgDesktop": chart.comparison_panel(default, ids[0], ids[1], min(all_years), max(all_years), chart.COMPARISON_DESKTOP, names=names, markers=_metric_markers(default)),
+        "defaultSvgMobile": chart.comparison_panel(default, ids[0], ids[1], min(all_years), max(all_years), chart.COMPARISON_MOBILE, names=names, markers=_metric_markers(default)),
     }
 
 
@@ -817,10 +855,12 @@ def _dossier(metrics: list[dict[str, Any]]) -> dict[str, Any]:
             match = next((p for p in points if p["schoolId"] == school_id and p["year"] == year), None)
             row[school_id] = {"value": f"{match['value']:.1f}%", "status": match["status"]} if match else None
         rows.append(row)
+    names = {school["id"]: school["name"] for school in dataset.schools()}
     return {
         "metric": {"id": metric["id"], "label": metric["label"], "definition": metric["definition"], "note": metric["note"]},
         "rows": rows,
-        "svg": chart.comparison_chart(metric, "eton", "westminster", 2015, 2019),
+        "svgDesktop": chart.comparison_panel(metric, "eton", "westminster", 2015, 2019, chart.COMPARISON_DESKTOP, names=names, markers=_metric_markers(metric)),
+        "svgMobile": chart.comparison_panel(metric, "eton", "westminster", 2015, 2019, chart.COMPARISON_MOBILE, names=names, markers=_metric_markers(metric)),
         "prepared": LAST_REVIEWED,
     }
 
@@ -836,14 +876,12 @@ def build() -> dict[str, Any]:
     span = records.collection_span()
     evidence_records = _evidence_records()
     schools = [_school(school, metrics) for school in dataset.schools()]
-    record_ids_by_anchor: dict[str, str] = {}
-    for item in evidence.index():
-        if item.corpus == "figures" and item.dataset_id:
-            record_ids_by_anchor[f"{item.dataset_id}-{components.slugify(item.period)}"] = item.id
+    record_ids = {item.id for item in evidence.index()}
     for school in schools:
         for ledger in [*school["exam"], *school["university"]]:
             for row in ledger["rows"]:
-                row["recordId"] = record_ids_by_anchor.get(row["anchor"])
+                if row["recordId"] not in record_ids:  # pragma: no cover - the evidence index enumerates every row
+                    raise RuntimeError(f"ledger row {row['anchor']} has no evidence record")
 
     documents: dict[str, Any] = {
         "site": {
@@ -854,6 +892,7 @@ def build() -> dict[str, Any]:
             "lastReviewedShort": LAST_REVIEWED_SHORT,
             "spanFrom": span["min"],
             "spanTo": span["max"],
+            "ledgersFrom": min(int(re.search(r"(18|19|20)\d{2}", s["evidenceWindow"]).group(0)) for s in schools if re.search(r"(18|19|20)\d{2}", s["evidenceWindow"])),
             "counts": counts,
             "corrections": len(corpora.corrections()),
             "conflicts": len(corpora.conflicts()),

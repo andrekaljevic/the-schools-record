@@ -62,6 +62,9 @@ Next.js was rejected for this product because its static export cannot host the 
 * **Stage 2 — benchmarking (transferable principles only).** Adopted: one typographic system with optical sizing and tabular figures (financial and statistical publishing); small multiples on shared rulers with gaps preserved (statistical graphics practice); progressive enhancement with plain HTML forms and no framework runtime (public-sector service patterns); permanent addresses for every record and an explicit provenance panel per figure (data-journalism and archival practice); print as a first-class output (dossiers). Rejected: card-and-shadow dashboards, gradients, hero imagery for its own sake, client-side routing.
 * **Stage 3 — vertical slice.** `tsr/projection.py` + `tools/build_public_projection.py` (19 documents, 9.2 MB, deterministic, private-pattern scanned); Astro 7 scaffold; design system (`web/src/styles/global.css`); home, index, school record, ledgers, comparison, record permalink, correction form, 404; reviewed at 390 and 1440 px; fixes applied (chart label clipping, ledger page weight 1.8 MB → 0.8 MB by compacting per-row evidence panels, latin-only fonts).
 * **Stage 4 — full product.** Every route in the brief built statically: 2,538 pages including 2,277 record permalinks, per-corpus paginated listings, series pages for the index, per-school corrections, CSV endpoints for every ledger and comparison metric, sitemap, robots, security headers, icons and social card. Islands: comparison instrument (TypeScript port of the Python chart, byte-identical on 2,730 fixture cases), evidence search, school-index filter, corpus filters, forms, legacy-link redirect. Forms post to a platform-neutral handler with honeypot, timing check, rate limit and honest receipts.
+* **Stage 5 — audits.** Production build audited: privacy scan and security scan of every built file, budgets, axe on 25 routes, Lighthouse mobile and desktop, `npm audit`. Findings fixed before the jury (contrast tokens, landmark names, heading order, overflow at 320 px, `.invalid` origin handling).
+* **Stage 6 — independent jury and two remediation loops.** Four fresh-context reviewers (design director; product and content; data and methodology; engineering, accessibility and security) scored the served build and listed defects; scores and every finding are in `evidence/jury.md`. Loop 1 fixed the high and major findings (unique row anchors with exact record links; gap-aware comparison panels on the shared grammar with a mobile geometry; origin-aware metadata; ledger legibility, status glossary links, stated gaps, correction ↔ row links; keyboard and focus fixes; handler hardening; publisher and contact). Loop 2 re-ran every gate: Python, unit, type check, build, scans, budgets, 53 browser tests, Lighthouse.
+* **Stage 7 — delivery.** Cutover, redirect, monitoring and rollback plan in `CUTOVER.md`; evidence pack complete; CI workflow builds with a preview origin and uploads the site as an artifact; no production deployment and no merge to `main`.
 
 ## 6. Verified test results
 
@@ -77,6 +80,15 @@ all budgets met; `data/dataset.json` SHA-256 unchanged.
   && npm run preview` in `web/`) and the CI workflow uploads `web/dist` as an artifact on every push to the branch.
 * **Firefox and WebKit.** Browser downloads are blocked here; only Chromium 1194 could be installed. The site uses no
   Chromium-specific API, but cross-browser evidence remains to be captured on a machine that can install them.
+* **Frozen wording the jury questioned.** Several strings the reviewers found jargon-laden or unsupported are frozen
+  dataset text (metric notes such as "excluded by default" and "retained in the Yearbook"; the corrections entry
+  C15; the "Pre-U honest" series name; the method definition that says a source "reportedly" rounds). The site now
+  explains the first two in place and leaves the rest verbatim: changing them is a versioned editorial decision.
+* **Withheld source titles.** The Oxford, Cambridge, US and subject corpora cite references whose titles the reviewed
+  edition withheld and for which no public link was approved. The record pages say so and give the route to ask;
+  approving further public links is an editorial step outside this brief.
+* **Largest ledger page.** St Paul's university outcomes (20 ledgers, about 1,000 rows) is under 900 KB of HTML and
+  about 53 KB compressed. Splitting it into family sub-pages would cut the DOM further; it is proposed, not done.
 * **Form receiver.** The handler forwards to `REVIEW_WEBHOOK_URL` when configured; until a durable receiver is
   provisioned, every submission is truthfully reported as not recorded. This is by design, not a defect.
 * **Production origin.** `SITE_URL` must be set at build time for canonical URLs, Open Graph and the sitemap to carry

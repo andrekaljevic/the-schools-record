@@ -1,6 +1,6 @@
 {
   "requestedUrl": "http://127.0.0.1:4321/schools/winchester/exam-results/",
-  "fetchTime": "2026-09-02T23:11:05.796Z",
+  "fetchTime": "2026-09-03T11:09:09.003Z",
   "lighthouseVersion": "13.4.1",
   "categories": {
     "performance": 1,
@@ -11,8 +11,8 @@
   "audits": {
     "largest-contentful-paint": {
       "score": 1,
-      "numericValue": 522.0604000000001,
-      "displayValue": "0.5 s"
+      "numericValue": 565.5296000000001,
+      "displayValue": "0.6 s"
     },
     "cumulative-layout-shift": {
       "score": 1,
@@ -26,18 +26,18 @@
     },
     "first-contentful-paint": {
       "score": 1,
-      "numericValue": 442.0604,
-      "displayValue": "0.4 s"
+      "numericValue": 485.5296000000001,
+      "displayValue": "0.5 s"
     },
     "total-byte-weight": {
       "score": 1,
-      "numericValue": 318600,
-      "displayValue": "Total size was 311 KiB"
+      "numericValue": 325674,
+      "displayValue": "Total size was 318 KiB"
     },
     "speed-index": {
       "score": 1,
-      "numericValue": 442.0604,
-      "displayValue": "0.4 s"
+      "numericValue": 485.5296000000001,
+      "displayValue": "0.5 s"
     }
   }
 }

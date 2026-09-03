@@ -1,6 +1,6 @@
 {
   "requestedUrl": "http://127.0.0.1:4321/schools/westminster/",
-  "fetchTime": "2026-09-02T23:10:58.070Z",
+  "fetchTime": "2026-09-03T11:09:02.279Z",
   "lighthouseVersion": "13.4.1",
   "categories": {
     "performance": 1,
@@ -10,9 +10,9 @@
   },
   "audits": {
     "largest-contentful-paint": {
-      "score": 0.98,
-      "numericValue": 764.9512,
-      "displayValue": "0.8 s"
+      "score": 0.99,
+      "numericValue": 686.2339,
+      "displayValue": "0.7 s"
     },
     "cumulative-layout-shift": {
       "score": 1,
@@ -26,17 +26,17 @@
     },
     "first-contentful-paint": {
       "score": 1,
-      "numericValue": 407.42679999999996,
+      "numericValue": 449.3508499999999,
       "displayValue": "0.4 s"
     },
     "total-byte-weight": {
       "score": 1,
-      "numericValue": 488203,
-      "displayValue": "Total size was 477 KiB"
+      "numericValue": 380663,
+      "displayValue": "Total size was 372 KiB"
     },
     "speed-index": {
       "score": 1,
-      "numericValue": 407.42679999999996,
+      "numericValue": 449.3508499999999,
       "displayValue": "0.4 s"
     }
   }

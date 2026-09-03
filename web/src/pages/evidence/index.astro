@@ -28,7 +28,7 @@ const statuses = ['Primary', 'Secondary', 'Derived', 'Reconstructed', 'Conflict'
         <a class="text-link" href="/evidence/">Clear and search everything <Icon name="arrow-right" /></a>
       </div>
       <form class="evidence-filters" role="search" aria-label="Search the frozen records" method="get" action="/evidence/" data-island="evidence-search" data-low={low} data-high={high}>
-        <div class="field ev-span-2"><label for="ev-q">Search records</label><input id="ev-q" name="q" type="search" placeholder="School, year, subject, university or measure" autocomplete="off" /></div>
+        <div class="field ev-span-2"><label for="ev-q">Search records</label><input id="ev-q" name="q" type="search" placeholder="School, year, subject…" autocomplete="off" /></div>
         <div class="field"><label for="ev-corpus">Record type</label><select id="ev-corpus" name="corpus"><option value="">All records</option>{Object.entries(data.corpusLabels).map(([key, label]) => <option value={key}>{label}</option>)}</select></div>
         <div class="field"><label for="ev-school">School</label><select id="ev-school" name="school"><option value="">All schools</option>{data.schools.map((school) => <option value={school.id}>{school.name}</option>)}</select></div>
         <div class="field"><label for="ev-domain">Outcome</label><select id="ev-domain" name="domain"><option value="">All outcomes</option>{Object.entries(data.domainLabels).map(([key, label]) => <option value={key}>{label}</option>)}</select></div>
@@ -39,6 +39,7 @@ const statuses = ['Primary', 'Secondary', 'Derived', 'Reconstructed', 'Conflict'
       </form>
       <p class="result-count" aria-live="polite" data-result-count>{formatCount(records.length)} records · showing 1–{first.length}</p>
       <p class="mute small">Every record can also be read page by page without search: <a href="/evidence/browse/all/">browse all records</a>, or one corpus at a time from the counts above.</p>
+      <noscript><p class="notice notice-teal"><strong>Search needs JavaScript</strong>The first page of the full record is shown below; use the browse pages above to read the rest.</p></noscript>
       <div class="evidence-list" data-results>
         {first.map((record) => <EvidenceRecord record={record} heading="h2" />)}
       </div>

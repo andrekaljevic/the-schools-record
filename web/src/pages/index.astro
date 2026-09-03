@@ -35,7 +35,7 @@ const questions = [
           <div><dt>Frozen records</dt><dd>{formatCount(data.counts.total)}</dd></div>
           <div><dt>Last reviewed</dt><dd>{data.lastReviewedShort}</dd></div>
         </dl>
-        <p class="ledger-note">The collection is deliberately focused. It does not imply that only these schools matter.</p>
+        <p class="ledger-note">The school ledgers run from {data.ledgersFrom}; the {data.spanFrom} start is a single secondary Winchester record. The collection is deliberately focused and does not imply that only these schools matter.</p>
       </div>
     </section>
 
@@ -86,7 +86,7 @@ const questions = [
         {data.schools.map((school, index) => (
           <article class={`school-card${index === 0 ? ' school-card-feature' : ''}`}>
             <a href={schoolPath(school.id)} aria-label={`View ${school.name}`}>
-              <Artwork schoolId={school.id} alt={school.artworkAlt} decorative />
+              <Artwork schoolId={school.id} alt={school.artworkAlt} decorative sizes={index === 0 ? "(min-width: 60rem) 50vw, 100vw" : "(min-width: 60rem) 25vw, (min-width: 40rem) 50vw, 100vw"} />
               <div class="school-card-copy">
                 <p class="card-meta">{school.evidenceWindow}</p>
                 <h3>{school.name}</h3>

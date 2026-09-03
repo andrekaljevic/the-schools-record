@@ -1,10 +1,8 @@
 ---
-interface Props { schoolId: string; alt: string; decorative?: boolean; eager?: boolean }
-const { schoolId, alt, decorative = false, eager = false } = Astro.props;
+interface Props { schoolId: string; alt: string; decorative?: boolean; eager?: boolean; sizes?: string }
+const { schoolId, alt, decorative = false, eager = false, sizes = '(min-width: 60rem) 33vw, 100vw' } = Astro.props;
 const base = '/schools';
 ---
 <picture class={`school-artwork artwork-${schoolId}`}>
-  <source media="(max-width: 520px)" srcset={`${base}/${schoolId}-480.webp`} />
-  <source media="(max-width: 960px)" srcset={`${base}/${schoolId}-800.webp`} />
-  <img src={`${base}/${schoolId}-1200.webp`} width="1200" height="900" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} decoding="async" alt={decorative ? '' : alt} />
+  <img src={`${base}/${schoolId}-800.webp`} srcset={`${base}/${schoolId}-480.webp 480w, ${base}/${schoolId}-800.webp 800w, ${base}/${schoolId}-1200.webp 1200w`} sizes={sizes} width="1200" height="900" loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} decoding="async" alt={decorative ? '' : alt} />
 </picture>

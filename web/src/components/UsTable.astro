@@ -7,7 +7,7 @@ interface Props { rows: UsRow[]; caption: string }
 const { rows, caption } = Astro.props;
 const dash = (value: unknown) => (value === null || value === undefined || value === '' ? '—' : String(value));
 ---
-<div class="table-scroll" tabindex="0" aria-label={`Scrollable table: ${caption}`}>
+<div class="table-scroll" tabindex="0" role="region" aria-label={`${caption} table`}>
   <table class="data-table corpus-table">
     <caption>{caption}</caption>
     <thead><tr><th scope="col">Period</th><th scope="col">Institution</th><th scope="col">Outcome type</th><th scope="col">Count</th><th scope="col">Cohort denominator</th><th scope="col">Rate</th><th scope="col">Region</th><th scope="col">Evidence</th><th scope="col">Record</th></tr></thead>
