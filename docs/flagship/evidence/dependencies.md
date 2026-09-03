@@ -18,6 +18,8 @@
 | `typescript` | 5.9.3 | type checker (dev) | Apache-2.0 |
 | `vitest` | 4.1.11 | unit tests (dev) | MIT |
 
+`npm audit --audit-level=high`: found 0 vulnerabilities (2 September 2026, 411 packages installed).
+
 No runtime dependency ships to the browser: the client bundles are the site's own TypeScript islands only.
 
 ## Data layer (requirements.txt)

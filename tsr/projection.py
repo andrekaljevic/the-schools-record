@@ -39,6 +39,7 @@ PRIVATE_PATTERNS = (
 )
 
 LAST_REVIEWED = "2 September 2026"
+LAST_REVIEWED_SHORT = "2 Sep 2026"
 
 SCHOOL_SECTIONS = (
     ("exam-results", "Examination results"),
@@ -850,6 +851,7 @@ def build() -> dict[str, Any]:
             "baselineCommit": metadata["baseline_commit"],
             "redactions": metadata["source_location_redactions"],
             "lastReviewed": LAST_REVIEWED,
+            "lastReviewedShort": LAST_REVIEWED_SHORT,
             "spanFrom": span["min"],
             "spanTo": span["max"],
             "counts": counts,

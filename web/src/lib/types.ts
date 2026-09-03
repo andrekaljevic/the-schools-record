@@ -28,6 +28,7 @@ export interface Site {
   baselineCommit: string;
   redactions: number;
   lastReviewed: string;
+  lastReviewedShort: string;
   spanFrom: number;
   spanTo: number;
   counts: { figures: number; granular: number; oxbridge: number; us: number; total: number };

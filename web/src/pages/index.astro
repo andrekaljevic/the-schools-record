@@ -33,7 +33,7 @@ const questions = [
           <div><dt>Schools</dt><dd>{data.schools.length}</dd></div>
           <div><dt>Historical span</dt><dd>{data.spanFrom}–{data.spanTo}</dd></div>
           <div><dt>Frozen records</dt><dd>{formatCount(data.counts.total)}</dd></div>
-          <div><dt>Last reviewed</dt><dd>{data.lastReviewed.replace('September', 'Sep')}</dd></div>
+          <div><dt>Last reviewed</dt><dd>{data.lastReviewedShort}</dd></div>
         </dl>
         <p class="ledger-note">The collection is deliberately focused. It does not imply that only these schools matter.</p>
       </div>
